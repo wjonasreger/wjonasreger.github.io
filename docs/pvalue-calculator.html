@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.317">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>W. Jonas Reger - P-Value Calculator</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<link href="./assets/images/masthead.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link id="quarto-text-highlighting-styles" href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script type="module" src="site_libs/quarto-ojs/esbuild-bundle.js"></script>
+<link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">W. Jonas Reger</span>
+  </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html">Home</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html">Resume</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./projects.html">Projects</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./pvalue-calculator.html" aria-current="page">P-Value Calculator</a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#normal-distribution" id="toc-normal-distribution" class="nav-link active" data-scroll-target="#normal-distribution">Normal Distribution</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">P-Value Calculator</h1>
+</div>
+
+
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<section id="normal-distribution" class="level1">
+<h1>Normal Distribution</h1>
+<div class="cell">
+<div class="sourceCode cell-code hidden" id="cb1" data-startfrom="10" data-source-offset="-16"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 9;"><span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">bisection</span>(f<span class="op">,</span> x1<span class="op">,</span> x2<span class="op">,</span> releps<span class="op">,</span> abseps) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> f1 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sign</span>(<span class="fu">f</span>(x1))<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> f2 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sign</span>(<span class="fu">f</span>(x2))<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> x <span class="op">=</span> <span class="fl">0.5</span><span class="op">*</span>(x1<span class="op">+</span>x2)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> fx <span class="op">=</span> <span class="fu">f</span>(x)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span>(x2<span class="op">-</span>x1 <span class="op">&gt;</span> abseps <span class="op">&amp;&amp;</span> x2<span class="op">-</span>x1 <span class="op">&gt;</span> releps<span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(x) <span class="op">&amp;&amp;</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(fx) <span class="op">&gt;</span> abseps) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (fx<span class="op">*</span>f1 <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>            x1 <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            f1 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sign</span>(fx)<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> {</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            x2 <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            f2 <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">sign</span>(fx)<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="fl">0.5</span><span class="op">*</span>(x1<span class="op">+</span>x2)<span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        fx <span class="op">=</span> <span class="fu">f</span>(x)<span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">pnorm</span>(z) {</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> x <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">SQRT1_2</span><span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(z)<span class="op">;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">// compute erfc(x) using an approximation formula (max rel error = 1.2e-7)</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// see https://en.wikipedia.org/wiki/Error_function#Numerical_approximation</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t <span class="op">=</span> <span class="fl">1.0</span><span class="op">/</span>(<span class="dv">1</span><span class="op">+</span><span class="fl">0.5</span><span class="op">*</span>x)<span class="op">;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t2 <span class="op">=</span> t<span class="op">*</span>t<span class="op">;</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t3 <span class="op">=</span> t2<span class="op">*</span>t<span class="op">;</span> </span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t4 <span class="op">=</span> t2<span class="op">*</span>t2<span class="op">;</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t5 <span class="op">=</span> t2<span class="op">*</span>t3<span class="op">;</span> </span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t6 <span class="op">=</span> t3<span class="op">*</span>t3<span class="op">;</span> </span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t7 <span class="op">=</span> t3<span class="op">*</span>t4<span class="op">;</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t8 <span class="op">=</span> t4<span class="op">*</span>t4<span class="op">;</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> t9 <span class="op">=</span> t4<span class="op">*</span>t5<span class="op">;</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> tau <span class="op">=</span> <span class="op">-</span>x<span class="op">*</span>x <span class="op">-</span> <span class="fl">1.26551223</span> <span class="op">+</span> <span class="fl">1.00002368</span><span class="op">*</span>t <span class="op">+</span> <span class="fl">0.37409196</span><span class="op">*</span>t2 <span class="op">+</span> <span class="fl">0.09678418</span><span class="op">*</span>t3 <span class="op">-</span> <span class="fl">0.18628806</span><span class="op">*</span>t4 <span class="op">+</span> <span class="fl">0.27886807</span><span class="op">*</span>t5 <span class="op">-</span> <span class="fl">1.13520398</span><span class="op">*</span>t6 <span class="op">+</span> <span class="fl">1.48851587</span><span class="op">*</span>t7 <span class="op">-</span> <span class="fl">0.82215223</span><span class="op">*</span>t8 <span class="op">+</span> <span class="fl">0.17087277</span><span class="op">*</span>t9<span class="op">;</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> p <span class="op">=</span> <span class="fl">0.5</span><span class="op">*</span>t<span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">exp</span>(tau)<span class="op">;</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (z <span class="op">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>     p <span class="op">=</span> <span class="dv">1</span><span class="op">-</span>p<span class="op">;</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> p<span class="op">;</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">qnorm</span>(p) {</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (p<span class="op">==</span><span class="fl">0.5</span>) {</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>     <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (p <span class="op">&lt;</span> <span class="fl">1e-300</span> <span class="op">||</span> p <span class="op">&gt;</span> <span class="dv">1</span><span class="op">-</span><span class="fl">3e-16</span>) {</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">/</span><span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Set relative accuracy parameter </span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> eps <span class="op">=</span> <span class="fl">1.e-6</span><span class="op">;</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> pval <span class="op">=</span> p<span class="op">;</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (p <span class="op">&gt;</span> <span class="fl">0.5</span>) {</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>     pval <span class="op">=</span> <span class="dv">1</span><span class="op">-</span>p<span class="op">;</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Start bisection search...</span></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Set the upper and lower bound of z according to the inequalities</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>  <span class="co">// of erfc function described in </span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>  <span class="co">// https://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions :</span></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>  <span class="co">// erfc(x) \leq exp(-x^2)  for x&gt;0, and </span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>  <span class="co">// erfc(x) \geq sqrt(2e/pi) sqrt(b-1)/b exp(-b x^2)  for x&gt;0 and b&gt;1 </span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The lower bound below comes from setting b=2.</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Upper bound is multiplied by a safety factor 1.01; </span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>  <span class="co">// lower bound is multiplied by a safety factor 0.99.</span></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> sqrt_2pioe <span class="op">=</span> <span class="fl">1.520346901066281</span><span class="op">;</span></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> min_arg <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>pval<span class="op">*</span>sqrt_2pioe<span class="op">;</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> minz <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (min_arg <span class="op">&lt;</span> <span class="fl">1.0</span>) {</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>     minz <span class="op">=</span> <span class="fl">0.99</span><span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">sqrt</span>( <span class="op">-</span><span class="bu">Math</span><span class="op">.</span><span class="fu">log</span>(min_arg) )<span class="op">;</span></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> maxz <span class="op">=</span> <span class="fl">1.01</span><span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">sqrt</span>( <span class="op">-</span><span class="dv">2</span><span class="op">*</span><span class="bu">Math</span><span class="op">.</span><span class="fu">log</span>(<span class="dv">2</span><span class="op">*</span>pval) )<span class="op">;</span></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> fun <span class="op">=</span> <span class="kw">function</span>(z) {<span class="cf">return</span> <span class="fu">pnorm</span>(z) <span class="op">-</span> pval<span class="op">;</span>}</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> z <span class="op">=</span> <span class="fu">bisection</span>(fun<span class="op">,</span> minz<span class="op">,</span>maxz<span class="op">,</span> eps<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (p <span class="op">&gt;</span> <span class="fl">0.5</span>) {z <span class="op">=</span> <span class="op">-</span>z<span class="op">;</span>}</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> z<span class="op">;</span></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calc_outputs</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc) {</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (reg <span class="op">==</span> <span class="st">"right-tail"</span>) {</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> area <span class="op">=</span> <span class="fu">pnorm</span>(s)<span class="op">;</span></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> stat <span class="op">=</span> <span class="fu">qnorm</span>(a)<span class="op">;</span></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_s2area <span class="op">=</span> <span class="st">"pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="op">-</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">") OR pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">", lower.tail=FALSE)"</span></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_a2stat <span class="op">=</span> <span class="st">"-qnorm("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">") OR qnorm("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">", lower.tail=FALSE)"</span></span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_s2area <span class="op">=</span> <span class="st">"1 - norm.cdf("</span><span class="op">+</span><span class="bu">String</span>(s)<span class="op">+</span><span class="st">") OR norm.sf("</span><span class="op">+</span><span class="bu">String</span>(s)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_a2stat <span class="op">=</span> <span class="st">"norm.ppf(1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">") OR norm.isf("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (reg <span class="op">==</span> <span class="st">"left-tail"</span>) {</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> area <span class="op">=</span> <span class="dv">1</span><span class="op">-</span><span class="fu">pnorm</span>(s)<span class="op">;</span></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> stat <span class="op">=</span> <span class="fu">qnorm</span>(<span class="dv">1</span><span class="op">-</span>a)<span class="op">;</span></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_s2area <span class="op">=</span> <span class="st">"pnorm("</span><span class="op">+</span><span class="bu">String</span>(s)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_a2stat <span class="op">=</span> <span class="st">"qnorm("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_s2area <span class="op">=</span> <span class="st">"norm.cdf("</span><span class="op">+</span><span class="bu">String</span>(s)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_a2stat <span class="op">=</span> <span class="st">"norm.ppf("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (reg <span class="op">==</span> <span class="st">"two-tail"</span>) {</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> area <span class="op">=</span> <span class="dv">2</span><span class="op">*</span><span class="fu">pnorm</span>(s)<span class="op">;</span></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> stat <span class="op">=</span> <span class="fu">qnorm</span>(a)<span class="op">;</span></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_s2area <span class="op">=</span> <span class="st">"2*pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="op">-</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">") OR 2*pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">", lower.tail=FALSE)"</span></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_a2stat <span class="op">=</span> <span class="st">"-qnorm("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">"/2) OR qnorm("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">"/2, lower.tail=FALSE)"</span></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_s2area <span class="op">=</span> <span class="st">"2*(1 - norm.cdf("</span><span class="op">+</span><span class="bu">String</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">") OR 2*(norm.sf("</span><span class="op">+</span><span class="bu">String</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">"))"</span></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_a2stat <span class="op">=</span> <span class="st">"norm.ppf(1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">"/2) OR norm.isf("</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">"/2)"</span></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> area <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> <span class="dv">2</span><span class="op">*</span><span class="fu">pnorm</span>(s)<span class="op">;</span></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> stat <span class="op">=</span> <span class="fu">qnorm</span>(a)</span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_s2area <span class="op">=</span> <span class="st">"1 - 2*pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="op">-</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">") OR 1 - 2*pnorm("</span><span class="op">+</span><span class="bu">String</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">", lower.tail=FALSE)"</span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> R_a2stat <span class="op">=</span> <span class="st">"-qnorm((1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")/2) OR qnorm((1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")/2, lower.tail=FALSE)"</span></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_s2area <span class="op">=</span> <span class="st">"1 - 2*norm.cdf("</span><span class="op">+</span><span class="bu">String</span>(<span class="op">-</span><span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(s))<span class="op">+</span><span class="st">") OR 1 - 2*norm.sf("</span><span class="op">+</span><span class="bu">String</span>(s)<span class="op">+</span><span class="st">")"</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> py_a2stat <span class="op">=</span> <span class="st">"norm.ppf(1 - (1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")/2) OR norm.isf((1 - "</span><span class="op">+</span><span class="bu">String</span>(a)<span class="op">+</span><span class="st">")/2)"</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> area <span class="op">=</span> <span class="bu">Number</span>(area<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">4</span>))</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> stat <span class="op">=</span> <span class="bu">Number</span>(stat<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">4</span>))</span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> py_s2area <span class="op">=</span> py_s2area <span class="op">+</span> <span class="st">" (from scipy.stats import norm)"</span></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> py_a2stat <span class="op">=</span> py_a2stat <span class="op">+</span> <span class="st">" (from scipy.stats import norm)"</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [area<span class="op">,</span> stat<span class="op">,</span> R_s2area<span class="op">,</span> R_a2stat<span class="op">,</span> py_s2area<span class="op">,</span> py_a2stat]</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">print_input</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc) {</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (calc <span class="op">==</span> <span class="st">"statistic"</span>) {</span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Input] "</span> <span class="op">+</span> reg <span class="op">+</span> <span class="st">" Area = "</span> <span class="op">+</span> <span class="bu">String</span>(a)</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Input] Statistic = "</span> <span class="op">+</span> <span class="bu">String</span>(s)</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> output</span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">print_output</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc) {</span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> outputs <span class="op">=</span> <span class="fu">calc_outputs</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc)</span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> area <span class="op">=</span> outputs[<span class="dv">0</span>]</span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> stat <span class="op">=</span> outputs[<span class="dv">1</span>]</span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (calc <span class="op">==</span> <span class="st">"statistic"</span>) {</span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Output] Statistic = "</span> <span class="op">+</span> <span class="bu">String</span>(stat)</span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Output] "</span> <span class="op">+</span> reg <span class="op">+</span> <span class="st">" Area = "</span> <span class="op">+</span> <span class="bu">String</span>(area)</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> output</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">print_R</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc) {</span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> outputs <span class="op">=</span> <span class="fu">calc_outputs</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc)</span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> R_s2area <span class="op">=</span> outputs[<span class="dv">2</span>]</span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> R_a2stat <span class="op">=</span> outputs[<span class="dv">3</span>]</span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (calc <span class="op">==</span> <span class="st">"statistic"</span>) {</span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[R] "</span> <span class="op">+</span> R_a2stat</span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[R] "</span> <span class="op">+</span> R_s2area</span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> output</span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">print_py</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc) {</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> outputs <span class="op">=</span> <span class="fu">calc_outputs</span>(s<span class="op">,</span> a<span class="op">,</span> reg<span class="op">,</span> calc)</span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> R_s2area <span class="op">=</span> outputs[<span class="dv">4</span>]</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> R_a2stat <span class="op">=</span> outputs[<span class="dv">5</span>]</span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (calc <span class="op">==</span> <span class="st">"statistic"</span>) {</span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Python] "</span> <span class="op">+</span> R_a2stat</span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> output <span class="op">=</span> <span class="st">"[Python] "</span> <span class="op">+</span> R_s2area</span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> output</span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-1" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-2" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-3" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-4" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-5" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-6" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-7" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-8" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code hidden" id="cb2" data-startfrom="178" data-source-offset="-17"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 177;"><span id="cb2-178"><a href="#cb2-178" aria-hidden="true" tabindex="-1"></a>viewof region <span class="op">=</span> Inputs<span class="op">.</span><span class="fu">radio</span>(</span>
+<span id="cb2-179"><a href="#cb2-179" aria-hidden="true" tabindex="-1"></a>  [<span class="st">"right-tail"</span><span class="op">,</span> <span class="st">"left-tail"</span><span class="op">,</span> <span class="st">"two-tail"</span><span class="op">,</span> <span class="st">"middle-area"</span>]<span class="op">,</span></span>
+<span id="cb2-180"><a href="#cb2-180" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">value</span><span class="op">:</span> <span class="st">"right-tail"</span><span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"Region"</span>}</span>
+<span id="cb2-181"><a href="#cb2-181" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-182"><a href="#cb2-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-183"><a href="#cb2-183" aria-hidden="true" tabindex="-1"></a>viewof statistic <span class="op">=</span> Inputs<span class="op">.</span><span class="fu">range</span>(</span>
+<span id="cb2-184"><a href="#cb2-184" aria-hidden="true" tabindex="-1"></a>  [<span class="op">-</span><span class="dv">3</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">,</span> </span>
+<span id="cb2-185"><a href="#cb2-185" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">value</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span> <span class="dt">step</span><span class="op">:</span> <span class="fl">0.0001</span><span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"Statistic"</span>}</span>
+<span id="cb2-186"><a href="#cb2-186" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-187"><a href="#cb2-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-188"><a href="#cb2-188" aria-hidden="true" tabindex="-1"></a>viewof area <span class="op">=</span> Inputs<span class="op">.</span><span class="fu">range</span>(</span>
+<span id="cb2-189"><a href="#cb2-189" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">0</span><span class="op">,</span> <span class="dv">1</span>]<span class="op">,</span> </span>
+<span id="cb2-190"><a href="#cb2-190" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">value</span><span class="op">:</span> <span class="fl">0.5</span><span class="op">,</span> <span class="dt">step</span><span class="op">:</span> <span class="fl">0.0001</span><span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"Area"</span>}</span>
+<span id="cb2-191"><a href="#cb2-191" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-192"><a href="#cb2-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-193"><a href="#cb2-193" aria-hidden="true" tabindex="-1"></a>viewof calculate <span class="op">=</span> Inputs<span class="op">.</span><span class="fu">button</span>([</span>
+<span id="cb2-194"><a href="#cb2-194" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Statistic"</span><span class="op">,</span> value <span class="kw">=&gt;</span> <span class="st">"statistic"</span>]<span class="op">,</span></span>
+<span id="cb2-195"><a href="#cb2-195" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Area"</span><span class="op">,</span> value <span class="kw">=&gt;</span> <span class="st">"area"</span>]</span>
+<span id="cb2-196"><a href="#cb2-196" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span> </span>
+<span id="cb2-197"><a href="#cb2-197" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">label</span><span class="op">:</span> <span class="st">"Calculate"</span><span class="op">,</span> <span class="dt">value</span><span class="op">:</span> <span class="st">"Area"</span>}</span>
+<span id="cb2-198"><a href="#cb2-198" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-199"><a href="#cb2-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-200"><a href="#cb2-200" aria-hidden="true" tabindex="-1"></a><span class="fu">print_input</span>(statistic<span class="op">,</span> area<span class="op">,</span> region<span class="op">,</span> calculate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-1" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-2" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-3" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-4" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-5" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+<div class="sourceCode cell-code hidden" id="cb3" data-startfrom="201" data-source-offset="-531"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 200;"><span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a><span class="fu">print_output</span>(statistic<span class="op">,</span> area<span class="op">,</span> region<span class="op">,</span> calculate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-6" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+<div class="sourceCode cell-code hidden" id="cb4" data-startfrom="202" data-source-offset="-580"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 201;"><span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a><span class="fu">print_R</span>(statistic<span class="op">,</span> area<span class="op">,</span> region<span class="op">,</span> calculate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-7" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+<div class="sourceCode cell-code hidden" id="cb5" data-startfrom="203" data-source-offset="-624"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 202;"><span id="cb5-203"><a href="#cb5-203" aria-hidden="true" tabindex="-1"></a><span class="fu">print_py</span>(statistic<span class="op">,</span> area<span class="op">,</span> region<span class="op">,</span> calculate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-2-8" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script type="ojs-module-contents">
+{"contents":[{"methodName":"interpret","cellName":"ojs-cell-1","inline":false,"source":"//| echo: false\nfunction bisection(f, x1, x2, releps, abseps) {\n    var f1 = Math.sign(f(x1));\n    var f2 = Math.sign(f(x2));\n    var x = 0.5*(x1+x2);\n    var fx = f(x);\n    while(x2-x1 > abseps && x2-x1 > releps*Math.abs(x) && Math.abs(fx) > abseps) {\n        if (fx*f1 > 0) {\n            x1 = x;\n            f1 = Math.sign(fx);\n        } else {\n            x2 = x;\n            f2 = Math.sign(fx);\n        }\n        x = 0.5*(x1+x2);\n        fx = f(x);\n    }\n    return x;\n}\n\nfunction pnorm(z) {\n  var x = Math.SQRT1_2*Math.abs(z);\n  // compute erfc(x) using an approximation formula (max rel error = 1.2e-7)\n  // see https://en.wikipedia.org/wiki/Error_function#Numerical_approximation\n  var t = 1.0/(1+0.5*x);\n  var t2 = t*t;\n  var t3 = t2*t; \n  var t4 = t2*t2;\n  var t5 = t2*t3; \n  var t6 = t3*t3; \n  var t7 = t3*t4;\n  var t8 = t4*t4;\n  var t9 = t4*t5;\n  var tau = -x*x - 1.26551223 + 1.00002368*t + 0.37409196*t2 + 0.09678418*t3 - 0.18628806*t4 + 0.27886807*t5 - 1.13520398*t6 + 1.48851587*t7 - 0.82215223*t8 + 0.17087277*t9;\n\n  var p = 0.5*t*Math.exp(tau);\n\n  if (z < 0) {\n     p = 1-p;\n  }\n\n  return p;\n}\n\nfunction qnorm(p) {\n  if (p==0.5) {\n     return 0;\n  }\n\n  if (p < 1e-300 || p > 1-3e-16) {\n    return 1/0;\n  }\n\n  // Set relative accuracy parameter \n  var eps = 1.e-6;\n  \n  var pval = p;\n  if (p > 0.5) {\n     pval = 1-p;\n  }\n\n  // Start bisection search...\n  // Set the upper and lower bound of z according to the inequalities\n  // of erfc function described in \n  // https://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions :\n  // erfc(x) \\leq exp(-x^2)  for x>0, and \n  // erfc(x) \\geq sqrt(2e/pi) sqrt(b-1)/b exp(-b x^2)  for x>0 and b>1 \n  // The lower bound below comes from setting b=2.\n  // Upper bound is multiplied by a safety factor 1.01; \n  // lower bound is multiplied by a safety factor 0.99.\n  var sqrt_2pioe = 1.520346901066281;\n  var min_arg = 2*pval*sqrt_2pioe;\n  var minz = 0.0;\n  if (min_arg < 1.0) {\n     minz = 0.99*Math.sqrt( -Math.log(min_arg) );\n  }\n  var maxz = 1.01*Math.sqrt( -2*Math.log(2*pval) );\n  var fun = function(z) {return pnorm(z) - pval;}\n  var z = bisection(fun, minz,maxz, eps, 0);\n  if (p > 0.5) {z = -z;}\n  return z;\n}\n\nfunction calc_outputs(s, a, reg, calc) {\n  if (reg == \"right-tail\") {\n    var area = pnorm(s);\n    var stat = qnorm(a);\n    var R_s2area = \"pnorm(\"+String(-Math.abs(s))+\") OR pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm(\"+String(a)+\") OR qnorm(\"+String(a)+\", lower.tail=FALSE)\"\n    var py_s2area = \"1 - norm.cdf(\"+String(s)+\") OR norm.sf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(1 - \"+String(a)+\") OR norm.isf(\"+String(a)+\")\"\n  } else if (reg == \"left-tail\") {\n    var area = 1-pnorm(s);\n    var stat = qnorm(1-a);\n    var R_s2area = \"pnorm(\"+String(s)+\")\"\n    var R_a2stat = \"qnorm(\"+String(a)+\")\"\n    var py_s2area = \"norm.cdf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(\"+String(a)+\")\"\n  } else if (reg == \"two-tail\") {\n    var area = 2*pnorm(s);\n    var stat = qnorm(a);\n    var R_s2area = \"2*pnorm(\"+String(-Math.abs(s))+\") OR 2*pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm(\"+String(a)+\"/2) OR qnorm(\"+String(a)+\"/2, lower.tail=FALSE)\"\n    var py_s2area = \"2*(1 - norm.cdf(\"+String(Math.abs(s))+\") OR 2*(norm.sf(\"+String(Math.abs(s))+\"))\"\n    var py_a2stat = \"norm.ppf(1 - \"+String(a)+\"/2) OR norm.isf(\"+String(a)+\"/2)\"\n  } else {\n    var area = 1 - 2*pnorm(s);\n    var stat = qnorm(a)\n    var R_s2area = \"1 - 2*pnorm(\"+String(-Math.abs(s))+\") OR 1 - 2*pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm((1 - \"+String(a)+\")/2) OR qnorm((1 - \"+String(a)+\")/2, lower.tail=FALSE)\"\n    var py_s2area = \"1 - 2*norm.cdf(\"+String(-Math.abs(s))+\") OR 1 - 2*norm.sf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(1 - (1 - \"+String(a)+\")/2) OR norm.isf((1 - \"+String(a)+\")/2)\"\n  }\n  var area = Number(area.toFixed(4))\n  var stat = Number(stat.toFixed(4))\n  var py_s2area = py_s2area + \" (from scipy.stats import norm)\"\n  var py_a2stat = py_a2stat + \" (from scipy.stats import norm)\"\n  return [area, stat, R_s2area, R_a2stat, py_s2area, py_a2stat]\n}\n\nfunction print_input(s, a, reg, calc) {\n  if (calc == \"statistic\") {\n    var output = \"[Input] \" + reg + \" Area = \" + String(a)\n  } else {\n    var output = \"[Input] Statistic = \" + String(s)\n  }\n  return output\n}\n\nfunction print_output(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var area = outputs[0]\n  var stat = outputs[1]\n  if (calc == \"statistic\") {\n    var output = \"[Output] Statistic = \" + String(stat)\n  } else {\n    var output = \"[Output] \" + reg + \" Area = \" + String(area)\n  }\n  return output\n}\n\nfunction print_R(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var R_s2area = outputs[2]\n  var R_a2stat = outputs[3]\n  if (calc == \"statistic\") {\n    var output = \"[R] \" + R_a2stat\n  } else {\n    var output = \"[R] \" + R_s2area\n  }\n  return output\n}\n\nfunction print_py(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var R_s2area = outputs[4]\n  var R_a2stat = outputs[5]\n  if (calc == \"statistic\") {\n    var output = \"[Python] \" + R_a2stat\n  } else {\n    var output = \"[Python] \" + R_s2area\n  }\n  return output\n}\n"},{"methodName":"interpret","cellName":"ojs-cell-2","inline":false,"source":"//| echo: false\n\nviewof region = Inputs.radio(\n  [\"right-tail\", \"left-tail\", \"two-tail\", \"middle-area\"],\n  {value: \"right-tail\", label: \"Region\"}\n)\n\nviewof statistic = Inputs.range(\n  [-3, 3], \n  {value: 1, step: 0.0001, label: \"Statistic\"}\n)\n\nviewof area = Inputs.range(\n  [0, 1], \n  {value: 0.5, step: 0.0001, label: \"Area\"}\n)\n\nviewof calculate = Inputs.button([\n    [\"Statistic\", value => \"statistic\"],\n    [\"Area\", value => \"area\"]\n  ], \n  {label: \"Calculate\", value: \"Area\"}\n)\n\nprint_input(statistic, area, region, calculate)\nprint_output(statistic, area, region, calculate)\nprint_R(statistic, area, region, calculate)\nprint_py(statistic, area, region, calculate)\n"},{"methodName":"interpretQuiet","source":"shinyInput('region')"},{"methodName":"interpretQuiet","source":"shinyInput('statistic')"},{"methodName":"interpretQuiet","source":"shinyInput('area')"},{"methodName":"interpretQuiet","source":"shinyInput('calculate')"}]}
+</script>
+<script type="module">
+window._ojs.paths.runtimeToDoc = "../..";
+window._ojs.paths.runtimeToRoot = "../..";
+window._ojs.paths.docToRoot = "";
+window._ojs.selfContained = false;
+window._ojs.runtime.interpretFromScriptTags();
+</script>
+<script type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

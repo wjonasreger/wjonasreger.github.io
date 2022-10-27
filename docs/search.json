@@ -1,10 +1,38 @@
 [
   {
-    "objectID": "projects.html",
-    "href": "projects.html",
-    "title": "Projects",
+    "objectID": "projects/korank.html",
+    "href": "projects/korank.html",
+    "title": "KoRank",
     "section": "",
-    "text": "Data Analytics\n\nUnnamed Project _(Coming soon...)_\nMovies on Netflix, Prime Video, Hulu and Disney+ Cluster Analysis\nGas Turbine Carbon Monoxide Emissions\nWalmart Sales During Stormy Weather Analysis\n\n\n\nWebsites\n\nUIUC STAT 100 Course Website\nDiscovering Data Science Course Website\n\n\n\nOther Projects\n\nVisual Statistics Shiny App\nUsing Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State"
+    "text": "Here is a table of 280+ Korean shows ranked from simplest to most complex starting from the top. Language level classifications are estimated by a model. This ranking presumes the learner is familiar with most of the words in the common words set derived from the data. Click on the name of the show to view more interesting information of the show. Click on its vocab set to see the uncommon words used in the show.\n\nKorean Shows Ranked by Vocabulary Potentials\n\n\nRank\nName (E)\nName (K)\nName (O)\nVocab\nLevel\n\n\n\n\n1\n\n\n\n\n\n\n\n2\n\n\n\n\n\n\n\n3"
+  },
+  {
+    "objectID": "projects/korank.html#common-vocabulary-set",
+    "href": "projects/korank.html#common-vocabulary-set",
+    "title": "KoRank",
+    "section": "Common Vocabulary Set",
+    "text": "Common Vocabulary Set\nHere are the 1000 most common vocabulary set defined by frequency over all texts.\nHere are the 1000 most common vocabulary set defined by coverage over all shows.\nVocabulary definitions are retrieved through Papago and/or Google Translate. Note that there may be some errors in definitions as words may be processed incorrectly or word-to-word translations may be insufficient for phrase meanings."
+  },
+  {
+    "objectID": "projects/korank.html#vocabulary-tools",
+    "href": "projects/korank.html#vocabulary-tools",
+    "title": "KoRank",
+    "section": "Vocabulary Tools",
+    "text": "Vocabulary Tools\n\nDictionary/Translations: Naver Dictionary, Papago, Google Translate, Mirinae, Pleco/Anki (maybe?)\nGrammar: Mirinae\nStreaming: Language Reactor with Netflix"
+  },
+  {
+    "objectID": "projects/korank.html#show-analytics",
+    "href": "projects/korank.html#show-analytics",
+    "title": "KoRank",
+    "section": "Show Analytics",
+    "text": "Show Analytics\nPlots for vocabulary contributions…\n\nTotal contribution strength\nMean contribution strength (Penalize longer shows)\nWeighted Mean contribution strength (Another penalty)\nTf-idf fun\nTime series thing?"
+  },
+  {
+    "objectID": "projects/korank.html#acknowledgements",
+    "href": "projects/korank.html#acknowledgements",
+    "title": "KoRank",
+    "section": "Acknowledgements",
+    "text": "Acknowledgements\nThank you to the following individuals for their respective contributions to the KoRank Project:\n\nAbhi Thanvi — Assisted with scraping text data from Netflix and other data from IMDb.\nPaul Holaway — Assisted with mathematical theory for modelling methods used in ranking shows.\nGraded Watching for Advanced Chinese Learners Website — An inspiration for displaying the results of this project as a dashboard tool for Korean language learners."
   },
   {
     "objectID": "projects/hi.html",
@@ -12,5 +40,33 @@
     "title": "Unnamed Project",
     "section": "",
     "text": "It's me.\n\n\nHello, it’s me.\n\nprint(\"Hi.\")\n\nHello, can you hear me?\n\n\nI'm the problem, it's me.\n\n\nHello from the other side.\n\n\nIt's me.\n\n\nHello from the outside.\n\nprint(\"Hi.\")\n\nHello, how are you?\n\n\nI'm the problem, it's me.\n\n\nIt’s so typical of me to talk about myself, I’m sorry\n\n\nIt must be exhausting always rooting for the anti-hero"
+  },
+  {
+    "objectID": "projects.html",
+    "href": "projects.html",
+    "title": "Projects",
+    "section": "",
+    "text": "Data Analytics\n\nUnnamed Project _(Coming soon...)_\nMovies on Netflix, Prime Video, Hulu and Disney+ Cluster Analysis\nGas Turbine Carbon Monoxide Emissions\nWalmart Sales During Stormy Weather Analysis\n\n\n\nWebsites\n\nUIUC STAT 100 Course Website\nDiscovering Data Science Course Website\n\n\n\nOther Projects\n\nVisual Statistics Shiny App\nUsing Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "W. Jonas Reger",
+    "section": "",
+    "text": "I am a self-taught programmer of 15+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, my core interests are Natural Language Processing and Machine Learning.\n\nprint(\"IT'S ME\")\n\n\n\n[1] \"I'M THE PROBLEM, IT'S ME\"\n\n\n\nExperience\nSandia National Laboratories | Albuquerque, NM\nR&D Graduate Virtual Intern | MARTIANS Program | May 2022 — Aug 2022\nDiscovery Partners Institute, University of Illinois at Chicago | Chicago, IL\nData Science Lead Virtual Instructor | Digital Scholars Program | May 2021 — Aug 2021\nUniversity of Illinois at Urbana-Champaign | Champaign, IL\nTeaching Assistant | Statistics Department | Jan 2019 — Current\n\n\nEducation\nUniversity of Illinois at Urbana-Champaign | Champaign, IL\nMS in Statistics | May 2023\nBS in Statistics, Minor in Mathematics | May 2021\nParkland College | Champaign, IL\nAS in Computer Science | May 2018"
+  },
+  {
+    "objectID": "pvalue-calculator.html",
+    "href": "pvalue-calculator.html",
+    "title": "P-Value Calculator",
+    "section": "",
+    "text": "function bisection(f, x1, x2, releps, abseps) {\n    var f1 = Math.sign(f(x1));\n    var f2 = Math.sign(f(x2));\n    var x = 0.5*(x1+x2);\n    var fx = f(x);\n    while(x2-x1 > abseps && x2-x1 > releps*Math.abs(x) && Math.abs(fx) > abseps) {\n        if (fx*f1 > 0) {\n            x1 = x;\n            f1 = Math.sign(fx);\n        } else {\n            x2 = x;\n            f2 = Math.sign(fx);\n        }\n        x = 0.5*(x1+x2);\n        fx = f(x);\n    }\n    return x;\n}\n\nfunction pnorm(z) {\n  var x = Math.SQRT1_2*Math.abs(z);\n  // compute erfc(x) using an approximation formula (max rel error = 1.2e-7)\n  // see https://en.wikipedia.org/wiki/Error_function#Numerical_approximation\n  var t = 1.0/(1+0.5*x);\n  var t2 = t*t;\n  var t3 = t2*t; \n  var t4 = t2*t2;\n  var t5 = t2*t3; \n  var t6 = t3*t3; \n  var t7 = t3*t4;\n  var t8 = t4*t4;\n  var t9 = t4*t5;\n  var tau = -x*x - 1.26551223 + 1.00002368*t + 0.37409196*t2 + 0.09678418*t3 - 0.18628806*t4 + 0.27886807*t5 - 1.13520398*t6 + 1.48851587*t7 - 0.82215223*t8 + 0.17087277*t9;\n\n  var p = 0.5*t*Math.exp(tau);\n\n  if (z < 0) {\n     p = 1-p;\n  }\n\n  return p;\n}\n\nfunction qnorm(p) {\n  if (p==0.5) {\n     return 0;\n  }\n\n  if (p < 1e-300 || p > 1-3e-16) {\n    return 1/0;\n  }\n\n  // Set relative accuracy parameter \n  var eps = 1.e-6;\n  \n  var pval = p;\n  if (p > 0.5) {\n     pval = 1-p;\n  }\n\n  // Start bisection search...\n  // Set the upper and lower bound of z according to the inequalities\n  // of erfc function described in \n  // https://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions :\n  // erfc(x) \\leq exp(-x^2)  for x>0, and \n  // erfc(x) \\geq sqrt(2e/pi) sqrt(b-1)/b exp(-b x^2)  for x>0 and b>1 \n  // The lower bound below comes from setting b=2.\n  // Upper bound is multiplied by a safety factor 1.01; \n  // lower bound is multiplied by a safety factor 0.99.\n  var sqrt_2pioe = 1.520346901066281;\n  var min_arg = 2*pval*sqrt_2pioe;\n  var minz = 0.0;\n  if (min_arg < 1.0) {\n     minz = 0.99*Math.sqrt( -Math.log(min_arg) );\n  }\n  var maxz = 1.01*Math.sqrt( -2*Math.log(2*pval) );\n  var fun = function(z) {return pnorm(z) - pval;}\n  var z = bisection(fun, minz,maxz, eps, 0);\n  if (p > 0.5) {z = -z;}\n  return z;\n}\n\nfunction calc_outputs(s, a, reg, calc) {\n  if (reg == \"right-tail\") {\n    var area = pnorm(s);\n    var stat = qnorm(a);\n    var R_s2area = \"pnorm(\"+String(-Math.abs(s))+\") OR pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm(\"+String(a)+\") OR qnorm(\"+String(a)+\", lower.tail=FALSE)\"\n    var py_s2area = \"1 - norm.cdf(\"+String(s)+\") OR norm.sf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(1 - \"+String(a)+\") OR norm.isf(\"+String(a)+\")\"\n  } else if (reg == \"left-tail\") {\n    var area = 1-pnorm(s);\n    var stat = qnorm(1-a);\n    var R_s2area = \"pnorm(\"+String(s)+\")\"\n    var R_a2stat = \"qnorm(\"+String(a)+\")\"\n    var py_s2area = \"norm.cdf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(\"+String(a)+\")\"\n  } else if (reg == \"two-tail\") {\n    var area = 2*pnorm(s);\n    var stat = qnorm(a);\n    var R_s2area = \"2*pnorm(\"+String(-Math.abs(s))+\") OR 2*pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm(\"+String(a)+\"/2) OR qnorm(\"+String(a)+\"/2, lower.tail=FALSE)\"\n    var py_s2area = \"2*(1 - norm.cdf(\"+String(Math.abs(s))+\") OR 2*(norm.sf(\"+String(Math.abs(s))+\"))\"\n    var py_a2stat = \"norm.ppf(1 - \"+String(a)+\"/2) OR norm.isf(\"+String(a)+\"/2)\"\n  } else {\n    var area = 1 - 2*pnorm(s);\n    var stat = qnorm(a)\n    var R_s2area = \"1 - 2*pnorm(\"+String(-Math.abs(s))+\") OR 1 - 2*pnorm(\"+String(Math.abs(s))+\", lower.tail=FALSE)\"\n    var R_a2stat = \"-qnorm((1 - \"+String(a)+\")/2) OR qnorm((1 - \"+String(a)+\")/2, lower.tail=FALSE)\"\n    var py_s2area = \"1 - 2*norm.cdf(\"+String(-Math.abs(s))+\") OR 1 - 2*norm.sf(\"+String(s)+\")\"\n    var py_a2stat = \"norm.ppf(1 - (1 - \"+String(a)+\")/2) OR norm.isf((1 - \"+String(a)+\")/2)\"\n  }\n  var area = Number(area.toFixed(4))\n  var stat = Number(stat.toFixed(4))\n  var py_s2area = py_s2area + \" (from scipy.stats import norm)\"\n  var py_a2stat = py_a2stat + \" (from scipy.stats import norm)\"\n  return [area, stat, R_s2area, R_a2stat, py_s2area, py_a2stat]\n}\n\nfunction print_input(s, a, reg, calc) {\n  if (calc == \"statistic\") {\n    var output = \"[Input] \" + reg + \" Area = \" + String(a)\n  } else {\n    var output = \"[Input] Statistic = \" + String(s)\n  }\n  return output\n}\n\nfunction print_output(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var area = outputs[0]\n  var stat = outputs[1]\n  if (calc == \"statistic\") {\n    var output = \"[Output] Statistic = \" + String(stat)\n  } else {\n    var output = \"[Output] \" + reg + \" Area = \" + String(area)\n  }\n  return output\n}\n\nfunction print_R(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var R_s2area = outputs[2]\n  var R_a2stat = outputs[3]\n  if (calc == \"statistic\") {\n    var output = \"[R] \" + R_a2stat\n  } else {\n    var output = \"[R] \" + R_s2area\n  }\n  return output\n}\n\nfunction print_py(s, a, reg, calc) {\n  var outputs = calc_outputs(s, a, reg, calc)\n  var R_s2area = outputs[4]\n  var R_a2stat = outputs[5]\n  if (calc == \"statistic\") {\n    var output = \"[Python] \" + R_a2stat\n  } else {\n    var output = \"[Python] \" + R_s2area\n  }\n  return output\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nviewof region = Inputs.radio(\n  [\"right-tail\", \"left-tail\", \"two-tail\", \"middle-area\"],\n  {value: \"right-tail\", label: \"Region\"}\n)\n\nviewof statistic = Inputs.range(\n  [-3, 3], \n  {value: 1, step: 0.0001, label: \"Statistic\"}\n)\n\nviewof area = Inputs.range(\n  [0, 1], \n  {value: 0.5, step: 0.0001, label: \"Area\"}\n)\n\nviewof calculate = Inputs.button([\n    [\"Statistic\", value => \"statistic\"],\n    [\"Area\", value => \"area\"]\n  ], \n  {label: \"Calculate\", value: \"Area\"}\n)\n\nprint_input(statistic, area, region, calculate)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nprint_output(statistic, area, region, calculate)\n\n\n\n\n\n\n\nprint_R(statistic, area, region, calculate)\n\n\n\n\n\n\n\nprint_py(statistic, area, region, calculate)"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "Resume",
+    "section": "",
+    "text": "Projects & Publications\nUnsupervised Learning & Clustering Algorithms\n\nUnsupervised Learning: Popular Streaming Platforms\n\nProcessed a mixed variable dataset using Pandas for clustering analysis and performed exploratory data analysis to find correlations for features such as Genre, Age, Country, IMDb Score, etc.\nLeveraged Agglomerative Hierarchical Clustering and K-Modes Clustering to identify targeted consumer groups across streaming platforms like Amazon Prime Video and Netflix based on available films and viewer ratings\nVisualized clusterability and accuracy of target group clusters formed by each algorithm using evaluation metrics such as cophenetic correlation coefficient, t-SNE plots and average silhouette scores/plots\n\n\n\n\nExperience\nSandia National Laboratories — Albuquerque, NM\n\nR&D Graduate Virtual Intern — MARTIANS Program\n\nInvestigated social media data to ascertain evidence of social influence strategy\nLeveraged Python and PushShift API wrappers to aggregate data from social media sites\nUtilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis\nDeveloped Random Forest and Deep Neural Network models for predicting user engagement\n\n\nDiscovery Partners Institute, University of Illinois at Chicago — Chicago, IL\n\nData Science Lead Virtual Instructor — Digital Scholars Program\n\nDesigned and instructed \"Discovering Data Science\" course for a high school summer STEM program\nTaught data science topics in programming with Python, statistics, ethics, and real-world applications\nGuided students through data analysis projects using Chicago data, to discover something about their community\n\n\nUniversity of Illinois at Urbana-Champaign — Urbana, IL\n\nTeaching Assistant — Statistics Department\n\nFacilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics\nWrote and audited course materials for course development and student assessment using Python/R and GitHub\nSupported diverse students in data science research projects for the Blackwell Summer Scholars Program\nDesigned and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and education materials [https://stat100website.web.illinois.edu]\n\n\n\n\nEducation\n\nUniversity of Illinois at Urbana-Champaign\n\nMaster of Science in Statistics — 3.93/4.00 — May 2023\nBachelor of Science in Statistics, Minor in Mathematics — 3.56/4.00 — May 2021 — Highest Distinction\n\nParkland College\n\nAssociate of Science in Computer Science — 3.32/4.00 — May 2018"
   }
 ]
