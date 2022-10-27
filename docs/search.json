@@ -39,6 +39,34 @@
     "href": "projects/korank.html",
     "title": "KoRank",
     "section": "",
-    "text": "A Semi-Supervised Approach to Ranking Korean Shows by Linguistic Level"
+    "text": "Here is a table of 280+ Korean shows ranked from simplest to most complex starting from the top. Language level classifications are estimated by a model. This ranking presumes the learner is familiar with most of the words in the common words set derived from the data. Click on the name of the show to view more interesting information of the show. Click on its vocab set to see the uncommon words used in the show.\n\nKorean Shows Ranked by Vocabulary Potentials\n\n\nRank\nName (E)\nName (K)\nName (O)\nVocab\nLevel\n\n\n\n\n1\n\n\n\n\n\n\n\n2\n\n\n\n\n\n\n\n3"
+  },
+  {
+    "objectID": "projects/korank.html#acknowledgements",
+    "href": "projects/korank.html#acknowledgements",
+    "title": "KoRank",
+    "section": "Acknowledgements",
+    "text": "Acknowledgements\nThank you to the following individuals for their respective contributions to the KoRank Project:\n\nAbhi Thanvi — Assisted with scraping text data from Netflix and other data from IMDb.\nPaul Holaway — Assisted with mathematical theory for modelling methods used in ranking shows.\nGraded Watching for Advanced Chinese Learners Website — An inspiration for displaying the results of this project as a dashboard tool for Korean language learners."
+  },
+  {
+    "objectID": "projects/korank.html#common-vocabulary-set",
+    "href": "projects/korank.html#common-vocabulary-set",
+    "title": "KoRank",
+    "section": "Common Vocabulary Set",
+    "text": "Common Vocabulary Set\nHere are the 1000 most common vocabulary set defined by frequency over all texts.\nHere are the 1000 most common vocabulary set defined by coverage over all shows.\nVocabulary definitions are retrieved through Papago and/or Google Translate. Note that there may be some errors in definitions as words may be processed incorrectly or word-to-word translations may be insufficient for phrase meanings."
+  },
+  {
+    "objectID": "projects/korank.html#vocabulary-tools",
+    "href": "projects/korank.html#vocabulary-tools",
+    "title": "KoRank",
+    "section": "Vocabulary Tools",
+    "text": "Vocabulary Tools\n\nDictionary/Translations: Naver Dictionary, Papago, Google Translate, Mirinae, Pleco/Anki (maybe?)\nGrammar: Mirinae\nStreaming: Language Reactor with Netflix"
+  },
+  {
+    "objectID": "projects/korank.html#show-analytics",
+    "href": "projects/korank.html#show-analytics",
+    "title": "KoRank",
+    "section": "Show Analytics",
+    "text": "Show Analytics\nPlots for vocabulary contributions…\n\nTotal contribution strength\nMean contribution strength (Penalize longer shows)\nWeighted Mean contribution strength (Another penalty)\nTf-idf fun\nTime series thing?"
   }
 ]

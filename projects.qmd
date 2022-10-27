@@ -4,7 +4,7 @@ title: "Projects"
 
 # Natural Language Processing
 
--   [KoRank --- Ranking Korean Shows by Linguistic Level](projects/korank.qmd)
+-   KoRank --- Ranking Korean Shows by Linguistic Level
 
 -   KONG Project *(Coming Soon...)*
 
@@ -30,4 +30,4 @@ title: "Projects"
 
 -   [Visual Statistics Shiny App](https://h550e6-wjonasreger.shinyapps.io/rrvisapp/)
 
--   [Using Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State](assets/docs/publications/ACS Internship Article (2020 reformat).pdf)
+-   [Using Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State](assets/docs/publications/ACS%20Internship%20Article%20(2020%20reformat).pdf)
