@@ -1,0 +1,7 @@
+---
+title: "KoRank"
+---
+
+# *Coming Soon...*
+
+**A Semi-Supervised Approach to Ranking Korean Shows by Linguistic Level**

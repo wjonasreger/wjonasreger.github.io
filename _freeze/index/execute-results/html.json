@@ -1,0 +1,14 @@
+{
+  "hash": "7f786f3987a211b5e4d1df6f95c0672e",
+  "result": {
+    "markdown": "---\ntitle: \"W. Jonas Reger\"\nimage: \"assets/images/profile.jpg\"\nabout:\n  template: \"solana\"\n---\n\nMy name is Jonas. I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as a Teaching Assistant and Instructor in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.\n\nI am a self-taught programmer of 15+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, **my core interests are Natural Language Processing and Machine Learning**.\n\n::: {.cell}\n\n```{.r .cell-code}\nprint(\"IT'S ME\")\n```\n:::\n\n::: {.cell}\n::: {.cell-output .cell-output-stdout}\n```\n[1] \"I'M THE PROBLEM, IT'S ME\"\n```\n:::\n:::\n\n# Experience\n\n**Sandia National Laboratories** \\| Albuquerque, NM\n\nR&D Graduate Virtual Intern \\| MARTIANS Program \\| May 2022 --- Aug 2022\n\n**Discovery Partners Institute, University of Illinois at Chicago** \\| Chicago, IL\n\nData Science Lead Virtual Instructor \\| Digital Scholars Program \\| May 2021 --- Aug 2021\n\n**University of Illinois at Urbana-Champaign** \\| Champaign, IL\n\nTeaching Assistant \\| Statistics Department \\| Jan 2019 --- Current\n\n# Education\n\n**University of Illinois at Urbana-Champaign** \\| Champaign, IL\n\nMS in Statistics \\| May 2023\n\nBS in Statistics, Minor in Mathematics \\| May 2021\n\n**Parkland College** \\| Champaign, IL\n\nAS in Computer Science \\| May 2018",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": null
+  }
+}

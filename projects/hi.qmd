@@ -1,0 +1,52 @@
+---
+title: "Unnamed Project"
+---
+
+## Nothing to show here yet, but hopefully you can enjoy this ;)
+
+```{python}
+#| echo: false
+print("It's me.")
+```
+
+**Hello, it's me.**
+
+```{python}
+#| eval: false
+print("Hi.")
+```
+
+**Hello, can you hear me?**
+
+```{python}
+#| echo: false
+print("I'm the problem, it's me.")
+```
+
+**Hello from the other side.**
+
+```{python}
+#| echo: false
+print("It's me.")
+```
+
+**Hello from the outside.**
+
+```{python}
+#| eval: false
+print("Hi.")
+```
+
+**Hello, how are you?**
+
+```{python}
+#| echo: false
+print("I'm the problem, it's me.")
+```
+
+**It's so typical of me to talk about myself, I'm sorry**
+
+```{python}
+#| echo: false
+print("It must be exhausting always rooting for the anti-hero")
+```

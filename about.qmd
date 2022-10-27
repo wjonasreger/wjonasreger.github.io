@@ -1,9 +1,73 @@
 ---
-title: "About"
+title: "Resume"
 ---
 
-About this site
+# Skills
 
-```{r}
-1 + 1
-```
+-   Statistical Machine Learning (Supervised & Unsupervised), Natural Language Processing, Data Management, Statistical Computing (Simulation & Approximation), Statistical Data Analysis, Programming, Mathematical Theory.
+
+-   Python: (Jupyter, NumPy, Pandas, Scikit-Learn, TensorFlow, PyTorch, NLTK, Seaborn, BeautifulSoup, discord.py)
+
+-   R: (Rstudio, ggplot2, dplyr, caret, tidyverse, purr, shiny, plotly)
+
+-   Other: (Jekyll, Quarto, Git/GitHub, GitHub Pages, C++, Java, SQL, Javascript, HTML, CSS)
+
+# Projects & Publications
+
+**Unsupervised Learning & Clustering Algorithms**
+
+-   Unsupervised Learning: Popular Streaming Platforms
+
+    -   Processed a mixed variable dataset using Pandas for clustering analysis and performed exploratory data analysis to find correlations for features such as Genre, Age, Country, IMDb Score, etc.
+
+    -   Leveraged Agglomerative Hierarchical Clustering and K-Modes Clustering to identify targeted consumer groups across streaming platforms like Amazon Prime Video and Netflix based on available films and viewer ratings
+
+    -   Visualized clusterability and accuracy of target group clusters formed by each algorithm using evaluation metrics such as cophenetic correlation coefficient, t-SNE plots and average silhouette scores/plots
+
+# Experience
+
+Sandia National Laboratories --- Albuquerque, NM
+
+-   R&D Graduate Virtual Intern --- MARTIANS Program
+
+    -   Investigated social media data to ascertain evidence of social influence strategy
+
+    -   Leveraged Python and PushShift API wrappers to aggregate data from social media sites
+
+    -   Utilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis
+
+    -   Developed Random Forest and Deep Neural Network models for predicting user engagement
+
+Discovery Partners Institute, University of Illinois at Chicago --- Chicago, IL
+
+-   Data Science Lead Virtual Instructor --- Digital Scholars Program
+
+    -   Designed and instructed \"Discovering Data Science\" course for a high school summer STEM program
+
+    -   Taught data science topics in programming with Python, statistics, ethics, and real-world applications
+
+    -   Guided students through data analysis projects using Chicago data, to discover something about their community
+
+University of Illinois at Urbana-Champaign --- Urbana, IL
+
+-   Teaching Assistant --- Statistics Department
+
+    -   Facilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics
+
+    -   Wrote and audited course materials for course development and student assessment using Python/R and GitHub
+
+    -   Supported diverse students in data science research projects for the Blackwell Summer Scholars Program
+
+    -   Designed and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and education materials \[[https://stat100website.web.illinois.edu](https://stat100website.web.illinois.edu/)\]
+
+# Education
+
+-   University of Illinois at Urbana-Champaign
+
+    -   Master of Science in Statistics --- 3.93/4.00 --- May 2023
+
+    -   Bachelor of Science in Statistics, Minor in Mathematics --- 3.56/4.00 --- May 2021 --- Highest Distinction
+
+-   Parkland College
+
+    -   Associate of Science in Computer Science --- 3.32/4.00 --- May 2018

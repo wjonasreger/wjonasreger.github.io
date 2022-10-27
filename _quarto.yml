@@ -2,20 +2,30 @@ project:
   type: website
   output-dir: docs
 
+execute:
+  freeze: auto
+
 website:
-  title: "site"
+  title: "W. Jonas Reger"
+  favicon: assets/images/masthead.png
+  search:
+    location: navbar
+    type: overlay
   navbar:
     background: primary
     left:
       - href: index.qmd
         text: Home
       - about.qmd
+      - projects.qmd
+      - pvalue-calculator.qmd
 
 format:
   html:
-    theme: cosmo
+    theme:
+      # dark: darkly
+      light: flatly
     css: styles.css
     toc: true
 
 editor: visual
-

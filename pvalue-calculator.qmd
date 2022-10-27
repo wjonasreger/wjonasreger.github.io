@@ -1,0 +1,203 @@
+---
+title: "P-Value Calculator"
+---
+
+# Normal Distribution
+
+```{ojs}
+//| echo: false
+function bisection(f, x1, x2, releps, abseps) {
+    var f1 = Math.sign(f(x1));
+    var f2 = Math.sign(f(x2));
+    var x = 0.5*(x1+x2);
+    var fx = f(x);
+    while(x2-x1 > abseps && x2-x1 > releps*Math.abs(x) && Math.abs(fx) > abseps) {
+        if (fx*f1 > 0) {
+            x1 = x;
+            f1 = Math.sign(fx);
+        } else {
+            x2 = x;
+            f2 = Math.sign(fx);
+        }
+        x = 0.5*(x1+x2);
+        fx = f(x);
+    }
+    return x;
+}
+
+function pnorm(z) {
+  var x = Math.SQRT1_2*Math.abs(z);
+  // compute erfc(x) using an approximation formula (max rel error = 1.2e-7)
+  // see https://en.wikipedia.org/wiki/Error_function#Numerical_approximation
+  var t = 1.0/(1+0.5*x);
+  var t2 = t*t;
+  var t3 = t2*t; 
+  var t4 = t2*t2;
+  var t5 = t2*t3; 
+  var t6 = t3*t3; 
+  var t7 = t3*t4;
+  var t8 = t4*t4;
+  var t9 = t4*t5;
+  var tau = -x*x - 1.26551223 + 1.00002368*t + 0.37409196*t2 + 0.09678418*t3 - 0.18628806*t4 + 0.27886807*t5 - 1.13520398*t6 + 1.48851587*t7 - 0.82215223*t8 + 0.17087277*t9;
+
+  var p = 0.5*t*Math.exp(tau);
+
+  if (z < 0) {
+     p = 1-p;
+  }
+
+  return p;
+}
+
+function qnorm(p) {
+  if (p==0.5) {
+     return 0;
+  }
+
+  if (p < 1e-300 || p > 1-3e-16) {
+    return 1/0;
+  }
+
+  // Set relative accuracy parameter 
+  var eps = 1.e-6;
+  
+  var pval = p;
+  if (p > 0.5) {
+     pval = 1-p;
+  }
+
+  // Start bisection search...
+  // Set the upper and lower bound of z according to the inequalities
+  // of erfc function described in 
+  // https://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions :
+  // erfc(x) \leq exp(-x^2)  for x>0, and 
+  // erfc(x) \geq sqrt(2e/pi) sqrt(b-1)/b exp(-b x^2)  for x>0 and b>1 
+  // The lower bound below comes from setting b=2.
+  // Upper bound is multiplied by a safety factor 1.01; 
+  // lower bound is multiplied by a safety factor 0.99.
+  var sqrt_2pioe = 1.520346901066281;
+  var min_arg = 2*pval*sqrt_2pioe;
+  var minz = 0.0;
+  if (min_arg < 1.0) {
+     minz = 0.99*Math.sqrt( -Math.log(min_arg) );
+  }
+  var maxz = 1.01*Math.sqrt( -2*Math.log(2*pval) );
+  var fun = function(z) {return pnorm(z) - pval;}
+  var z = bisection(fun, minz,maxz, eps, 0);
+  if (p > 0.5) {z = -z;}
+  return z;
+}
+
+function calc_outputs(s, a, reg, calc) {
+  if (reg == "right-tail") {
+    var area = pnorm(s);
+    var stat = qnorm(a);
+    var R_s2area = "pnorm("+String(-Math.abs(s))+") OR pnorm("+String(Math.abs(s))+", lower.tail=FALSE)"
+    var R_a2stat = "-qnorm("+String(a)+") OR qnorm("+String(a)+", lower.tail=FALSE)"
+    var py_s2area = "1 - norm.cdf("+String(s)+") OR norm.sf("+String(s)+")"
+    var py_a2stat = "norm.ppf(1 - "+String(a)+") OR norm.isf("+String(a)+")"
+  } else if (reg == "left-tail") {
+    var area = 1-pnorm(s);
+    var stat = qnorm(1-a);
+    var R_s2area = "pnorm("+String(s)+")"
+    var R_a2stat = "qnorm("+String(a)+")"
+    var py_s2area = "norm.cdf("+String(s)+")"
+    var py_a2stat = "norm.ppf("+String(a)+")"
+  } else if (reg == "two-tail") {
+    var area = 2*pnorm(s);
+    var stat = qnorm(a);
+    var R_s2area = "2*pnorm("+String(-Math.abs(s))+") OR 2*pnorm("+String(Math.abs(s))+", lower.tail=FALSE)"
+    var R_a2stat = "-qnorm("+String(a)+"/2) OR qnorm("+String(a)+"/2, lower.tail=FALSE)"
+    var py_s2area = "2*(1 - norm.cdf("+String(Math.abs(s))+") OR 2*(norm.sf("+String(Math.abs(s))+"))"
+    var py_a2stat = "norm.ppf(1 - "+String(a)+"/2) OR norm.isf("+String(a)+"/2)"
+  } else {
+    var area = 1 - 2*pnorm(s);
+    var stat = qnorm(a)
+    var R_s2area = "1 - 2*pnorm("+String(-Math.abs(s))+") OR 1 - 2*pnorm("+String(Math.abs(s))+", lower.tail=FALSE)"
+    var R_a2stat = "-qnorm((1 - "+String(a)+")/2) OR qnorm((1 - "+String(a)+")/2, lower.tail=FALSE)"
+    var py_s2area = "1 - 2*norm.cdf("+String(-Math.abs(s))+") OR 1 - 2*norm.sf("+String(s)+")"
+    var py_a2stat = "norm.ppf(1 - (1 - "+String(a)+")/2) OR norm.isf((1 - "+String(a)+")/2)"
+  }
+  var area = Number(area.toFixed(4))
+  var stat = Number(stat.toFixed(4))
+  var py_s2area = py_s2area + " (from scipy.stats import norm)"
+  var py_a2stat = py_a2stat + " (from scipy.stats import norm)"
+  return [area, stat, R_s2area, R_a2stat, py_s2area, py_a2stat]
+}
+
+function print_input(s, a, reg, calc) {
+  if (calc == "statistic") {
+    var output = "[Input] " + reg + " Area = " + String(a)
+  } else {
+    var output = "[Input] Statistic = " + String(s)
+  }
+  return output
+}
+
+function print_output(s, a, reg, calc) {
+  var outputs = calc_outputs(s, a, reg, calc)
+  var area = outputs[0]
+  var stat = outputs[1]
+  if (calc == "statistic") {
+    var output = "[Output] Statistic = " + String(stat)
+  } else {
+    var output = "[Output] " + reg + " Area = " + String(area)
+  }
+  return output
+}
+
+function print_R(s, a, reg, calc) {
+  var outputs = calc_outputs(s, a, reg, calc)
+  var R_s2area = outputs[2]
+  var R_a2stat = outputs[3]
+  if (calc == "statistic") {
+    var output = "[R] " + R_a2stat
+  } else {
+    var output = "[R] " + R_s2area
+  }
+  return output
+}
+
+function print_py(s, a, reg, calc) {
+  var outputs = calc_outputs(s, a, reg, calc)
+  var R_s2area = outputs[4]
+  var R_a2stat = outputs[5]
+  if (calc == "statistic") {
+    var output = "[Python] " + R_a2stat
+  } else {
+    var output = "[Python] " + R_s2area
+  }
+  return output
+}
+```
+
+```{ojs}
+//| echo: false
+
+viewof region = Inputs.radio(
+  ["right-tail", "left-tail", "two-tail", "middle-area"],
+  {value: "right-tail", label: "Region"}
+)
+
+viewof statistic = Inputs.range(
+  [-3, 3], 
+  {value: 1, step: 0.0001, label: "Statistic"}
+)
+
+viewof area = Inputs.range(
+  [0, 1], 
+  {value: 0.5, step: 0.0001, label: "Area"}
+)
+
+viewof calculate = Inputs.button([
+    ["Statistic", value => "statistic"],
+    ["Area", value => "area"]
+  ], 
+  {label: "Calculate", value: "Area"}
+)
+
+print_input(statistic, area, region, calculate)
+print_output(statistic, area, region, calculate)
+print_R(statistic, area, region, calculate)
+print_py(statistic, area, region, calculate)
+```

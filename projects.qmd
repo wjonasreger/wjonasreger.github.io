@@ -1,0 +1,33 @@
+---
+title: "Projects"
+---
+
+# Natural Language Processing
+
+-   [KoRank --- Ranking Korean Shows by Linguistic Level](projects/korank.qmd)
+
+-   KONG Project *(Coming Soon...)*
+
+-   VCA Project *(Coming Soon...)*
+
+# Data Analytics
+
+-   [Unnamed Project \_(Coming soon\...)\_](projects/hi.qmd)
+
+-   [Movies on Netflix, Prime Video, Hulu and Disney+ Cluster Analysis](https://github.com/wjonasreger/STAT430_FinalProject)
+
+-   [Gas Turbine Carbon Monoxide Emissions](https://github.com/wjonasreger/STAT443_FinalProject)
+
+-   [Walmart Sales During Stormy Weather Analysis](assets/docs/publications/walmart_425_outline.pdf)
+
+# Websites
+
+-   [UIUC STAT 100 Course Website](https://stat100website.web.illinois.edu)
+
+-   [Discovering Data Science Course Website](https://wjonasreger.github.io/DigitalScholars_DataScience/)
+
+# Other Projects
+
+-   [Visual Statistics Shiny App](https://h550e6-wjonasreger.shinyapps.io/rrvisapp/)
+
+-   [Using Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State](assets/docs/publications/ACS Internship Article (2020 reformat).pdf)

@@ -1,11 +1,44 @@
 ---
-title: "site"
+title: "W. Jonas Reger"
+image: "assets/images/profile.jpg"
+about:
+  template: "solana"
 ---
 
-This is a Quarto website.
+My name is Jonas. I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as a Teaching Assistant and Instructor in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+I am a self-taught programmer of 15+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, **my core interests are Natural Language Processing and Machine Learning**.
 
-```{r}
-1 + 1
+```{r, eval=FALSE}
+print("IT'S ME")
 ```
+
+```{r, echo=FALSE}
+print("I'M THE PROBLEM, IT'S ME")
+```
+
+# Experience
+
+**Sandia National Laboratories** \| Albuquerque, NM
+
+R&D Graduate Virtual Intern \| MARTIANS Program \| May 2022 --- Aug 2022
+
+**Discovery Partners Institute, University of Illinois at Chicago** \| Chicago, IL
+
+Data Science Lead Virtual Instructor \| Digital Scholars Program \| May 2021 --- Aug 2021
+
+**University of Illinois at Urbana-Champaign** \| Champaign, IL
+
+Teaching Assistant \| Statistics Department \| Jan 2019 --- Current
+
+# Education
+
+**University of Illinois at Urbana-Champaign** \| Champaign, IL
+
+MS in Statistics \| May 2023
+
+BS in Statistics, Minor in Mathematics \| May 2021
+
+**Parkland College** \| Champaign, IL
+
+AS in Computer Science \| May 2018
