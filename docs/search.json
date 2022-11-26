@@ -1,59 +1,17 @@
 [
   {
-    "objectID": "projects/korank.html",
-    "href": "projects/korank.html",
-    "title": "KoRank",
-    "section": "",
-    "text": "Here is a table of 280+ Korean shows ranked from simplest to most complex starting from the top. Language level classifications are estimated by a model. This ranking presumes the learner is familiar with most of the words in the common words set derived from the data. Click on the name of the show to view more interesting information of the show. Click on its vocab set to see the uncommon words used in the show.\n\nKorean Shows Ranked by Vocabulary Potentials\n\n\nRank\nName (E)\nName (K)\nName (O)\nVocab\nLevel\n\n\n\n\n1\n\n\n\n\n\n\n\n2\n\n\n\n\n\n\n\n3"
-  },
-  {
-    "objectID": "projects/korank.html#common-vocabulary-set",
-    "href": "projects/korank.html#common-vocabulary-set",
-    "title": "KoRank",
-    "section": "Common Vocabulary Set",
-    "text": "Common Vocabulary Set\nHere are the 1000 most common vocabulary set defined by frequency over all texts.\nHere are the 1000 most common vocabulary set defined by coverage over all shows.\nVocabulary definitions are retrieved through Papago and/or Google Translate. Note that there may be some errors in definitions as words may be processed incorrectly or word-to-word translations may be insufficient for phrase meanings."
-  },
-  {
-    "objectID": "projects/korank.html#vocabulary-tools",
-    "href": "projects/korank.html#vocabulary-tools",
-    "title": "KoRank",
-    "section": "Vocabulary Tools",
-    "text": "Vocabulary Tools\n\nDictionary/Translations: Naver Dictionary, Papago, Google Translate, Mirinae, Pleco/Anki (maybe?)\nGrammar: Mirinae\nStreaming: Language Reactor with Netflix"
-  },
-  {
-    "objectID": "projects/korank.html#show-analytics",
-    "href": "projects/korank.html#show-analytics",
-    "title": "KoRank",
-    "section": "Show Analytics",
-    "text": "Show Analytics\nPlots for vocabulary contributions…\n\nTotal contribution strength\nMean contribution strength (Penalize longer shows)\nWeighted Mean contribution strength (Another penalty)\nTf-idf fun\nTime series thing?"
-  },
-  {
-    "objectID": "projects/korank.html#acknowledgements",
-    "href": "projects/korank.html#acknowledgements",
-    "title": "KoRank",
-    "section": "Acknowledgements",
-    "text": "Acknowledgements\nThank you to the following individuals for their respective contributions to the KoRank Project:\n\nAbhi Thanvi — Assisted with scraping text data from Netflix and other data from IMDb.\nPaul Holaway — Assisted with mathematical theory for modelling methods used in ranking shows.\nGraded Watching for Advanced Chinese Learners Website — An inspiration for displaying the results of this project as a dashboard tool for Korean language learners."
-  },
-  {
-    "objectID": "projects/hi.html",
-    "href": "projects/hi.html",
-    "title": "Unnamed Project",
-    "section": "",
-    "text": "It's me.\n\n\nHello, it’s me.\n\nprint(\"Hi.\")\n\nHello, can you hear me?\n\n\nI'm the problem, it's me.\n\n\nHello from the other side.\n\n\nIt's me.\n\n\nHello from the outside.\n\nprint(\"Hi.\")\n\nHello, how are you?\n\n\nI'm the problem, it's me.\n\n\nIt’s so typical of me to talk about myself, I’m sorry\n\n\nIt must be exhausting always rooting for the anti-hero"
-  },
-  {
     "objectID": "projects.html",
     "href": "projects.html",
     "title": "Projects",
     "section": "",
-    "text": "Data Analytics\n\nMovies on Netflix, Prime Video, Hulu and Disney+ Cluster Analysis\nGas Turbine Carbon Monoxide Emissions\nWalmart Sales During Stormy Weather Analysis\n\n\n\nWebsites\n\nUIUC STAT 100 Course Website\nDiscovering Data Science Course Website\n\n\n\nOther Projects\n\nVisual Statistics Shiny App\nUsing Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State"
+    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Author\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n  \n\n\n\n\nDiscovering Data Science Course Website\n\n\n\n\n\n\n\ndata science\n\n\neducation\n\n\ngithub\n\n\nwebsite\n\n\n\n\nA course website for the Digital Scholars data science pilot course\n\n\n\n\n\n\nJun 1, 2021\n\n\nJonas Reger\n\n\n\n\n\n\n  \n\n\n\n\nMovies on Streaming Platforms Clustering Analysis\n\n\n\n\n\n\n\ndata analysis\n\n\ngithub\n\n\nmachine learning\n\n\npython\n\n\n\n\nA clustering analysis project to detect underlying clustering structures for movies on streaming platforms\n\n\n\n\n\n\nMay 15, 2021\n\n\nJonas Reger\n\n\n\n\n\n\n  \n\n\n\n\nReducing Carbon Monoxide Emissions of Gas Turbines Analysis\n\n\n\n\n\n\n\ndata analysis\n\n\ngithub\n\n\nr\n\n\nstatistics\n\n\n\n\nA statistical consulting project to find interpretable features that contribute to reducing emissions from gas turbines\n\n\n\n\n\n\nMay 15, 2021\n\n\nJonas Reger\n\n\n\n\n\n\n  \n\n\n\n\nSTAT 100 Course Website\n\n\n\n\n\n\n\neducation\n\n\ngithub\n\n\nstatistics\n\n\nwebsite\n\n\n\n\nAn official course website for STAT 100 developed using jekyll and GitHub pages\n\n\n\n\n\n\nJan 1, 2020\n\n\nJonas Reger\n\n\n\n\n\n\n  \n\n\n\n\nWalmart Sales During Stormy Weather Data Analysis\n\n\n\n\n\n\n\ndata analysis\n\n\nmachine learning\n\n\nstatistics\n\n\nr\n\n\n\n\nA data analysis project towards predictions of Walmart sales during stormy weather\n\n\n\n\n\n\nDec 15, 2019\n\n\nJonas Reger\n\n\n\n\n\n\n  \n\n\n\n\nCancer Research Publication for American Cancer Society\n\n\n\n\n\n\n\ncancer research\n\n\ndata analysis\n\n\n\n\nA bio-chem cancer research paper towards identification of a cancer stem cell state\n\n\n\n\n\n\nAug 1, 2013\n\n\nJonas Reger\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
     "href": "index.html",
     "title": "W. Jonas Reger",
     "section": "",
-    "text": "My name is Jonas! I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as an Instructor and Teaching Assistant in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.\nI am a self-taught programmer of 10+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, my core interests are Natural Language Processing and Machine Learning."
+    "text": "Email\n  LinkedIn\n  Github\n\n      \nMy name is Jonas! I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as an Instructor and Teaching Assistant in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.\nI am a self-taught programmer of 10+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, my core interests are Natural Language Processing and Machine Learning."
   },
   {
     "objectID": "pvalue-calculator.html",
@@ -67,7 +25,7 @@
     "href": "about.html",
     "title": "Resume",
     "section": "",
-    "text": "Projects & Publications\nUnsupervised Learning & Clustering Algorithms\n\nUnsupervised Learning: Popular Streaming Platforms\n\nProcessed a mixed variable dataset using Pandas for clustering analysis and performed exploratory data analysis to find correlations for features such as Genre, Age, Country, IMDb Score, etc.\nLeveraged Agglomerative Hierarchical Clustering and K-Modes Clustering to identify targeted consumer groups across streaming platforms like Amazon Prime Video and Netflix based on available films and viewer ratings\nVisualized clusterability and accuracy of target group clusters formed by each algorithm using evaluation metrics such as cophenetic correlation coefficient, t-SNE plots and average silhouette scores/plots\n\n\n\n\nExperience\nSandia National Laboratories — Albuquerque, NM\n\nR&D Graduate Virtual Intern — MARTIANS Program\n\nInvestigated social media data to ascertain evidence of social influence strategy\nLeveraged Python and PushShift API wrappers to aggregate data from social media sites\nUtilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis\nDeveloped Random Forest and Deep Neural Network models for predicting user engagement\n\n\nDiscovery Partners Institute, University of Illinois at Chicago — Chicago, IL\n\nData Science Lead Virtual Instructor — Digital Scholars Program\n\nDesigned and instructed \"Discovering Data Science\" course for a high school summer STEM program\nTaught data science topics in programming with Python, statistics, ethics, and real-world applications\nGuided students through data analysis projects using Chicago data, to discover something about their community\n\n\nUniversity of Illinois at Urbana-Champaign — Urbana, IL\n\nTeaching Assistant — Statistics Department\n\nFacilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics\nWrote and audited course materials for course development and student assessment using Python/R and GitHub\nSupported diverse students in data science research projects for the Blackwell Summer Scholars Program\nDesigned and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and education materials [https://stat100website.web.illinois.edu]\n\n\n\n\nEducation\n\nUniversity of Illinois at Urbana-Champaign\n\nMaster of Science in Statistics — 3.93/4.00 — May 2023\nBachelor of Science in Statistics, Minor in Mathematics — 3.56/4.00 — May 2021 — Highest Distinction\n\nParkland College\n\nAssociate of Science in Computer Science — 3.32/4.00 — May 2018"
+    "text": "Projects & Publications\nUnsupervised Learning & Clustering Algorithms\n\nUnsupervised Learning: Popular Streaming Platforms\n\nProcessed a mixed variable dataset using Pandas for clustering analysis and performed exploratory data analysis to find correlations for features such as Genre, Age, Country, IMDb Score, etc.\nLeveraged Agglomerative Hierarchical Clustering and K-Modes Clustering to identify targeted consumer groups across streaming platforms like Amazon Prime Video and Netflix based on available films and viewer ratings\nVisualized clusterability and accuracy of target group clusters formed by each algorithm using evaluation metrics such as cophenetic correlation coefficient, t-SNE plots and average silhouette scores/plots\n\n\n\n\nExperience\nSandia National Laboratories — Albuquerque, NM\n\nR&D Graduate Virtual Intern — MARTIANS Program\n\nInvestigated social media data to ascertain evidence of social influence strategy\nLeveraged Python and PushShift API wrappers to aggregate data from social media sites\nUtilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis\nDeveloped Random Forest and Deep Neural Network models for predicting user engagement\n\n\nDiscovery Partners Institute, University of Illinois at Chicago — Chicago, IL\n\nData Science Lead Virtual Instructor — Digital Scholars Program\n\nDesigned and instructed “Discovering Data Science” course for a high school summer STEM program\nTaught data science topics in programming with Python, statistics, ethics, and real-world applications\nGuided students through data analysis projects using Chicago data, to discover something about their community\n\n\nUniversity of Illinois at Urbana-Champaign — Urbana, IL\n\nTeaching Assistant — Statistics Department\n\nFacilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics\nWrote and audited course materials for course development and student assessment using Python/R and GitHub\nSupported diverse students in data science research projects for the Blackwell Summer Scholars Program\nDesigned and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and education materials [https://stat100website.web.illinois.edu]\n\n\n\n\nEducation\n\nUniversity of Illinois at Urbana-Champaign\n\nMaster of Science in Statistics — 3.93/4.00 — May 2023\nBachelor of Science in Statistics, Minor in Mathematics — 3.56/4.00 — May 2021 — Highest Distinction\n\nParkland College\n\nAssociate of Science in Computer Science — 3.32/4.00 — May 2018"
   },
   {
     "objectID": "index.html#contact",
@@ -103,5 +61,96 @@
     "title": "W. Jonas Reger",
     "section": "Skills",
     "text": "Skills\n\nMachine Learning, Natural Language Processing, Data Management, Statistical Computing, Statistical Data Analysis, Programming, Mathematical Theory\nPython: (Jupyter, NumPy, Pandas, Scikit-Learn, TensorFlow, PyTorch, NLTK, Seaborn, BeautifulSoup, discord.py)\nR: (Rstudio, ggplot2, dplyr, caret, tidyverse, purr, shiny, plotly)\nOther: (Jekyll, Quarto, Git/GitHub, GitHub Pages, C++, Java, SQL, Javascript, HTML, CSS)"
+  },
+  {
+    "objectID": "projects/acs_cancer_research.html",
+    "href": "projects/acs_cancer_research.html",
+    "title": "Cancer Research Publication for American Cancer Society",
+    "section": "",
+    "text": "In summer 2013, I participated in a research project with American Cancer Society and University of Illinois at Urbana-Champaign. The objective of the experiment was to analyze cellular reactions to simple adhesion peptides with combinations of cancer implicated growth factors. Peptides that contained growth factors that enhance cancer cellular signaling showed greater greater potential in acetylated lysine expression than those that include cancer cellular signaling inhibitors\nLink\nUsing peptide surfaces to study the reprogramming of malignant melanoma cells towards identification of a cancer stem cell state\nAbstract\nThe microenvironment that surrounds cells contains many different components of molecules such as proteins and growth factors that influence cellular behavior. By creating microenvironments to influence cells, it will allow us to use materials to control cellular behaviors for biomedical applications in cancer diagnosis and treatment. In this project, we used solid phase peptide synthesis to create short peptides derived from adhesion and signaling proteins. We employed a method using copper-catalyzed azide-alkyne cycloaddition on surfaces to arrange the peptides in self-assembled monolayers (SAM) to see how mouse melanoma cells would react to different combinations of peptides and growth factors in terms of marker expressions. Adhesion peptides and combinations of cancer implicated growth factors (ATWLPPR, HTSDQTN, CPQPRPL, and SVVYGLR) were immobilized onto gold-coated coverslips. B16F10 melanoma cells were later seeded and stained for markers of the cellular epigenetic state and pluripotency, acetylated lysine and Nanog respectively. Peptides involved in epidermal growth factor signaling increased lysine acetylation in adherent B16F10s compared to the adhesion peptide alone. This platform will prove useful for the discovery of synthetic surfaces that control melanoma epigenetics and regulate gene expression for studying oncogenesis and reprogramming melanoma to a cancer stem cell state."
+  },
+  {
+    "objectID": "projects/stat100_site.html",
+    "href": "projects/stat100_site.html",
+    "title": "STAT 100 Course Website",
+    "section": "",
+    "text": "Designed the STAT 100 course website initially in Fall 2019 and launched it publicly as the official course website under Karle Flanagan’s GitHub repository. I implemented numerous updates and modifications to it as the main web developer until the end of summer in 2022. Currently, I am an advisor for any developer matters, but no longer maintaining the content updates. The goal of designing the website was to make the site more easily accessible and more aesthetically pleasing to students. The site serves all STAT 100 students, which makes up approximately 3000+ students a year at the University of Illinois at Urbana-Champaign.\nLink\nSTAT 100 Official Course Website\nSTAT 100 Website GitHub Repository"
+  },
+  {
+    "objectID": "projects/walmart_weather_analysis.html",
+    "href": "projects/walmart_weather_analysis.html",
+    "title": "Walmart Sales During Stormy Weather Data Analysis",
+    "section": "",
+    "text": "In fall 2019, I contributed to a class group project for STAT 425 (Appled Regression & Design) at University of Illinois at Urbana-Champaign. The objective of the project was to predict the number of items sold at Walmart stores during stormy weather (within 3 days of a storm). The data was from an old Kaggle competition, from which we drew our emphasis on predictive power over interpretability of our models.\nLink\nWalmart Sales and Weather Data Analysis"
+  },
+  {
+    "objectID": "projects/reducing_CO_emissions_analysis.html",
+    "href": "projects/reducing_CO_emissions_analysis.html",
+    "title": "Reducing Carbon Monoxide Emissions of Gas Turbines Analysis",
+    "section": "",
+    "text": "In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze gas turbine data and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.\nLink\nDocuments on GitHub"
+  },
+  {
+    "objectID": "projects/discovering_data_science_site.html",
+    "href": "projects/discovering_data_science_site.html",
+    "title": "Discovering Data Science Course Website",
+    "section": "",
+    "text": "In summer 2021, I developed and taught an intro to data science course for Chicago high school students at Discovery Partners Institute. As lead instructor, I developed a new curriculum to pilot the Data Science track course of the Digital Scholars Program. The goal was to expose students with diverse cultural and academic backgrounds to data science topics in a learning-friendly environment. Many students did their own data analysis project on Chicago-related data at the conclusion of the program.\nLink\nDiscovering Data Science Course Website\nDiscovering Data Science Website GitHub Repository"
+  },
+  {
+    "objectID": "projects/movies_streaming_platform_analysis.html",
+    "href": "projects/movies_streaming_platform_analysis.html",
+    "title": "Movies on Streaming Platforms Clustering Analysis",
+    "section": "",
+    "text": "In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a movies streaming platform dataset from Kaggle and detect any underlying clustering structures using methods and tools in python.\nLink\nDocuments on GitHub"
+  },
+  {
+    "objectID": "projects/acs_cancer_research/index.html",
+    "href": "projects/acs_cancer_research/index.html",
+    "title": "Cancer Research Publication for American Cancer Society",
+    "section": "",
+    "text": "In summer 2013, I participated in a research project with American Cancer Society and University of Illinois at Urbana-Champaign. The objective of the experiment was to analyze cellular reactions to simple adhesion peptides with combinations of cancer implicated growth factors. Peptides that contained growth factors that enhance cancer cellular signaling showed greater greater potential in acetylated lysine expression than those that include cancer cellular signaling inhibitors\nLink\nUsing peptide surfaces to study the reprogramming of malignant melanoma cells towards identification of a cancer stem cell state\nAbstract\nThe microenvironment that surrounds cells contains many different components of molecules such as proteins and growth factors that influence cellular behavior. By creating microenvironments to influence cells, it will allow us to use materials to control cellular behaviors for biomedical applications in cancer diagnosis and treatment. In this project, we used solid phase peptide synthesis to create short peptides derived from adhesion and signaling proteins. We employed a method using copper-catalyzed azide-alkyne cycloaddition on surfaces to arrange the peptides in self-assembled monolayers (SAM) to see how mouse melanoma cells would react to different combinations of peptides and growth factors in terms of marker expressions. Adhesion peptides and combinations of cancer implicated growth factors (ATWLPPR, HTSDQTN, CPQPRPL, and SVVYGLR) were immobilized onto gold-coated coverslips. B16F10 melanoma cells were later seeded and stained for markers of the cellular epigenetic state and pluripotency, acetylated lysine and Nanog respectively. Peptides involved in epidermal growth factor signaling increased lysine acetylation in adherent B16F10s compared to the adhesion peptide alone. This platform will prove useful for the discovery of synthetic surfaces that control melanoma epigenetics and regulate gene expression for studying oncogenesis and reprogramming melanoma to a cancer stem cell state."
+  },
+  {
+    "objectID": "projects/stat100/index.html",
+    "href": "projects/stat100/index.html",
+    "title": "STAT 100 Course Website",
+    "section": "",
+    "text": "Designed the STAT 100 course website initially in Fall 2019 and launched it publicly as the official course website under Karle Flanagan’s GitHub repository. I implemented numerous updates and modifications to it as the main web developer until the end of summer in 2022. Currently, I am an advisor for any developer matters, but no longer maintaining the content updates. The goal of designing the website was to make the site more easily accessible and more aesthetically pleasing to students. The site serves all STAT 100 students, which makes up approximately 3000+ students a year at the University of Illinois at Urbana-Champaign.\nLink\nSTAT 100 Official Course Website\nSTAT 100 Website GitHub Repository"
+  },
+  {
+    "objectID": "projects/reducing_co_emissions/index.html",
+    "href": "projects/reducing_co_emissions/index.html",
+    "title": "Reducing Carbon Monoxide Emissions of Gas Turbines Analysis",
+    "section": "",
+    "text": "In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze gas turbine data and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.\nLink\nDocuments on GitHub"
+  },
+  {
+    "objectID": "projects/walmart_weather/index.html",
+    "href": "projects/walmart_weather/index.html",
+    "title": "Walmart Sales During Stormy Weather Data Analysis",
+    "section": "",
+    "text": "In fall 2019, I contributed to a class group project for STAT 425 (Appled Regression & Design) at University of Illinois at Urbana-Champaign. The objective of the project was to predict the number of items sold at Walmart stores during stormy weather (within 3 days of a storm). The data was from an old Kaggle competition, from which we drew our emphasis on predictive power over interpretability of our models.\nLink\nWalmart Sales and Weather Data Analysis"
+  },
+  {
+    "objectID": "projects/cancer_research/index.html",
+    "href": "projects/cancer_research/index.html",
+    "title": "Cancer Research Publication for American Cancer Society",
+    "section": "",
+    "text": "In summer 2013, I participated in a research project with American Cancer Society and University of Illinois at Urbana-Champaign. The objective of the experiment was to analyze cellular reactions to simple adhesion peptides with combinations of cancer implicated growth factors. Peptides that contained growth factors that enhance cancer cellular signaling showed greater greater potential in acetylated lysine expression than those that include cancer cellular signaling inhibitors\nLink\nUsing peptide surfaces to study the reprogramming of malignant melanoma cells towards identification of a cancer stem cell state\nAbstract\nThe microenvironment that surrounds cells contains many different components of molecules such as proteins and growth factors that influence cellular behavior. By creating microenvironments to influence cells, it will allow us to use materials to control cellular behaviors for biomedical applications in cancer diagnosis and treatment. In this project, we used solid phase peptide synthesis to create short peptides derived from adhesion and signaling proteins. We employed a method using copper-catalyzed azide-alkyne cycloaddition on surfaces to arrange the peptides in self-assembled monolayers (SAM) to see how mouse melanoma cells would react to different combinations of peptides and growth factors in terms of marker expressions. Adhesion peptides and combinations of cancer implicated growth factors (ATWLPPR, HTSDQTN, CPQPRPL, and SVVYGLR) were immobilized onto gold-coated coverslips. B16F10 melanoma cells were later seeded and stained for markers of the cellular epigenetic state and pluripotency, acetylated lysine and Nanog respectively. Peptides involved in epidermal growth factor signaling increased lysine acetylation in adherent B16F10s compared to the adhesion peptide alone. This platform will prove useful for the discovery of synthetic surfaces that control melanoma epigenetics and regulate gene expression for studying oncogenesis and reprogramming melanoma to a cancer stem cell state."
+  },
+  {
+    "objectID": "projects/movies_streaming_platform/index.html",
+    "href": "projects/movies_streaming_platform/index.html",
+    "title": "Movies on Streaming Platforms Clustering Analysis",
+    "section": "",
+    "text": "In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a movies streaming platform dataset from Kaggle and detect any underlying clustering structures using methods and tools in python.\nLink\nDocuments on GitHub"
+  },
+  {
+    "objectID": "projects/discovering_data_science/index.html",
+    "href": "projects/discovering_data_science/index.html",
+    "title": "Discovering Data Science Course Website",
+    "section": "",
+    "text": "In summer 2021, I developed and taught an intro to data science course for Chicago high school students at Discovery Partners Institute. As lead instructor, I developed a new curriculum to pilot the Data Science track course of the Digital Scholars Program. The goal was to expose students with diverse cultural and academic backgrounds to data science topics in a learning-friendly environment. Many students did their own data analysis project on Chicago-related data at the conclusion of the program.\nLink\nDiscovering Data Science Course Website\nDiscovering Data Science Website GitHub Repository"
   }
 ]

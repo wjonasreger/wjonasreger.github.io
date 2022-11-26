@@ -1,5 +1,12 @@
 ---
 title: "Unnamed Project"
+description: "ignore this example template"
+author: "Jonas Reger"
+date: "11/01/2022"
+categories:
+  - nada
+draft: true
+freeze: true
 ---
 
 ## Nothing to show here yet, but hopefully you can enjoy this ;)

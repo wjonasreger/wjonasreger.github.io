@@ -1,0 +1,13 @@
+[
+  {
+    "listing": "/projects.html",
+    "items": [
+      "/projects/discovering_data_science/index.html",
+      "/projects/movies_streaming_platform/index.html",
+      "/projects/reducing_co_emissions/index.html",
+      "/projects/stat100/index.html",
+      "/projects/walmart_weather/index.html",
+      "/projects/cancer_research/index.html"
+    ]
+  }
+]

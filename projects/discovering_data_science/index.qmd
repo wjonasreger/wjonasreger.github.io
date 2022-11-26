@@ -1,0 +1,21 @@
+---
+title: "Discovering Data Science Course Website"
+description: "A course website for the Digital Scholars data science pilot course"
+author: "Jonas Reger"
+date: "06/1/2021"
+categories: [data science, education, github, website]
+draft: false
+freeze: true
+image: "thumbnail.jpg"
+---
+
+**Overview**
+
+In summer 2021, I developed and taught an intro to data science course for Chicago high school students at Discovery Partners Institute. As lead instructor, I developed a new curriculum to pilot the Data Science track course of the Digital Scholars Program. The goal was to expose students with diverse cultural and academic backgrounds to data science topics in a learning-friendly environment. Many students did their own data analysis project on Chicago-related data at the conclusion of the program.
+
+**Link**
+
+[Discovering Data Science Course Website](https://wjonasreger.github.io/DigitalScholars_DataScience/)
+
+[Discovering Data Science Website GitHub Repository](https://github.com/wjonasreger/DigitalScholars_DataScience)
+

@@ -1,5 +1,11 @@
 ---
 title: "KoRank"
+description: "An NLP project towards ranking Korean texts for Foreign Language Learning applications"
+author: "Jonas Reger"
+date: "11/20/2022"
+categories: [natural language processing, machine learning, korean]
+draft: true
+freeze: true
 ---
 
 ## Korean Show Rankings

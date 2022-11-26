@@ -1,31 +1,23 @@
 ---
 title: "Projects"
+listing: 
+  - id: "projects"
+    contents: "projects"
+    sort:
+      - "date desc"
+      - "title"
+    type: default
+    sort-ui: true
+    filter-ui: true
+    page-size: 5
+    image-placeholder: 'assets/images/default_post.jpg'
+    categories: true
+    feed: true
+title-block-banner: false
+page-layout: full
 ---
 
-# Natural Language Processing
+All of my past and current projects can be viewed here in these documents.
 
--   KoNLP Project 1 *(Coming Soon...)*
-
--   KoNLP Project 2 *(Coming Soon...)*
-
--   VCA Project *(Coming Soon...)*
-
-# Data Analytics
-
--   [Movies on Netflix, Prime Video, Hulu and Disney+ Cluster Analysis](https://github.com/wjonasreger/movie_streaming_platforms_analysis)
-
--   [Gas Turbine Carbon Monoxide Emissions](https://github.com/wjonasreger/reducing_CO_emissions_analysis)
-
--   [Walmart Sales During Stormy Weather Analysis](assets/docs/publications/walmart_425_outline.pdf)
-
-# Websites
-
--   [UIUC STAT 100 Course Website](https://stat100website.web.illinois.edu)
-
--   [Discovering Data Science Course Website](https://wjonasreger.github.io/DigitalScholars_DataScience/)
-
-# Other Projects
-
--   [Visual Statistics Shiny App](https://h550e6-wjonasreger.shinyapps.io/rrvisapp/)
-
--   [Using Peptide Surfaces to Study the Reprogramming of Malignant Melanoma Cells Towards Identification of a Cancer Stem Cell State](assets/docs/publications/ACS%20Internship%20Article%20(2020%20reformat).pdf)
+::: {#projects}
+:::

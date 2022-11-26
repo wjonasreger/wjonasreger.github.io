@@ -1,0 +1,18 @@
+---
+title: "Walmart Sales During Stormy Weather Data Analysis"
+description: "A data analysis project towards predictions of Walmart sales during stormy weather"
+author: "Jonas Reger"
+date: "12/15/2019"
+categories: [data analysis, machine learning, statistics, r]
+draft: false
+freeze: true
+image: "thumbnail.jpg"
+---
+
+**Overview**
+
+In fall 2019, I contributed to a class group project for STAT 425 (Appled Regression & Design) at University of Illinois at Urbana-Champaign. The objective of the project was to predict the number of items sold at Walmart stores during stormy weather (within 3 days of a storm). The data was from an old Kaggle competition, from which we drew our emphasis on predictive power over interpretability of our models.
+
+**Link**
+
+[Walmart Sales and Weather Data Analysis](https://wjonasreger.github.io/assets/docs/publications/walmart_425_outline.pdf)

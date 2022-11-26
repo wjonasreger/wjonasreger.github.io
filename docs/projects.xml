@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>W. Jonas Reger</title>
+<link>https://wjonasreger.github.io/projects.html</link>
+<atom:link href="https://wjonasreger.github.io/projects.xml" rel="self" type="application/rss+xml"/>
+<description>Jonas Reger's professional website for data science</description>
+<generator>quarto-0.9.317</generator>
+<lastBuildDate>Tue, 01 Jun 2021 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Discovering Data Science Course Website</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/discovering_data_science/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>In summer 2021, I developed and taught an intro to data science course for Chicago high school students at Discovery Partners Institute. As lead instructor, I developed a new curriculum to pilot the Data Science track course of the Digital Scholars Program. The goal was to expose students with diverse cultural and academic backgrounds to data science topics in a learning-friendly environment. Many students did their own data analysis project on Chicago-related data at the conclusion of the program.</p>
+<p><strong>Link</strong></p>
+<p><a href="https://wjonasreger.github.io/DigitalScholars_DataScience/">Discovering Data Science Course Website</a></p>
+<p><a href="https://github.com/wjonasreger/DigitalScholars_DataScience">Discovering Data Science Website GitHub Repository</a></p>
+
+
+
+ ]]></description>
+  <category>data science</category>
+  <category>education</category>
+  <category>github</category>
+  <category>website</category>
+  <guid>https://wjonasreger.github.io/projects/discovering_data_science/index.html</guid>
+  <pubDate>Tue, 01 Jun 2021 05:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/discovering_data_science/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Movies on Streaming Platforms Clustering Analysis</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/movies_streaming_platform/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a movies streaming platform dataset from Kaggle and detect any underlying clustering structures using methods and tools in python.</p>
+<p><strong>Link</strong></p>
+<p><a href="https://github.com/wjonasreger/movie_streaming_platforms_analysis">Documents on GitHub</a></p>
+
+
+
+ ]]></description>
+  <category>data analysis</category>
+  <category>github</category>
+  <category>machine learning</category>
+  <category>python</category>
+  <guid>https://wjonasreger.github.io/projects/movies_streaming_platform/index.html</guid>
+  <pubDate>Sat, 15 May 2021 05:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/movies_streaming_platform/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Reducing Carbon Monoxide Emissions of Gas Turbines Analysis</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/reducing_co_emissions/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze gas turbine data and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.</p>
+<p><strong>Link</strong></p>
+<p><a href="https://github.com/wjonasreger/reducing_CO_emissions_analysis">Documents on GitHub</a></p>
+
+
+
+ ]]></description>
+  <category>data analysis</category>
+  <category>github</category>
+  <category>r</category>
+  <category>statistics</category>
+  <guid>https://wjonasreger.github.io/projects/reducing_co_emissions/index.html</guid>
+  <pubDate>Sat, 15 May 2021 05:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/reducing_co_emissions/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>STAT 100 Course Website</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/stat100/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>Designed the STAT 100 course website initially in Fall 2019 and launched it publicly as the official course website under Karle Flanagan’s GitHub repository. I implemented numerous updates and modifications to it as the main web developer until the end of summer in 2022. Currently, I am an advisor for any developer matters, but no longer maintaining the content updates. The goal of designing the website was to make the site more easily accessible and more aesthetically pleasing to students. The site serves all STAT 100 students, which makes up approximately 3000+ students a year at the University of Illinois at Urbana-Champaign.</p>
+<p><strong>Link</strong></p>
+<p><a href="https://stat100website.web.illinois.edu">STAT 100 Official Course Website</a></p>
+<p><a href="https://github.com/karleflanagan/stat100website">STAT 100 Website GitHub Repository</a></p>
+
+
+
+ ]]></description>
+  <category>education</category>
+  <category>github</category>
+  <category>statistics</category>
+  <category>website</category>
+  <guid>https://wjonasreger.github.io/projects/stat100/index.html</guid>
+  <pubDate>Wed, 01 Jan 2020 06:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/stat100/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Walmart Sales During Stormy Weather Data Analysis</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/walmart_weather/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>In fall 2019, I contributed to a class group project for STAT 425 (Appled Regression &amp; Design) at University of Illinois at Urbana-Champaign. The objective of the project was to predict the number of items sold at Walmart stores during stormy weather (within 3 days of a storm). The data was from an old Kaggle competition, from which we drew our emphasis on predictive power over interpretability of our models.</p>
+<p><strong>Link</strong></p>
+<p><a href="https://wjonasreger.github.io/assets/docs/publications/walmart_425_outline.pdf">Walmart Sales and Weather Data Analysis</a></p>
+
+
+
+ ]]></description>
+  <category>data analysis</category>
+  <category>machine learning</category>
+  <category>statistics</category>
+  <category>r</category>
+  <guid>https://wjonasreger.github.io/projects/walmart_weather/index.html</guid>
+  <pubDate>Sun, 15 Dec 2019 06:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/walmart_weather/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Cancer Research Publication for American Cancer Society</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/cancer_research/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p><strong>Overview</strong></p>
+<p>In summer 2013, I participated in a research project with American Cancer Society and University of Illinois at Urbana-Champaign. The objective of the experiment was to analyze cellular reactions to simple adhesion peptides with combinations of cancer implicated growth factors. Peptides that contained growth factors that enhance cancer cellular signaling showed greater greater potential in acetylated lysine expression than those that include cancer cellular signaling inhibitors</p>
+<p><strong>Link</strong></p>
+<p><a href="https://wjonasreger.github.io/assets/docs/publications/ACS%20Internship%20Article%20(2020%20reformat).pdf">Using peptide surfaces to study the reprogramming of malignant melanoma cells towards identification of a cancer stem cell state</a></p>
+<p><strong>Abstract</strong></p>
+<p>The microenvironment that surrounds cells contains many different components of molecules such as proteins and growth factors that influence cellular behavior. By creating microenvironments to influence cells, it will allow us to use materials to control cellular behaviors for biomedical applications in cancer diagnosis and treatment. In this project, we used solid phase peptide synthesis to create short peptides derived from adhesion and signaling proteins. We employed a method using copper-catalyzed azide-alkyne cycloaddition on surfaces to arrange the peptides in self-assembled monolayers (SAM) to see how mouse melanoma cells would react to different combinations of peptides and growth factors in terms of marker expressions. Adhesion peptides and combinations of cancer implicated growth factors (ATWLPPR, HTSDQTN, CPQPRPL, and SVVYGLR) were immobilized onto gold-coated coverslips. B16F10 melanoma cells were later seeded and stained for markers of the cellular epigenetic state and pluripotency, acetylated lysine and Nanog respectively. Peptides involved in epidermal growth factor signaling increased lysine acetylation in adherent B16F10s compared to the adhesion peptide alone. This platform will prove useful for the discovery of synthetic surfaces that control melanoma epigenetics and regulate gene expression for studying oncogenesis and reprogramming melanoma to a cancer stem cell state.</p>
+
+
+
+ ]]></description>
+  <category>cancer research</category>
+  <category>data analysis</category>
+  <guid>https://wjonasreger.github.io/projects/cancer_research/index.html</guid>
+  <pubDate>Thu, 01 Aug 2013 05:00:00 GMT</pubDate>
+  <media:content url="https://wjonasreger.github.io//projects/cancer_research/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+</channel>
+</rss>

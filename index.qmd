@@ -1,26 +1,27 @@
 ---
 title: "W. Jonas Reger"
 image: "assets/images/profile.jpg"
+title-block-banner: false
 about:
   id: about-heading
   template: "solana"
+  links:
+    - icon: email
+      text: Email
+      href: mailto:wjonasreger@gmail.com
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/wjonasreger/
+    - icon: github
+      text: Github
+      href: https://github.com/wjonasreger
 ---
 
-:::{#about-heading}
-
+::: {#about-heading}
 My name is Jonas! I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as an Instructor and Teaching Assistant in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.
 
 I am a self-taught programmer of 10+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, **my core interests are Natural Language Processing and Machine Learning**.
-
 :::
-
-## Contact
-
-The best way to reach me is via email. Here is my contact information.
-
--   Email: [wjonasreger\@gmail.com](mailto:wjonasreger@gmail.com)
--   GitHub: [wjonasreger](https://github.com/wjonasreger)
--   LinkedIn: [wjonasreger](https://www.linkedin.com/in/wjonasreger/)
 
 ## Skills
 

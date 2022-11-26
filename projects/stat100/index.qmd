@@ -1,0 +1,20 @@
+---
+title: "STAT 100 Course Website"
+description: "An official course website for STAT 100 developed using jekyll and GitHub pages"
+image: "thumbnail.jpg"
+author: "Jonas Reger"
+date: "01/01/2020"
+categories: [education, github, statistics, website]
+reading-time: true
+draft: false
+---
+
+**Overview**
+
+Designed the STAT 100 course website initially in Fall 2019 and launched it publicly as the official course website under Karle Flanagan's GitHub repository. I implemented numerous updates and modifications to it as the main web developer until the end of summer in 2022. Currently, I am an advisor for any developer matters, but no longer maintaining the content updates. The goal of designing the website was to make the site more easily accessible and more aesthetically pleasing to students. The site serves all STAT 100 students, which makes up approximately 3000+ students a year at the University of Illinois at Urbana-Champaign.
+
+**Link**
+
+[STAT 100 Official Course Website](https://stat100website.web.illinois.edu)
+
+[STAT 100 Website GitHub Repository](https://github.com/karleflanagan/stat100website)

@@ -7,6 +7,8 @@ execute:
 
 website:
   title: "W. Jonas Reger"
+  site-url: https://wjonasreger.github.io
+  description: "Jonas Reger's professional website for data science"
   favicon: assets/images/masthead.png
   search:
     location: navbar
@@ -19,6 +21,10 @@ website:
       - href: projects.qmd
         text: Projects
       - pvalue-calculator.qmd
+      - icon: github
+        href: https://github.com/wjonasreger
+      - icon: linkedin
+        href: https://www.linkedin.com/in/wjonasreger/
 
 format:
   html:
