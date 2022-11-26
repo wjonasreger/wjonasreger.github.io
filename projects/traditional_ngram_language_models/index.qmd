@@ -1,0 +1,14 @@
+---
+title: "Traditional n-gram Language Models"
+description: "Some traditional unigram and bigram language models with and without smoothing"
+author: "Jonas Reger"
+date: "09/25/2022"
+categories: [machine learning, natural language processing, python]
+draft: false
+freeze: true
+format:
+  html:
+    include-after-body: 'traditional_ngram_language_models.html'
+    page-layout: full
+page-layout: full
+---

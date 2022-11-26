@@ -10,7 +10,26 @@
 <atom:link href="https://wjonasreger.github.io/projects.xml" rel="self" type="application/rss+xml"/>
 <description>Jonas Reger's professional website for data science</description>
 <generator>quarto-0.9.317</generator>
-<lastBuildDate>Tue, 01 Jun 2021 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 25 Sep 2022 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Traditional n-gram Language Models</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/traditional_ngram_language_models/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+
+ ]]></description>
+  <category>machine learning</category>
+  <category>natural language processing</category>
+  <category>python</category>
+  <guid>https://wjonasreger.github.io/projects/traditional_ngram_language_models/index.html</guid>
+  <pubDate>Sun, 25 Sep 2022 05:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Discovering Data Science Course Website</title>
   <dc:creator>Jonas Reger</dc:creator>
@@ -47,7 +66,7 @@
 
 
 <p><strong>Overview</strong></p>
-<p>In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a movies streaming platform dataset from Kaggle and detect any underlying clustering structures using methods and tools in python.</p>
+<p>In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a <a href="https://www.kaggle.com/datasets/ruchi798/movies-on-netflix-prime-video-hulu-and-disney">movies streaming platform dataset from Kaggle</a> and detect any underlying clustering structures using methods and tools in python.</p>
 <p><strong>Link</strong></p>
 <p><a href="https://github.com/wjonasreger/movie_streaming_platforms_analysis">Documents on GitHub</a></p>
 
@@ -72,7 +91,7 @@
 
 
 <p><strong>Overview</strong></p>
-<p>In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze gas turbine data and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.</p>
+<p>In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze <a href="https://archive.ics.uci.edu/ml/datasets/Gas+Turbine+CO+and+NOx+Emission+Data+Set">gas turbine data from the UCI repository</a> and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.</p>
 <p><strong>Link</strong></p>
 <p><a href="https://github.com/wjonasreger/reducing_CO_emissions_analysis">Documents on GitHub</a></p>
 

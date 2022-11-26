@@ -1,0 +1,14 @@
+---
+title: "Text Classification with Neural Networks"
+description: "Using CNN and RNN networks to predict positive and negative sentiment scores of IMDb movie reviews"
+author: "Jonas Reger"
+date: "10/16/2022"
+categories: [machine learning, neural network, natural language processing, python]
+draft: true
+freeze: true
+format:
+  html:
+    include-after-body: ''
+    page-layout: full
+page-layout: full
+---

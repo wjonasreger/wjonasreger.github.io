@@ -2,11 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://wjonasreger.github.io/projects.html</loc>
-    <lastmod>2022-11-26T22:15:00.531Z</lastmod>
+    <lastmod>2022-11-26T23:12:06.694Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/index.html</loc>
-    <lastmod>2022-11-26T22:15:53.946Z</lastmod>
+    <lastmod>2022-11-26T22:45:41.664Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/about.html</loc>
@@ -42,26 +42,34 @@
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/stat100/index.html</loc>
-    <lastmod>2022-11-26T21:33:03.911Z</lastmod>
+    <lastmod>2022-11-26T22:46:34.071Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/reducing_co_emissions/index.html</loc>
-    <lastmod>2022-11-26T21:31:37.878Z</lastmod>
+    <lastmod>2022-11-26T22:46:34.430Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/walmart_weather/index.html</loc>
-    <lastmod>2022-11-26T21:31:47.322Z</lastmod>
+    <lastmod>2022-11-26T22:46:34.832Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/cancer_research/index.html</loc>
-    <lastmod>2022-11-26T21:31:55.391Z</lastmod>
+    <lastmod>2022-11-26T22:46:35.470Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/movies_streaming_platform/index.html</loc>
-    <lastmod>2022-11-26T21:31:32.678Z</lastmod>
+    <lastmod>2022-11-26T22:45:52.268Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/discovering_data_science/index.html</loc>
-    <lastmod>2022-11-26T21:31:28.413Z</lastmod>
+    <lastmod>2022-11-26T23:12:10.157Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wjonasreger.github.io/projects/traditional_ngram_language_models/index.html</loc>
+    <lastmod>2022-11-26T23:09:44.122Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wjonasreger.github.io/projects/traditional_ngram_language_models/ignore.html</loc>
+    <lastmod>2022-11-26T22:48:04.186Z</lastmod>
   </url>
 </urlset>
