@@ -16,8 +16,8 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
-      - projects.qmd
+      - href: projects.qmd
+        text: Projects
       - pvalue-calculator.qmd
 
 format:

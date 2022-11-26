@@ -53,7 +53,7 @@
     "href": "index.html",
     "title": "W. Jonas Reger",
     "section": "",
-    "text": "I am a self-taught programmer of 15+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, my core interests are Natural Language Processing and Machine Learning.\n\nprint(\"IT'S ME\")\n\n\n\n[1] \"I'M THE PROBLEM, IT'S ME\"\n\n\n\nExperience\nSandia National Laboratories | Albuquerque, NM\nR&D Graduate Virtual Intern | MARTIANS Program | May 2022 — Aug 2022\nDiscovery Partners Institute, University of Illinois at Chicago | Chicago, IL\nData Science Lead Virtual Instructor | Digital Scholars Program | May 2021 — Aug 2021\nUniversity of Illinois at Urbana-Champaign | Champaign, IL\nTeaching Assistant | Statistics Department | Jan 2019 — Current\n\n\nEducation\nUniversity of Illinois at Urbana-Champaign | Champaign, IL\nMS in Statistics | May 2023\nBS in Statistics, Minor in Mathematics | May 2021\nParkland College | Champaign, IL\nAS in Computer Science | May 2018"
+    "text": "My name is Jonas! I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as an Instructor and Teaching Assistant in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.\nI am a self-taught programmer of 10+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, my core interests are Natural Language Processing and Machine Learning."
   },
   {
     "objectID": "pvalue-calculator.html",
@@ -68,5 +68,40 @@
     "title": "Resume",
     "section": "",
     "text": "Projects & Publications\nUnsupervised Learning & Clustering Algorithms\n\nUnsupervised Learning: Popular Streaming Platforms\n\nProcessed a mixed variable dataset using Pandas for clustering analysis and performed exploratory data analysis to find correlations for features such as Genre, Age, Country, IMDb Score, etc.\nLeveraged Agglomerative Hierarchical Clustering and K-Modes Clustering to identify targeted consumer groups across streaming platforms like Amazon Prime Video and Netflix based on available films and viewer ratings\nVisualized clusterability and accuracy of target group clusters formed by each algorithm using evaluation metrics such as cophenetic correlation coefficient, t-SNE plots and average silhouette scores/plots\n\n\n\n\nExperience\nSandia National Laboratories — Albuquerque, NM\n\nR&D Graduate Virtual Intern — MARTIANS Program\n\nInvestigated social media data to ascertain evidence of social influence strategy\nLeveraged Python and PushShift API wrappers to aggregate data from social media sites\nUtilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis\nDeveloped Random Forest and Deep Neural Network models for predicting user engagement\n\n\nDiscovery Partners Institute, University of Illinois at Chicago — Chicago, IL\n\nData Science Lead Virtual Instructor — Digital Scholars Program\n\nDesigned and instructed \"Discovering Data Science\" course for a high school summer STEM program\nTaught data science topics in programming with Python, statistics, ethics, and real-world applications\nGuided students through data analysis projects using Chicago data, to discover something about their community\n\n\nUniversity of Illinois at Urbana-Champaign — Urbana, IL\n\nTeaching Assistant — Statistics Department\n\nFacilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics\nWrote and audited course materials for course development and student assessment using Python/R and GitHub\nSupported diverse students in data science research projects for the Blackwell Summer Scholars Program\nDesigned and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and education materials [https://stat100website.web.illinois.edu]\n\n\n\n\nEducation\n\nUniversity of Illinois at Urbana-Champaign\n\nMaster of Science in Statistics — 3.93/4.00 — May 2023\nBachelor of Science in Statistics, Minor in Mathematics — 3.56/4.00 — May 2021 — Highest Distinction\n\nParkland College\n\nAssociate of Science in Computer Science — 3.32/4.00 — May 2018"
+  },
+  {
+    "objectID": "index.html#contact",
+    "href": "index.html#contact",
+    "title": "W. Jonas Reger",
+    "section": "Contact",
+    "text": "Contact\nThe best way to reach me is via email. Here is my contact information.\n\nEmail: wjonasreger@gmail.com\nGitHub: wjonasreger\nLinkedIn: wjonasreger"
+  },
+  {
+    "objectID": "index.html#teaching",
+    "href": "index.html#teaching",
+    "title": "W. Jonas Reger",
+    "section": "Teaching",
+    "text": "Teaching\nDetails\n\nFacilitated student learning objectives in class and office hours covering data science topics in programming with Python/R, data management, probability, and statistics\nWrote and audited course materials for curriculum development and student assessment using Python/R and GitHub\nSupported students from diverse backgrounds in acquiring data science skills and knowledge\nDesigned and maintained the STAT 100 course website using Jekyll and Github Pages, which serves 1000+ students each semester, providing useful course information and materials\n\nInstructor\n\nSTAT 100 Statistics [Spring 2022]\nDPI Discovering Data Science [Summer 2021]\n\nTeaching Assistant\n\nSTAT 100 Statistics [Fall 2021]\nSTAT 107 Data Science Discovery [Fall 2021]\nSTAT 385 [Fall 2022]\n\nCourse Assistant\n\nSTAT 100 Statistics [Spring 2021] [Fall 2020] [Summer 2020] [Spring 2020] [Fall 2019] [Spring 2019]\nSTAT 400 Statistics & Probability I [Spring 2020] [Spring 2019]\nSTAT 410 Statistics & Probability II [Spring 2020]\nSTAT 420 Methods of Applied Statistics [Fall 2019] [Summer 2019]\nSTAT 432 Basics of Statistical Learning [Fall 2020]\nBlackwell Summer Scholars Program [Summer 2021]"
+  },
+  {
+    "objectID": "index.html#experience",
+    "href": "index.html#experience",
+    "title": "W. Jonas Reger",
+    "section": "Experience",
+    "text": "Experience\nSandia National Laboratories — R&D Graduate Intern [May 2022—Aug 2022]\n\nExamined social media data to ascertain evidence of social influence strategy\nScraped data from Reddit using Python and PushShift API wrappers\nUtilized Huggingface NLP models for sentiment, topic, intent, and utterance analysis\nDeveloped Random Forest and Deep Neural Network models for predicting user engagement"
+  },
+  {
+    "objectID": "index.html#education",
+    "href": "index.html#education",
+    "title": "W. Jonas Reger",
+    "section": "Education",
+    "text": "Education\nUniversity of Illinois at Urbana-Champaign — Champaign, IL\n\nM.S. Statistics — May 2023\nB.S. Statistics, Mathematics Minor — May 2021\n\nParkland College — Champaign, IL\n\nA.S. Computer Science — May 2018"
+  },
+  {
+    "objectID": "index.html#skills",
+    "href": "index.html#skills",
+    "title": "W. Jonas Reger",
+    "section": "Skills",
+    "text": "Skills\n\nMachine Learning, Natural Language Processing, Data Management, Statistical Computing, Statistical Data Analysis, Programming, Mathematical Theory\nPython: (Jupyter, NumPy, Pandas, Scikit-Learn, TensorFlow, PyTorch, NLTK, Seaborn, BeautifulSoup, discord.py)\nR: (Rstudio, ggplot2, dplyr, caret, tidyverse, purr, shiny, plotly)\nOther: (Jekyll, Quarto, Git/GitHub, GitHub Pages, C++, Java, SQL, Javascript, HTML, CSS)"
   }
 ]

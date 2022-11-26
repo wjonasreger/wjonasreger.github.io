@@ -42,7 +42,7 @@ Discovery Partners Institute, University of Illinois at Chicago --- Chicago, IL
 
 -   Data Science Lead Virtual Instructor --- Digital Scholars Program
 
-    -   Designed and instructed \"Discovering Data Science\" course for a high school summer STEM program
+    -   Designed and instructed "Discovering Data Science" course for a high school summer STEM program
 
     -   Taught data science topics in programming with Python, statistics, ethics, and real-world applications
 
