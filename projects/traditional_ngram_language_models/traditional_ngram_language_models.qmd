@@ -1,0 +1,453 @@
+---
+title: "Traditional n-gram Language Models"
+description: "Some traditional unigram and bigram language models with and without smoothing"
+author: "Jonas Reger"
+date: "09/25/2022"
+categories: [github, machine learning, natural language processing, python, torch]
+draft: false
+freeze: true
+page-layout: full
+image: "thumbnail.jpg"
+
+jupyter: python3
+execute: 
+  cache: true
+format:
+  html:
+    code-fold: false
+    theme: united
+---
+
+In this notebook, some traditional n-gram language models are trained on the WikiText-2 data, a corpus of high-quality Wikipedia articles. The dataset was originally introduced in the following [paper](https://arxiv.org/pdf/1609.07843v1.pdf). A raw version of the data can easily be viewed [here](https://github.com/pytorch/examples/tree/master/word_language_model/data/wikitext-2). The source code of this notebook is also viewable [here](https://github.com/wjonasreger/traditional_ngram_language_models) on GitHub.
+
+## Load Packages
+
+The `torchdata` package will need to be installed prior to running.
+
+```{python}
+#| eval: false
+#| echo: false
+!pip install torch==1.12.1
+!pip install torchdata==0.4.1
+!pip install torchtext==0.13.1
+```
+
+```{python}
+import torchtext
+import random
+import sys
+import math
+from collections import defaultdict
+
+random.seed(22)
+```
+
+## Preprocess Data
+
+To make these models more robust, it is necessary to perform some basic preprocessing on the corpora.
+
+-   **Sentence splitting:** The interest behind this procedure is to model individual sentences, rather than longer chunks of text such as paragraphs or documents. The WikiText-2 dataset provides paragraphs; thus, a simple method is used to identify individual sentences by splitting paragraphs at punctuation tokens (".", "!", "?").
+
+-   **Sentence markers:** For both training and testing corpora, each sentence is surrounded by a start-of-sentence (`START`) and end-of-sentence marker (`END`). These markers allow the models to generate sentences that have realistic beginnings and endings.
+
+-   **Unknown words:** In order to deal with unknown words in the test corpora, all words that do not appear in the vocabulary are replaced with a special token for unknown words (`UNK`) before estimating these models. However, the WikiText-2 dataset has already done this. Unknown words in the test corpus are treated as that special token instead.
+
+```{python}
+# constants
+START = "<START>"   # start-of-sentence token
+END = "<END>"    # end-of-sentence-token
+UNK = "<UNK>"   # unknown word token
+```
+
+```{python}
+# preprocess function to return preprocessed text data and vocabulary data
+def preprocess(data, vocab=None):
+    final_data = []
+    lowercase = "abcdefghijklmnopqrstuvwxyz"
+
+    for paragraph in data:
+        paragraph = [x if x != '<unk>' else UNK for x in paragraph.split()] # replace wikitext-2 <unk> with custom UNK token
+
+        if vocab is not None:
+            paragraph = [x if x in vocab else UNK for x in paragraph] # replace unknown words if vocab set is provided
+
+        if paragraph == [] or paragraph.count('=') >= 2: continue # skip empty paragraphs
+
+        sen = []
+        prev_punct, prev_quot = False, False
+
+        for word in paragraph:
+            if prev_quot: # if word follows a quotation mark
+                if word[0] not in lowercase: # simple way to check if punctuation follows quotation to end sentence (susceptible to ending sentences mid-way if contains a quote)
+                    final_data.append(sen)
+                    sen = []
+                    prev_punct, prev_quot = False, False
+
+            if prev_punct: # if word follows punctuation
+                if word == '"': # check occurence of quotation marks to help decide to continue or end sentence
+                    prev_punct, prev_quot = False, True
+                else: # when word follows non-quote punctuations
+                    if word[0] not in lowercase: # simple way to check if new sentence is starting (i.e., starts with capitalized letter after punctuation)
+                        final_data.append(sen)
+                        sen = []
+                        prev_punct, prev_quot = False, False
+
+            if word in {'.', '?', '!'}: prev_punct = True
+            sen += [word]
+
+        # may need to indent the next two lines later...
+        if sen[-1] not in {'.', '?', '!', '"'}: continue # prevent a lot of short sentences (a simple rule)
+
+        final_data.append(sen) # add sentence to final data
+
+    vocab_was_none = vocab is None
+
+    if vocab_was_none:
+        vocab = set()
+
+    for i in range(len(final_data)):
+        final_data[i] = [START] + final_data[i] + [END] # add start and end tags to sentences
+
+        if vocab_was_none:
+            for word in final_data[i]:
+                vocab.add(word) # build vocab set
+
+    return final_data, vocab
+
+# function to retreive and preprocess the WikiText-2 dataset
+def getDataset():
+    dataset = torchtext.datasets.WikiText2(root='.data', split=('train', 'valid'))
+    train_dataset, vocab = preprocess(dataset[0]) # preprocessed train and vocab data
+    test_dataset, _ = preprocess(dataset[1], vocab) # preprocessed test data with vocab set input
+
+    return train_dataset, test_dataset
+
+train_dataset, test_dataset = getDataset() # instantiate preprocessed test-train data
+```
+
+Here are some examples of sentences from the pre-processed training data.
+
+```{python}
+for sentence in random.sample(train_dataset, 5):
+    print(sentence)
+```
+
+## The `LanguageModel` Class
+
+Four types of language models are implemented.
+
+-   **unigram** model
+-   **smoothed unigram** model
+-   **bigram** model
+-   **smoothed bigram** model
+
+Each model subclass extends the following methods for each respective model.
+
+-   **Initialization** (i.e., `__init__(self, train_data)`): Trains the language model on `train_data`. This involves calculating relative frequency estimates.
+
+-   **Sentence generation** (i.e., `generateSentence(self)`): Returns a sentence that is generated by the model. The output is a list of words that are found in the vocab set, including the `UNK` token but excluding the `START` and `END` tokens. Each sentence starts with the `START` token (with probability 1). The number of words in a sentence is not fixed, rather it terminates whenever `END` is generated.
+
+-   **Log-likelihood of a Sentence** (i.e., `getSentenceLogLikelihood(self, sentence)`): Returns the logarithm of the likelihood probability of `sentence`, which is a list of words that exist in the vocab set.
+
+-   **Corpus Perplexity** (i.e., `getCorpusPerplexity(self, test_data)`): Computes the perplexity (i.e., normalized inverse log probability) of `test_data`.
+
+```{python}
+# base class defined for language models
+class LanguageModel(object):
+    def __init__(self, train_data):
+        return
+
+    def generateSentence(self):
+        raise NotImplementedError("generateSentence is not implemented in each model subclass.")
+
+    def getSentenceLogLikelihood(self, sentence):
+        raise NotImplementedError("getSentenceProbability is not implemented in each model subclass.")
+        
+    def getCorpusPerplexity(self, test_data):
+        raise NotImplementedError("getCorpusPerplexity is not implemented in each model subclass.")
+
+    def printSentences(self, n):
+        for i in range(n):
+            sentence = self.generateSentence()
+            sentence_loglik = self.getSentenceLogLikelihood(sentence)
+            print('\t[LOG-LIKELIHOOD] ', sentence_loglik , '\n\t[SENTENCE] ', ' '.join(sentence))
+```
+
+Here is a function to build a model and print random sentences, and corpus perplexities.
+
+```{python}
+def buildModel(ngram_model, train_dataset, test_dataset, sentences=5):
+    model = ngram_model(train_dataset)
+    print(f'[MODEL TYPE] {ngram_model.__name__}')
+
+    print('\n[RANDOM SENTENCES]')
+    model.printSentences(sentences)
+
+    print('\n[CORPUS PERPLEXITIES]')
+    print(f'\t[TRAIN DATA] {model.getCorpusPerplexity(train_dataset)}')
+    print(f'\t[TEST DATA] {model.getCorpusPerplexity(test_dataset)}')
+```
+
+## Unigram Model
+
+The probability distribution of a unigram is estimated by
+
+$$\hat{P} (w_i) = \frac{count(w_i)}{\sum_{j=0}^N count(w_j)}, \qquad \text{where } N \text{ is the size of vocab}$$
+
+where the probability of a sentence is estimated by
+
+$$\hat{P} (sentence) = \hat{P} (\texttt{START} \times w_0 \times .. \times w_n) = \prod_{i=0}^n \hat{P}(w_i)$$
+
+```{python}
+# a unigram language model class
+class UnigramModel(LanguageModel):
+    def __init__(self, train_data):
+        # generate ngrams
+        ngrams = defaultdict(float)
+        corpus_size = 0
+        for sentence in train_data:
+            for word in sentence:
+                if word != START:
+                    ngrams[word] += 1 # increment ngram count
+                    corpus_size += 1 # increment corpus size count
+        for vocab in list(ngrams.keys()):
+            ngrams[vocab] = ngrams[vocab] / corpus_size # compute estimated ngram probability
+        self.ngrams = ngrams
+
+    def generateSentence(self):
+        continue_sentence = True
+        sentence = [START] # instantiate sentence
+        while continue_sentence:
+          rand_prob = random.random()
+          cum_prob = 0
+          for ngram in self.ngrams.keys():
+            cum_prob += self.ngrams[ngram]
+            if cum_prob >= rand_prob: # find randomly selected ngram
+              sentence.append(ngram) # attach ngram to the sentence
+              if ngram == END: # check for end of sentence
+                continue_sentence = False
+              break
+        return sentence
+
+    def getSentenceLogLikelihood(self, sentence):
+        sentence_loglik = 0
+        for word in sentence[1:]: # can ignore first token (i.e., START has probability of 1)
+          sentence_loglik += math.log(self.ngrams[word])
+        return sentence_loglik
+        
+    def getCorpusPerplexity(self, test_data):
+        corpus_perp = 0
+        corpus_size = 0
+        for sentence in test_data:
+          corpus_perp += -self.getSentenceLogLikelihood(sentence)
+          corpus_size += len(sentence) - 1
+        return math.exp(corpus_perp / corpus_size) # corpus perplexity
+```
+
+Here are some randomly generated sentences and the log-likelihoods for each. Corpus perplexities are also computed on the train and test datasets under the model.
+
+```{python}
+buildModel(UnigramModel, train_dataset, test_dataset, sentences=5)
+```
+
+## Smoothed Unigram Model
+
+Here, a unigram model with Laplace (add-one) smoothing is implemented. The probability distribution of a word is given by $P_L(w)$. This type of smoothing takes away some of the probability mass for observed events and assigns it to unseen events.
+
+In order to smooth the model, it is necessary to have the number of words in the corpus, $N$, and the number of word types, $S$.
+
+If $c(w)$ is the frequency of $w$ in the training data, then $P_L(w)$ is computed as follows:
+
+$$P_L(w)=\frac{c(w)+1}{N+S}$$
+
+```{python}
+# a smoothed unigram language model class
+class SmoothedUnigramModel(UnigramModel):
+    def __init__(self, train_data):
+        ngrams = defaultdict(float)
+        corpus_size = 0
+        for sen in train_data:
+            for word in sen:
+                if word != START:
+                    ngrams[word] += 1 # increment ngram count
+                    corpus_size += 1 # increment corpus size
+        for vocab in list(ngrams.keys()):
+            ngrams[vocab] = (ngrams[vocab] + 1) / (corpus_size + len(ngrams)) # apply laplace smoothing
+        self.ngrams = ngrams
+```
+
+```{python}
+buildModel(SmoothedUnigramModel, train_dataset, test_dataset, sentences=5)
+```
+
+## Bigram Model
+
+Here, an unsmoothed bigram model is implemented. The probability distribution of a word is given by $\hat P(w'|w)$. Thus, the probability of $w_i$ is conditioned on $w_{i-1}$.
+
+For a corpus $W$ with $N$ words and a bigram model, Jurafsky and Martin suggested computing perplexity as follows:
+
+$$Perplexity(W) = \Big [ \prod_{i=1}^N \frac{1}{P(w^{(i)}|w^{(i-1)})} \Big ]^{1/N}$$
+
+To avoid underflow, all calculations are computed in log-space. That is, instead of multiplying probabilities, the logarithms of the probabilities are summed and exponentiated:
+
+$$\prod_{i=1}^N P(w^{(i)}|w^{(i-1)}) = \exp\Big (\sum_{i=1}^N \log P(w^{(i)}|w^{(i-1)}) \Big ) $$
+
+```{python}
+class BigramModel(LanguageModel):
+    def __init__(self, train_data):
+        ngrams = defaultdict(float)
+        for sentence in train_data:
+          for i in range(len(sentence)-1):
+            word = sentence[i]
+            next = sentence[i+1]
+            if word not in ngrams.keys():
+              ngrams[word] = defaultdict(float) # instantiate set of ngrams for new word w_i
+            ngrams[word][next] += 1 # increment ngram count
+        for wi_word in list(ngrams.keys()):
+          wi_ngrams_set = ngrams[wi_word] # ngram set for word w_i
+          wi_ngrams_count = sum(wi_ngrams_set.values()) # ngram count for the set
+          for wi_next in list(wi_ngrams_set.keys()):
+            ngrams[wi_word][wi_next] = wi_ngrams_set[wi_next] / wi_ngrams_count # ngram probabilities in the set
+        self.ngrams = ngrams
+
+    def generateSentence(self):
+        continue_sentence = True
+        sentence = [START] # instantiate sentence
+        while continue_sentence:
+          rand_prob = random.random()
+          cum_prob = 0
+          prev_word = sentence[-1] # previous word in sentence
+          for word in self.ngrams[prev_word].keys():
+            cum_prob += self.ngrams[prev_word][word]
+            if cum_prob >= rand_prob: # find randomly selected ngram
+              sentence.append(word) # add ngram to sentece
+              if word == END: # search for end of sentence
+                continue_sentence = False
+              break
+        return sentence
+
+    def getSentenceLogLikelihood(self, sentence):
+        sentence_prob = 0
+        for i in range(len(sentence)-1):
+          word = sentence[i]
+          next = sentence[i+1]
+          try:
+            sentence_prob += math.log(self.ngrams[word][next]) # compute log of ngram probability if ngram exists
+          except:
+            sentence_prob += -float('inf') # compute -inf for log of probability if ngram doesn't exist
+        return sentence_prob
+        
+    def getCorpusPerplexity(self, test_data):
+        corpus_perp = 0
+        corpus_size = 0
+        for sentence in test_data:
+          corpus_perp += -self.getSentenceLogLikelihood(sentence) # compute log-likelihood of sentence
+          corpus_size += len(sentence) - 1 # increment corpus size
+        return math.exp(corpus_perp / corpus_size) # compute perplexity and transform back to original space
+```
+
+```{python}
+buildModel(BigramModel, train_dataset, test_dataset, sentences=5)
+```
+
+## Smoothed Bigram Model
+
+Here, a smoothed bigram model with absolute discounting is implemented. The probability distribution of a word is given by $P_{AD}(w’|w)$.
+
+In order to smooth the model, it is necessary to compute a discounting factor $D$. If $n_k$ is the number of bigrams $w_1w_2$ that appear exactly $k$ times, $D$ is computed as:
+
+$$D=\frac{n_1}{n_1+2n_2}$$
+
+For each word $w$, the number of bigram types $ww’$ is computed as follows:
+
+$$S(w)=|\{w’\mid c(ww’)>0\}|$$
+
+where $c(ww’)$ is the frequency of $ww’$ in the training data. In other words, $S(w)$ is the number of unique words that follow $w$ at least once in the training data.
+
+Finally, $P_{AD}(w’|w)$ is computed as follows:
+
+$$P_{AD}(w’|w)=\frac{\max \big (c(ww’)-D,0\big )}{c(w)}+\bigg (\frac{D}{c(w)}\cdot S(w) \cdot P_L(w’)\bigg )$$
+
+where $c(w)$ is the frequency of $w$ in the training data and $P_L(w’)$ is the Laplace-smoothed unigram probability of $w’$.
+
+```{python}
+class SmoothedBigramModelAD(BigramModel):
+    def __init__(self, train_data):
+        # generate ngram probabilities from smoothed unigram model
+        self.LPSmoothedUnigram = SmoothedUnigramModel(train_data).ngrams
+
+        # generate ngram counts for bigram model
+        ngrams = defaultdict(float)
+        for sentence in train_data:
+          for w in range(len(sentence)-1):
+            word = sentence[w] # current word
+            next = sentence[w+1] # next word
+            if word not in ngrams.keys():
+              ngrams[word] = defaultdict(float) # create ngram set for word
+            ngrams[word][next] += 1 # increment ngram count
+
+        # toward computing the discounting factor D
+        n1 = 0 # count of ngrams that appear exactly once in train_data
+        n2 = 0 # count of ngrams that appear exactly twice in train_data
+        for wi_word in list(ngrams.keys()):
+            wi_ngrams_set = ngrams[wi_word]
+            for wi_next in list(wi_ngrams_set.keys()):
+              if ngrams[wi_word][wi_next] == 1:
+                n1 += 1 # increment n1 count for D computation
+              elif ngrams[wi_word][wi_next] == 2:
+                n2 += 1 # increment n2 count for D computation
+        D = n1 / (n1 + 2*n2) # compute discounting factor D
+
+        # toward computing ngram types and ngram tokens
+        S = defaultdict(float)
+        C = defaultdict(float)
+        for wi_word in list(ngrams.keys()):
+            wi_ngrams_set = ngrams[wi_word]
+            S[wi_word] = len(wi_ngrams_set) # number of ngram types
+            C[wi_word] = sum(wi_ngrams_set.values()) # number of ngram tokens
+        
+        # assigning ngrams and smoothing features as attributes for calcProb method
+        self.ngrams = ngrams
+        self.D = D
+        self.S = S
+        self.C = C
+
+    def calcProb(self, prev_word, next_word):
+        # calculate probability
+        try:
+          bigram = self.ngrams[prev_word][next_word] # count of bigram token
+          t1 = max(bigram - self.D, 0) / self.C[prev_word] # left term of P_AB formula
+          t2 = self.D / self.C[prev_word] * self.S[prev_word] * self.LPSmoothedUnigram[next_word] # right term of P_AB formula
+          abs_discount_prob = t1 + t2 # probability of next_word given prev_word with absolute discounting
+        except:
+          abs_discount_prob = 0
+        return abs_discount_prob
+
+    def generateSentence(self):
+        continue_sentence = True
+        sentence = [START] # instantiate sentence
+        while continue_sentence:
+          rand_prob = random.random()
+          cum_prob = 0
+          prev_word = sentence[-1]
+          for next_word in self.ngrams[prev_word].keys(): # search ngram types/tokens
+            cum_prob += self.calcProb(prev_word, next_word) # on-the-go probability calculation
+            if cum_prob >= rand_prob: # find randomly selected ngram
+              sentence.append(next_word) # add ngram to sentence
+              if next_word == END: # search for end of sentence
+                continue_sentence = False
+              break
+        return sentence
+
+    def getSentenceLogLikelihood(self, sentence):
+        sentence_prob = 0
+        for w in range(len(sentence)-1):
+            word = sentence[w]
+            next = sentence[w+1]
+            sentence_prob += math.log(self.calcProb(word, next))
+        return sentence_prob
+```
+
+```{python}
+buildModel(SmoothedBigramModelAD, train_dataset, test_dataset, sentences=5)
+```
