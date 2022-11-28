@@ -1,7 +1,7 @@
 ---
 title: "Movies on Streaming Platforms Clustering Analysis"
 description: "A clustering analysis project to detect underlying clustering structures for movies on streaming platforms"
-author: "Jonas Reger"
+author: "Atharv Pathak, Jonas Reger"
 date: "05/15/2021"
 image: "thumbnail.jpg"
 categories: [data analysis, github, machine learning, python]

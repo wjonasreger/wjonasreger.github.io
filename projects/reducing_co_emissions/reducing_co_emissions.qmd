@@ -1,7 +1,7 @@
 ---
 title: "Reducing Carbon Monoxide Emissions of Gas Turbines Analysis"
 description: "A statistical consulting project to find interpretable features that contribute to reducing emissions from gas turbines"
-author: "Jonas Reger"
+author: "Subin Cho, Chenfei Hu, Jiaqi Kang, Jonas Reger"
 date: "05/15/2021"
 categories: [data analysis, github, r, statistics]
 image: "thumbnail.jpg"
