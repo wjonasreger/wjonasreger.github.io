@@ -20,7 +20,7 @@ about:
 ::: {#about-heading}
 My name is Jonas! I am a Graduate Student studying Data Science within the Statistics Department at the University of Illinois at Urbana-Champaign (UIUC). I taught Statistics and Data Science in various roles as an Instructor and Teaching Assistant in university courses as well as research and education programs for equity, diversity, and inclusion for students of diverse backgrounds.
 
-I am a self-taught programmer of 10+ years with great interests of applying computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, **my core interests are Natural Language Processing and Machine Learning**.
+I am a self-taught programmer of 10+ years with great interests in applying my computational skills to diverse fields related to Data Science. While my general interests extends broadly across Data Science, **my core interests are Natural Language Processing and Machine Learning**.
 :::
 
 ## Skills
@@ -36,7 +36,7 @@ I am a self-taught programmer of 10+ years with great interests of applying comp
 
 -   Examined social media data to ascertain evidence of social influence strategy
 -   Scraped data from Reddit using Python and PushShift API wrappers
--   Utilized Huggingface NLP models for sentiment, topic, intent, and utterance analysis
+-   Utilized Huggingface Natural Language Processing models for sentiment, topic, intent, and utterance analysis
 -   Developed Random Forest and Deep Neural Network models for predicting user engagement
 
 ## Teaching

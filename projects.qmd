@@ -15,6 +15,7 @@ listing:
     feed: true
 title-block-banner: false
 page-layout: full
+date-format: "MMM YYYY"
 ---
 
 All of my past and current projects can be viewed here in these documents.

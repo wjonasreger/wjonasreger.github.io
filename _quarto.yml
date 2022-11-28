@@ -21,10 +21,13 @@ website:
       - href: projects.qmd
         text: Projects
       - pvalue-calculator.qmd
+    right:
       - icon: github
         href: https://github.com/wjonasreger
       - icon: linkedin
         href: https://www.linkedin.com/in/wjonasreger/
+      - icon: rss
+        href: index.xml
 
 format:
   html:

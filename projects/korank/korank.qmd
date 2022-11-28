@@ -1,0 +1,53 @@
+---
+title: "KoRank"
+description: "An NLP project towards ranking Korean texts for Foreign Language Learning applications"
+author: "Jonas Reger"
+date: "11/20/2022"
+categories: [natural language processing, machine learning, korean]
+draft: true
+freeze: true
+---
+
+## Korean Show Rankings
+
+Here is a table of 280+ Korean shows ranked from simplest to most complex starting from the top. Language level classifications are estimated by a model. This ranking presumes the learner is familiar with most of the words in the common words set derived from the data. Click on the name of the show to view more interesting information of the show. Click on its vocab set to see the uncommon words used in the show.
+
+| Rank | Name (E) | Name (K) | Name (O) | Vocab | Level |
+|------|----------|----------|----------|-------|-------|
+| 1    |          |          |          |       |       |
+| 2    |          |          |          |       |       |
+| 3    |          |          |          |       |       |
+
+: Korean Shows Ranked by Vocabulary Potentials
+
+## Common Vocabulary Set
+
+Here are the 1000 most common vocabulary set defined by frequency over all texts.
+
+Here are the 1000 most common vocabulary set defined by coverage over all shows.
+
+Vocabulary definitions are retrieved through Papago and/or Google Translate. Note that there may be some errors in definitions as words may be processed incorrectly or word-to-word translations may be insufficient for phrase meanings.
+
+## Vocabulary Tools
+
+1.  Dictionary/Translations: Naver Dictionary, Papago, Google Translate, Mirinae, Pleco/Anki (maybe?)
+2.  Grammar: Mirinae
+3.  Streaming: Language Reactor with Netflix
+
+## Show Analytics
+
+Plots for vocabulary contributions...
+
+1.  Total contribution strength
+2.  Mean contribution strength (Penalize longer shows)
+3.  Weighted Mean contribution strength (Another penalty)
+4.  Tf-idf fun
+5.  Time series thing?
+
+## Acknowledgements
+
+Thank you to the following individuals for their respective contributions to the KoRank Project:
+
+1.  Abhi Thanvi --- Assisted with scraping text data from Netflix and other data from IMDb.
+2.  Paul Holaway --- Assisted with mathematical theory for modelling methods used in ranking shows.
+3.  [Graded Watching for Advanced Chinese Learners Website](http://www.jiong3.com/gradedwatching/) --- An inspiration for displaying the results of this project as a dashboard tool for Korean language learners.
