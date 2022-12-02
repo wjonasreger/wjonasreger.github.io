@@ -9,6 +9,7 @@ website:
   title: "W. Jonas Reger"
   site-url: https://wjonasreger.github.io
   description: "Jonas Reger's professional website for data science"
+  image: assets/images/profile.jpg
   favicon: assets/images/masthead.png
   search:
     location: navbar

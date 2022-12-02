@@ -4,7 +4,7 @@ description: "An official course website for STAT 100 developed using jekyll and
 image: "thumbnail.jpg"
 author: "Jonas Reger"
 date: "01/01/2020"
-categories: [education, github, statistics, website]
+categories: [Education, Statistics, Website]
 reading-time: true
 draft: false
 ---

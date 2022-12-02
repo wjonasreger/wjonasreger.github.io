@@ -3,7 +3,7 @@ title: "Cancer Research Publication for American Cancer Society"
 description: "A bio-chem cancer research paper towards identification of a cancer stem cell state"
 author: "Jonas Reger, Kristopher Kilian"
 date: "08/1/2013"
-categories: [cancer research, data analysis]
+categories: [Scientific Research, Data Analysis]
 draft: false
 freeze: true
 image: "thumbnail.jpg"

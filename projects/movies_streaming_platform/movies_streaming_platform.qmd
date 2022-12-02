@@ -4,7 +4,7 @@ description: "A clustering analysis project to detect underlying clustering stru
 author: "Atharv Pathak, Jonas Reger"
 date: "05/15/2021"
 image: "thumbnail.jpg"
-categories: [data analysis, github, machine learning, python]
+categories: [Data Analysis, Machine Learning, Python]
 draft: false
 freeze: true
 ---

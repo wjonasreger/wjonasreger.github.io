@@ -2,46 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://wjonasreger.github.io/about.html</loc>
-    <lastmod>2022-11-28T18:37:31.465Z</lastmod>
+    <lastmod>2022-12-02T01:19:52.210Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/index.html</loc>
-    <lastmod>2022-11-28T18:47:57.037Z</lastmod>
+    <lastmod>2022-12-02T01:32:51.093Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/cancer_research/cancer_research.html</loc>
-    <lastmod>2022-11-28T18:37:32.438Z</lastmod>
+    <lastmod>2022-12-02T01:19:53.455Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/discovering_data_science/discovering_data_science.html</loc>
-    <lastmod>2022-11-28T18:37:32.881Z</lastmod>
+    <lastmod>2022-12-02T01:19:54.052Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wjonasreger.github.io/projects/morphological_finite_state_transducer/morphological_finite_state_transducer.html</loc>
+    <lastmod>2022-12-02T01:32:33.755Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/movies_streaming_platform/movies_streaming_platform.html</loc>
-    <lastmod>2022-11-28T18:37:35.395Z</lastmod>
+    <lastmod>2022-12-02T01:20:00.775Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/reducing_co_emissions/reducing_co_emissions.html</loc>
-    <lastmod>2022-11-28T18:37:36.685Z</lastmod>
+    <lastmod>2022-12-02T01:20:01.256Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/stat100/stat100.html</loc>
-    <lastmod>2022-11-28T18:37:37.084Z</lastmod>
+    <lastmod>2022-12-02T01:20:01.700Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/traditional_ngram_language_models/traditional_ngram_language_models.html</loc>
-    <lastmod>2022-11-28T18:37:38.534Z</lastmod>
+    <lastmod>2022-12-02T01:32:01.695Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/walmart_weather/walmart_weather.html</loc>
-    <lastmod>2022-11-28T18:37:39.322Z</lastmod>
+    <lastmod>2022-12-02T01:20:05.387Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects.html</loc>
-    <lastmod>2022-11-28T18:47:08.309Z</lastmod>
+    <lastmod>2022-12-02T01:32:14.866Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/pvalue-calculator.html</loc>
-    <lastmod>2022-11-28T18:37:40.641Z</lastmod>
+    <lastmod>2022-12-02T01:20:07.109Z</lastmod>
   </url>
 </urlset>

@@ -2,6 +2,7 @@
   {
     "listing": "/projects.html",
     "items": [
+      "/projects/morphological_finite_state_transducer/morphological_finite_state_transducer.html",
       "/projects/traditional_ngram_language_models/traditional_ngram_language_models.html",
       "/projects/discovering_data_science/discovering_data_science.html",
       "/projects/movies_streaming_platform/movies_streaming_platform.html",

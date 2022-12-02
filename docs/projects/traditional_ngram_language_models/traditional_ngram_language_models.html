@@ -185,18 +185,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-page-left">
-      <h1 class="title">Traditional n-gram Language Models</h1>
+      <div class="quarto-title-block"><div><h1 class="title">Traditional n-gram Language Models</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button" data-quarto-source-url="https://github.com/wjonasreger/traditional_ngram_language_models">View Source</a></li></ul></div></div>
                   <div>
         <div class="description">
           Some traditional unigram and bigram language models with and without smoothing
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">github</div>
-                <div class="quarto-category">machine learning</div>
-                <div class="quarto-category">natural language processing</div>
-                <div class="quarto-category">python</div>
-                <div class="quarto-category">torch</div>
+                <div class="quarto-category">Machine Learning</div>
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">Python</div>
               </div>
                   </div>
   </div>
@@ -251,6 +249,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
 <p>The <code>torchdata</code> package will need to be installed prior to running.</p>
 <div class="cell" data-execution_count="3">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torchtext</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
@@ -258,6 +258,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">22</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="preprocess-data" class="level2">
@@ -269,80 +270,89 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p><strong>Unknown words:</strong> In order to deal with unknown words in the test corpora, all words that do not appear in the vocabulary are replaced with a special token for unknown words (<code>UNK</code>) before estimating these models. However, the WikiText-2 dataset has already done this. Unknown words in the test corpus are treated as that special token instead.</p></li>
 </ul>
 <div class="cell" data-execution_count="4">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># constants</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>START <span class="op">=</span> <span class="st">"&lt;START&gt;"</span>   <span class="co"># start-of-sentence token</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>END <span class="op">=</span> <span class="st">"&lt;END&gt;"</span>    <span class="co"># end-of-sentence-token</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>UNK <span class="op">=</span> <span class="st">"&lt;UNK&gt;"</span>   <span class="co"># unknown word token</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell" data-execution_count="5">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocess function to return preprocessed text data and vocabulary data</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess(data, vocab<span class="op">=</span><span class="va">None</span>):</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    final_data <span class="op">=</span> []</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    lowercase <span class="op">=</span> <span class="st">"abcdefghijklmnopqrstuvwxyz"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  final_data <span class="op">=</span> []</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  lowercase <span class="op">=</span> <span class="st">"abcdefghijklmnopqrstuvwxyz"</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> paragraph <span class="kw">in</span> data:</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="op">!=</span> <span class="st">'&lt;unk&gt;'</span> <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph.split()] <span class="co"># replace wikitext-2 &lt;unk&gt; with custom UNK token</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> vocab <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="kw">in</span> vocab <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph] <span class="co"># replace unknown words if vocab set is provided</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> paragraph <span class="kw">in</span> data:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="op">!=</span> <span class="st">'&lt;unk&gt;'</span> <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph.split()] <span class="co"># replace wikitext-2 &lt;unk&gt; with custom UNK token</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vocab <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="kw">in</span> vocab <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph] <span class="co"># replace unknown words if vocab set is provided</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> paragraph <span class="op">==</span> [] <span class="kw">or</span> paragraph.count(<span class="st">'='</span>) <span class="op">&gt;=</span> <span class="dv">2</span>: <span class="cf">continue</span> <span class="co"># skip empty paragraphs</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        sen <span class="op">=</span> []</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> word <span class="kw">in</span> paragraph:</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> prev_quot: <span class="co"># if word follows a quotation mark</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if punctuation follows quotation to end sentence (susceptible to ending sentences mid-way if contains a quote)</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                    final_data.append(sen)</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                    sen <span class="op">=</span> []</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>                    prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> paragraph <span class="op">==</span> [] <span class="kw">or</span> paragraph.count(<span class="st">'='</span>) <span class="op">&gt;=</span> <span class="dv">2</span>: <span class="cf">continue</span> <span class="co"># skip empty paragraphs</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    sen <span class="op">=</span> []</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> word <span class="kw">in</span> paragraph:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> prev_quot: <span class="co"># if word follows a quotation mark</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if punctuation follows quotation to end sentence (susceptible to ending sentences mid-way if contains a quote)</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>          final_data.append(sen)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>          sen <span class="op">=</span> []</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>          prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> prev_punct: <span class="co"># if word follows punctuation</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> word <span class="op">==</span> <span class="st">'"'</span>: <span class="co"># check occurence of quotation marks to help decide to continue or end sentence</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>                    prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">True</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>: <span class="co"># when word follows non-quote punctuations</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if new sentence is starting (i.e., starts with capitalized letter after punctuation)</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>                        final_data.append(sen)</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>                        sen <span class="op">=</span> []</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>                        prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> prev_punct: <span class="co"># if word follows punctuation</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">==</span> <span class="st">'"'</span>: <span class="co"># check occurence of quotation marks to help decide to continue or end sentence</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>          prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">True</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>: <span class="co"># when word follows non-quote punctuations</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if new sentence is starting (i.e., starts with capitalized letter after punctuation)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            final_data.append(sen)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>            sen <span class="op">=</span> []</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
 <span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> word <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>}: prev_punct <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>            sen <span class="op">+=</span> [word]</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="co"># may need to indent the next two lines later...</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> sen[<span class="op">-</span><span class="dv">1</span>] <span class="kw">not</span> <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>, <span class="st">'"'</span>}: <span class="cf">continue</span> <span class="co"># prevent a lot of short sentences (a simple rule)</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        final_data.append(sen) <span class="co"># add sentence to final data</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> word <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>}: prev_punct <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>      sen <span class="op">+=</span> [word]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may need to indent the next two lines later...</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sen[<span class="op">-</span><span class="dv">1</span>] <span class="kw">not</span> <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>, <span class="st">'"'</span>}: <span class="cf">continue</span> <span class="co"># prevent a lot of short sentences (a simple rule)</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    final_data.append(sen) <span class="co"># add sentence to final data</span></span>
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    vocab_was_none <span class="op">=</span> vocab <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  vocab_was_none <span class="op">=</span> vocab <span class="kw">is</span> <span class="va">None</span></span>
 <span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vocab_was_none:</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        vocab <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> vocab_was_none:</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    vocab <span class="op">=</span> <span class="bu">set</span>()</span>
 <span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(final_data)):</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        final_data[i] <span class="op">=</span> [START] <span class="op">+</span> final_data[i] <span class="op">+</span> [END] <span class="co"># add start and end tags to sentences</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(final_data)):</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    final_data[i] <span class="op">=</span> [START] <span class="op">+</span> final_data[i] <span class="op">+</span> [END] <span class="co"># add start and end tags to sentences</span></span>
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> vocab_was_none:</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> word <span class="kw">in</span> final_data[i]:</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>                vocab.add(word) <span class="co"># build vocab set</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vocab_was_none:</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> final_data[i]:</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        vocab.add(word) <span class="co"># build vocab set</span></span>
 <span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> final_data, vocab</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> final_data, vocab</span>
 <span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co"># function to retreive and preprocess the WikiText-2 dataset</span></span>
 <span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> getDataset():</span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> torchtext.datasets.WikiText2(root<span class="op">=</span><span class="st">'.data'</span>, split<span class="op">=</span>(<span class="st">'train'</span>, <span class="st">'valid'</span>))</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    train_dataset, vocab <span class="op">=</span> preprocess(dataset[<span class="dv">0</span>]) <span class="co"># preprocessed train and vocab data</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    test_dataset, _ <span class="op">=</span> preprocess(dataset[<span class="dv">1</span>], vocab) <span class="co"># preprocessed test data with vocab set input</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>  dataset <span class="op">=</span> torchtext.datasets.WikiText2(root<span class="op">=</span><span class="st">'.data'</span>, split<span class="op">=</span>(<span class="st">'train'</span>, <span class="st">'valid'</span>))</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  train_dataset, vocab <span class="op">=</span> preprocess(dataset[<span class="dv">0</span>]) <span class="co"># preprocessed train and vocab data</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>  test_dataset, _ <span class="op">=</span> preprocess(dataset[<span class="dv">1</span>], vocab) <span class="co"># preprocessed test data with vocab set input</span></span>
 <span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> train_dataset, test_dataset</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> train_dataset, test_dataset</span>
 <span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>train_dataset, test_dataset <span class="op">=</span> getDataset() <span class="co"># instantiate preprocessed test-train data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Here are some examples of sentences from the pre-processed training data.</p>
 <div class="cell" data-execution_count="6">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sentence <span class="kw">in</span> random.sample(train_dataset, <span class="dv">5</span>):</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(sentence)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(sentence)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>['&lt;START&gt;', 'South', 'Korean', 'troops', 'halted', 'the', 'advance', 'of', 'the', 'North', 'Koreans', 'again', 'around', 'the', 'end', 'of', 'the', 'month', 'thanks', 'to', 'increased', 'reinforcements', 'and', 'support', 'closer', 'to', 'the', 'Pusan', 'Perimeter', 'logistics', 'network', '.', '&lt;END&gt;']
 ['&lt;START&gt;', 'In', 'October', '1970', ',', 'Dylan', 'released', 'New', 'Morning', ',', 'considered', 'a', 'return', 'to', 'form', '.', '&lt;END&gt;']
@@ -369,38 +379,44 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p><strong>Corpus Perplexity</strong> (i.e., <code>getCorpusPerplexity(self, test_data)</code>): Computes the perplexity (i.e., normalized inverse log probability) of <code>test_data</code>.</p></li>
 </ul>
 <div class="cell" data-execution_count="7">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># base class defined for language models</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LanguageModel(<span class="bu">object</span>):</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"generateSentence is not implemented in each model subclass."</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"generateSentence is not implemented in each model subclass."</span>)</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getSentenceProbability is not implemented in each model subclass."</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getCorpusPerplexity is not implemented in each model subclass."</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getSentenceProbability is not implemented in each model subclass."</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getCorpusPerplexity is not implemented in each model subclass."</span>)</span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> printSentences(<span class="va">self</span>, n):</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            sentence <span class="op">=</span> <span class="va">self</span>.generateSentence()</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            sentence_loglik <span class="op">=</span> <span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">'</span><span class="ch">\t</span><span class="st">[LOG-LIKELIHOOD] '</span>, sentence_loglik , <span class="st">'</span><span class="ch">\n\t</span><span class="st">[SENTENCE] '</span>, <span class="st">' '</span>.join(sentence))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> printSentences(<span class="va">self</span>, n):</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      sentence <span class="op">=</span> <span class="va">self</span>.generateSentence()</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      sentence_loglik <span class="op">=</span> <span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="st">'</span><span class="ch">\t</span><span class="st">[LOG-LIKELIHOOD] '</span>, sentence_loglik , <span class="st">'</span><span class="ch">\n\t</span><span class="st">[SENTENCE] '</span>, <span class="st">' '</span>.join(sentence))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Here is a function to build a model and print random sentences, and corpus perplexities.</p>
 <div class="cell" data-execution_count="8">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> buildModel(ngram_model, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>):</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ngram_model(train_dataset)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'[MODEL TYPE] </span><span class="sc">{</span>ngram_model<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  model <span class="op">=</span> ngram_model(train_dataset)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'[MODEL TYPE] </span><span class="sc">{</span>ngram_model<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">'</span>)</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[RANDOM SENTENCES]'</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    model.printSentences(sentences)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[RANDOM SENTENCES]'</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  model.printSentences(sentences)</span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[CORPUS PERPLEXITIES]'</span>)</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TRAIN DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(train_dataset)<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TEST DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(test_dataset)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[CORPUS PERPLEXITIES]'</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TRAIN DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(train_dataset)<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TEST DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(test_dataset)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="unigram-model" class="level2">
@@ -410,53 +426,59 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>where the probability of a sentence is estimated by</p>
 <p><span class="math display">\[\hat{P} (sentence) = \hat{P} (\texttt{START} \times w_0 \times .. \times w_n) = \prod_{i=0}^n \hat{P}(w_i)\]</span></p>
 <div class="cell" data-execution_count="9">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a unigram language model class</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UnigramModel(LanguageModel):</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="co"># generate ngrams</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        corpus_size <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> word <span class="kw">in</span> sentence:</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> word <span class="op">!=</span> START:</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                    ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                    corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size count</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>            ngrams[vocab] <span class="op">=</span> ngrams[vocab] <span class="op">/</span> corpus_size <span class="co"># compute estimated ngram probability</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngrams</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> sentence:</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">!=</span> START:</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size count</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      ngrams[vocab] <span class="op">=</span> ngrams[vocab] <span class="op">/</span> corpus_size <span class="co"># compute estimated ngram probability</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        continue_sentence <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> continue_sentence:</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>          rand_prob <span class="op">=</span> random.random()</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>          cum_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> ngram <span class="kw">in</span> <span class="va">self</span>.ngrams.keys():</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>            cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[ngram]</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>              sentence.append(ngram) <span class="co"># attach ngram to the sentence</span></span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> ngram <span class="op">==</span> END: <span class="co"># check for end of sentence</span></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>                continue_sentence <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>              <span class="cf">break</span></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> ngram <span class="kw">in</span> <span class="va">self</span>.ngrams.keys():</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[ngram]</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>          sentence.append(ngram) <span class="co"># attach ngram to the sentence</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> ngram <span class="op">==</span> END: <span class="co"># check for end of sentence</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
 <span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>        sentence_loglik <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> word <span class="kw">in</span> sentence[<span class="dv">1</span>:]: <span class="co"># can ignore first token (i.e., START has probability of 1)</span></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>          sentence_loglik <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word])</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence_loglik</span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>        corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>        corpus_size <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>          corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># corpus perplexity</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    sentence_loglik <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> word <span class="kw">in</span> sentence[<span class="dv">1</span>:]: <span class="co"># can ignore first token (i.e., START has probability of 1)</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>      sentence_loglik <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word])</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_loglik</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>      corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>      corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># corpus perplexity</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Here are some randomly generated sentences and the log-likelihoods for each. Corpus perplexities are also computed on the train and test datasets under the model.</p>
 <div class="cell" data-execution_count="10">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>buildModel(UnigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[MODEL TYPE] UnigramModel
 
@@ -487,22 +509,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>If <span class="math inline">\(c(w)\)</span> is the frequency of <span class="math inline">\(w\)</span> in the training data, then <span class="math inline">\(P_L(w)\)</span> is computed as follows:</p>
 <p><span class="math display">\[P_L(w)=\frac{c(w)+1}{N+S}\]</span></p>
 <div class="cell" data-execution_count="11">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a smoothed unigram language model class</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SmoothedUnigramModel(UnigramModel):</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        corpus_size <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sen <span class="kw">in</span> train_data:</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> word <span class="kw">in</span> sen:</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> word <span class="op">!=</span> START:</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>                    ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>                    corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>            ngrams[vocab] <span class="op">=</span> (ngrams[vocab] <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> (corpus_size <span class="op">+</span> <span class="bu">len</span>(ngrams)) <span class="co"># apply laplace smoothing</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sen <span class="kw">in</span> train_data:</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> sen:</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">!=</span> START:</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>      ngrams[vocab] <span class="op">=</span> (ngrams[vocab] <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> (corpus_size <span class="op">+</span> <span class="bu">len</span>(ngrams)) <span class="co"># apply laplace smoothing</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell" data-execution_count="12">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>buildModel(SmoothedUnigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[MODEL TYPE] SmoothedUnigramModel
 
@@ -534,60 +562,66 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>To avoid underflow, all calculations are computed in log-space. That is, instead of multiplying probabilities, the logarithms of the probabilities are summed and exponentiated:</p>
 <p><span class="math display">\[\prod_{i=1}^N P(w^{(i)}|w^{(i-1)}) = \exp\Big (\sum_{i=1}^N \log P(w^{(i)}|w^{(i-1)}) \Big ) \]</span></p>
 <div class="cell" data-execution_count="13">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BigramModel(LanguageModel):</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>            word <span class="op">=</span> sentence[i]</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>              ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># instantiate set of ngrams for new word w_i</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>            ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>          wi_ngrams_set <span class="op">=</span> ngrams[wi_word] <span class="co"># ngram set for word w_i</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>          wi_ngrams_count <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># ngram count for the set</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>            ngrams[wi_word][wi_next] <span class="op">=</span> wi_ngrams_set[wi_next] <span class="op">/</span> wi_ngrams_count <span class="co"># ngram probabilities in the set</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        word <span class="op">=</span> sentence[i]</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># instantiate set of ngrams for new word w_i</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word] <span class="co"># ngram set for word w_i</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_count <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># ngram count for the set</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        ngrams[wi_word][wi_next] <span class="op">=</span> wi_ngrams_set[wi_next] <span class="op">/</span> wi_ngrams_count <span class="co"># ngram probabilities in the set</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
 <span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        continue_sentence <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>        sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> continue_sentence:</span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>          rand_prob <span class="op">=</span> random.random()</span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>          cum_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>          prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>] <span class="co"># previous word in sentence</span></span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys():</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>            cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[prev_word][word]</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
-<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>              sentence.append(word) <span class="co"># add ngram to sentece</span></span>
-<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
-<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>                continue_sentence <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>              <span class="cf">break</span></span>
-<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>      prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>] <span class="co"># previous word in sentence</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys():</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[prev_word][word]</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>          sentence.append(word) <span class="co"># add ngram to sentece</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
 <span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
-<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>          word <span class="op">=</span> sentence[i]</span>
-<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>          <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
-<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>          <span class="cf">try</span>:</span>
-<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>            sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word][<span class="bu">next</span>]) <span class="co"># compute log of ngram probability if ngram exists</span></span>
-<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>          <span class="cf">except</span>:</span>
-<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>            sentence_prob <span class="op">+=</span> <span class="op">-</span><span class="bu">float</span>(<span class="st">'inf'</span>) <span class="co"># compute -inf for log of probability if ngram doesn't exist</span></span>
-<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence_prob</span>
-<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
-<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>        corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>        corpus_size <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
-<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>          corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence) <span class="co"># compute log-likelihood of sentence</span></span>
-<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
-<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># compute perplexity and transform back to original space</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>      word <span class="op">=</span> sentence[i]</span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>      <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span>:</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word][<span class="bu">next</span>]) <span class="co"># compute log of ngram probability if ngram exists</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>      <span class="cf">except</span>:</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">+=</span> <span class="op">-</span><span class="bu">float</span>(<span class="st">'inf'</span>) <span class="co"># compute -inf for log of probability if ngram doesn't exist</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_prob</span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>    corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>      corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence) <span class="co"># compute log-likelihood of sentence</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>      corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># compute perplexity and transform back to original space</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell" data-execution_count="14">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>buildModel(BigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[MODEL TYPE] BigramModel
 
@@ -623,84 +657,90 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><span class="math display">\[P_{AD}(w’|w)=\frac{\max \big (c(ww’)-D,0\big )}{c(w)}+\bigg (\frac{D}{c(w)}\cdot S(w) \cdot P_L(w’)\bigg )\]</span></p>
 <p>where <span class="math inline">\(c(w)\)</span> is the frequency of <span class="math inline">\(w\)</span> in the training data and <span class="math inline">\(P_L(w’)\)</span> is the Laplace-smoothed unigram probability of <span class="math inline">\(w’\)</span>.</p>
 <div class="cell" data-execution_count="15">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SmoothedBigramModelAD(BigramModel):</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="co"># generate ngram probabilities from smoothed unigram model</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.LPSmoothedUnigram <span class="op">=</span> SmoothedUnigramModel(train_data).ngrams</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngram probabilities from smoothed unigram model</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.LPSmoothedUnigram <span class="op">=</span> SmoothedUnigramModel(train_data).ngrams</span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="co"># generate ngram counts for bigram model</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>            word <span class="op">=</span> sentence[w] <span class="co"># current word</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>            <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>] <span class="co"># next word</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>              ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># create ngram set for word</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>            ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngram counts for bigram model</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        word <span class="op">=</span> sentence[w] <span class="co"># current word</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>] <span class="co"># next word</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># create ngram set for word</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
 <span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># toward computing the discounting factor D</span></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        n1 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly once in train_data</span></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        n2 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly twice in train_data</span></span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>            wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">1</span>:</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>                n1 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n1 count for D computation</span></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>              <span class="cf">elif</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">2</span>:</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>                n2 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n2 count for D computation</span></span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>        D <span class="op">=</span> n1 <span class="op">/</span> (n1 <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>n2) <span class="co"># compute discounting factor D</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># toward computing the discounting factor D</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    n1 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly once in train_data</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    n2 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly twice in train_data</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>          n1 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n1 count for D computation</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">2</span>:</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>          n2 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n2 count for D computation</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    D <span class="op">=</span> n1 <span class="op">/</span> (n1 <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>n2) <span class="co"># compute discounting factor D</span></span>
 <span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># toward computing ngram types and ngram tokens</span></span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>        S <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>        C <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>            wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>            S[wi_word] <span class="op">=</span> <span class="bu">len</span>(wi_ngrams_set) <span class="co"># number of ngram types</span></span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>            C[wi_word] <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># number of ngram tokens</span></span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>        <span class="co"># assigning ngrams and smoothing features as attributes for calcProb method</span></span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.D <span class="op">=</span> D</span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.S <span class="op">=</span> S</span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.C <span class="op">=</span> C</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># toward computing ngram types and ngram tokens</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    C <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>      S[wi_word] <span class="op">=</span> <span class="bu">len</span>(wi_ngrams_set) <span class="co"># number of ngram types</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>      C[wi_word] <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># number of ngram tokens</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># assigning ngrams and smoothing features as attributes for calcProb method</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.D <span class="op">=</span> D</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.S <span class="op">=</span> S</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.C <span class="op">=</span> C</span>
 <span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> calcProb(<span class="va">self</span>, prev_word, next_word):</span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>        <span class="co"># calculate probability</span></span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>          bigram <span class="op">=</span> <span class="va">self</span>.ngrams[prev_word][next_word] <span class="co"># count of bigram token</span></span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>          t1 <span class="op">=</span> <span class="bu">max</span>(bigram <span class="op">-</span> <span class="va">self</span>.D, <span class="dv">0</span>) <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="co"># left term of P_AB formula</span></span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>          t2 <span class="op">=</span> <span class="va">self</span>.D <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="op">*</span> <span class="va">self</span>.S[prev_word] <span class="op">*</span> <span class="va">self</span>.LPSmoothedUnigram[next_word] <span class="co"># right term of P_AB formula</span></span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>          abs_discount_prob <span class="op">=</span> t1 <span class="op">+</span> t2 <span class="co"># probability of next_word given prev_word with absolute discounting</span></span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span>:</span>
-<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>          abs_discount_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> abs_discount_prob</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> calcProb(<span class="va">self</span>, prev_word, next_word):</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># calculate probability</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>      bigram <span class="op">=</span> <span class="va">self</span>.ngrams[prev_word][next_word] <span class="co"># count of bigram token</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>      t1 <span class="op">=</span> <span class="bu">max</span>(bigram <span class="op">-</span> <span class="va">self</span>.D, <span class="dv">0</span>) <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="co"># left term of P_AB formula</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>      t2 <span class="op">=</span> <span class="va">self</span>.D <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="op">*</span> <span class="va">self</span>.S[prev_word] <span class="op">*</span> <span class="va">self</span>.LPSmoothedUnigram[next_word] <span class="co"># right term of P_AB formula</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>      abs_discount_prob <span class="op">=</span> t1 <span class="op">+</span> t2 <span class="co"># probability of next_word given prev_word with absolute discounting</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span>:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>      abs_discount_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> abs_discount_prob</span>
 <span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
-<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>        continue_sentence <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>        sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
-<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> continue_sentence:</span>
-<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>          rand_prob <span class="op">=</span> random.random()</span>
-<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>          cum_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>          prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>]</span>
-<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> next_word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys(): <span class="co"># search ngram types/tokens</span></span>
-<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>            cum_prob <span class="op">+=</span> <span class="va">self</span>.calcProb(prev_word, next_word) <span class="co"># on-the-go probability calculation</span></span>
-<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
-<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>              sentence.append(next_word) <span class="co"># add ngram to sentence</span></span>
-<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> next_word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
-<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>                continue_sentence <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>              <span class="cf">break</span></span>
-<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence</span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>      prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> next_word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys(): <span class="co"># search ngram types/tokens</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.calcProb(prev_word, next_word) <span class="co"># on-the-go probability calculation</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>          sentence.append(next_word) <span class="co"># add ngram to sentence</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> next_word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
 <span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
-<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>            word <span class="op">=</span> sentence[w]</span>
-<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>            <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>]</span>
-<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>            sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.calcProb(word, <span class="bu">next</span>))</span>
-<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sentence_prob</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>    sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>      word <span class="op">=</span> sentence[w]</span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>      <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>      sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.calcProb(word, <span class="bu">next</span>))</span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_prob</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell" data-execution_count="16">
+<details open="">
+<summary>Reveal the code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>buildModel(SmoothedBigramModelAD, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[MODEL TYPE] SmoothedBigramModelAD
 
@@ -795,6 +835,57 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     // clear code selection
     e.clearSelection();
   });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
   function tippyHover(el, contentFn) {
     const config = {
       allowHTML: true,

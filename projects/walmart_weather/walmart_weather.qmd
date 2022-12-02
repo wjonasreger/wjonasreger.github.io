@@ -3,7 +3,7 @@ title: "Walmart Sales During Stormy Weather Data Analysis"
 description: "A data analysis project towards predictions of Walmart sales during stormy weather"
 author: "Brendan Alexander, Isaias Lopez, Jonas Reger"
 date: "12/15/2019"
-categories: [data analysis, machine learning, statistics, r]
+categories: [Data Analysis, Machine Learning, Statistics, R]
 draft: false
 freeze: true
 image: "thumbnail.jpg"
