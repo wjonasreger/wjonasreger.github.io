@@ -2,14 +2,15 @@
   {
     "listing": "/projects.html",
     "items": [
-      "/projects/morphological_finite_state_transducer/morphological_finite_state_transducer.html",
-      "/projects/traditional_ngram_language_models/traditional_ngram_language_models.html",
-      "/projects/discovering_data_science/discovering_data_science.html",
-      "/projects/movies_streaming_platform/movies_streaming_platform.html",
-      "/projects/reducing_co_emissions/reducing_co_emissions.html",
-      "/projects/stat100/stat100.html",
-      "/projects/walmart_weather/walmart_weather.html",
-      "/projects/cancer_research/cancer_research.html"
+      "/projects/text_classification_neural_networks/index.html",
+      "/projects/morphological_finite_state_transducer/index.html",
+      "/projects/traditional_ngram_language_models/index.html",
+      "/projects/discovering_data_science/index.html",
+      "/projects/movies_streaming_platform/index.html",
+      "/projects/reducing_co_emissions/index.html",
+      "/projects/stat100/index.html",
+      "/projects/walmart_weather/index.html",
+      "/projects/cancer_research/index.html"
     ]
   }
 ]

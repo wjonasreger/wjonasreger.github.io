@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jonas Reger">
+<meta name="description" content="Some neural network models for predicting sentiments of movie reviews">
+
+<title>W. Jonas Reger - Text Classification with Neural Networks</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/masthead.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="W. Jonas Reger - Text Classification with Neural Networks">
+<meta property="og:description" content="UIUC Statistics Graduate Student Seeking Work in Natural Language Processing, Machine Learning, and Data Science">
+<meta property="og:site-name" content="W. Jonas Reger">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">W. Jonas Reger</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../pvalue-calculator.html">
+ <span class="menu-text">P-Value Calculator</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/wjonasreger"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/wjonasreger/"><i class="bi bi-linkedin" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-page-left">
+      <div class="quarto-title-block"><div><h1 class="title">Text Classification with Neural Networks</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button" data-quarto-source-url="https://github.com/wjonasreger/text_classification_neural_networks">View Source</a></li></ul></div></div>
+                  <div>
+        <div class="description">
+          Some neural network models for predicting sentiments of movie reviews
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Machine Learning</div>
+                <div class="quarto-category">Neural Networks</div>
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">Python</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Jonas Reger </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">October 2022</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#text-classification-with-neural-networks" id="toc-text-classification-with-neural-networks" class="nav-link active" data-scroll-target="#text-classification-with-neural-networks">Text Classification with Neural Networks</a>
+  <ul class="collapse">
+  <li><a href="#load-packages" id="toc-load-packages" class="nav-link" data-scroll-target="#load-packages">Load Packages</a></li>
+  <li><a href="#preprocess-data" id="toc-preprocess-data" class="nav-link" data-scroll-target="#preprocess-data">Preprocess Data</a></li>
+  <li><a href="#dataloader-the-textdataset-class" id="toc-dataloader-the-textdataset-class" class="nav-link" data-scroll-target="#dataloader-the-textdataset-class">Dataloader: The <code>TextDataset</code> Class</a></li>
+  <li><a href="#convolutional-neural-network-the-cnn-class" id="toc-convolutional-neural-network-the-cnn-class" class="nav-link" data-scroll-target="#convolutional-neural-network-the-cnn-class">Convolutional Neural Network: The <code>CNN</code> Class</a>
+  <ul class="collapse">
+  <li><a href="#model-training" id="toc-model-training" class="nav-link" data-scroll-target="#model-training">Model Training</a></li>
+  <li><a href="#model-evaluation" id="toc-model-evaluation" class="nav-link" data-scroll-target="#model-evaluation">Model Evaluation</a></li>
+  </ul></li>
+  <li><a href="#recurrent-neural-network-the-rnn-class" id="toc-recurrent-neural-network-the-rnn-class" class="nav-link" data-scroll-target="#recurrent-neural-network-the-rnn-class">Recurrent Neural Network: The RNN Class</a>
+  <ul class="collapse">
+  <li><a href="#model-training-1" id="toc-model-training-1" class="nav-link" data-scroll-target="#model-training-1">Model Training</a></li>
+  <li><a href="#model-evaluation-1" id="toc-model-evaluation-1" class="nav-link" data-scroll-target="#model-evaluation-1">Model Evaluation</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+
+
+
+
+<section id="text-classification-with-neural-networks" class="level1">
+<h1>Text Classification with Neural Networks</h1>
+<p>In this notebook, machine learning models are implemented to predict the sentiment of movie reviews using the <a href="https://ai.stanford.edu/~amaas/data/sentiment/">IMDb movie reviews dataset</a> through the <code>torchtext</code> package. Specifically, classifiers based on Convolutional Neural Networks (CNN’s) and Recurrent Neural Networks (RNN’s) are implemented.</p>
+<section id="load-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
+<p>First download the dataset using <a href="https://torchtext.readthedocs.io/en/latest/index.html">torchtext</a>, which is a package that supports NLP for PyTorch.</p>
+<p>The <code>torchdata</code> package will need to be installed prior to running.</p>
+<div class="cell" data-execution_count="2">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm.notebook <span class="im">import</span> tqdm</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torchtext</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils <span class="im">import</span> data</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.optim <span class="im">as</span> optim</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">22</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="3">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set device to cuda for faster model training</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>DEVICE <span class="op">=</span> torch.device(<span class="st">'cuda'</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">'cpu'</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Using device:'</span>, DEVICE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Using device: cuda</code></pre>
+</section>
+<section id="preprocess-data" class="level2">
+<h2 class="anchored" data-anchor-id="preprocess-data">Preprocess Data</h2>
+<p>The train and test data are preprocessed and tokenized.</p>
+<div class="cell" data-execution_count="4">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess(review):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  res <span class="op">=</span> []</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> x <span class="kw">in</span> review.split(<span class="st">' '</span>):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    remove_beg<span class="op">=</span><span class="va">True</span> <span class="cf">if</span> x[<span class="dv">0</span>] <span class="kw">in</span> {<span class="st">'('</span>, <span class="st">'"'</span>, <span class="st">"'"</span>} <span class="cf">else</span> <span class="va">False</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    remove_end<span class="op">=</span><span class="va">True</span> <span class="cf">if</span> x[<span class="op">-</span><span class="dv">1</span>] <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">','</span>, <span class="st">';'</span>, <span class="st">':'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>, <span class="st">'"'</span>, <span class="st">"'"</span>, <span class="st">')'</span>} <span class="cf">else</span> <span class="va">False</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> remove_beg <span class="kw">and</span> remove_end: res <span class="op">+=</span> [x[<span class="dv">0</span>], x[<span class="dv">1</span>:<span class="op">-</span><span class="dv">1</span>], x[<span class="op">-</span><span class="dv">1</span>]]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> remove_beg: res <span class="op">+=</span> [x[<span class="dv">0</span>], x[<span class="dv">1</span>:]]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> remove_end: res <span class="op">+=</span> [x[:<span class="op">-</span><span class="dv">1</span>], x[<span class="op">-</span><span class="dv">1</span>]]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>: res <span class="op">+=</span> [x]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> res</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>train_data <span class="op">=</span> torchtext.datasets.IMDB(root<span class="op">=</span><span class="st">'.data'</span>, split<span class="op">=</span><span class="st">'train'</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>train_data <span class="op">=</span> <span class="bu">list</span>(train_data)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>train_data <span class="op">=</span> [(x[<span class="dv">0</span>], preprocess(x[<span class="dv">1</span>])) <span class="cf">for</span> x <span class="kw">in</span> train_data]</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>train_data, test_data <span class="op">=</span> train_data[<span class="dv">0</span>:<span class="dv">10000</span>] <span class="op">+</span> train_data[<span class="dv">12500</span>:<span class="dv">12500</span><span class="op">+</span><span class="dv">10000</span>], train_data[<span class="dv">10000</span>:<span class="dv">12500</span>] <span class="op">+</span> train_data[<span class="dv">12500</span><span class="op">+</span><span class="dv">10000</span>:], </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Num. Train Examples:'</span>, <span class="bu">len</span>(train_data))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Num. Test Examples:'</span>, <span class="bu">len</span>(test_data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Num. Train Examples: 20000
+Num. Test Examples: 5000</code></pre>
+<p>Here some examples of reviews with a score and text from the pre-processed training data.</p>
+<div class="cell" data-execution_count="5">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">SAMPLE DATA:"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> random.sample(train_data, <span class="dv">5</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'Sample label:'</span>, x[<span class="dv">0</span>])</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'Sample text:'</span>, <span class="st">' '</span>.join(x[<span class="dv">1</span>]), <span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>SAMPLE DATA:
+Sample label: neg
+Sample text: I felt asleep , watching it!! ! ( and I had tickets for the midnight- premiere ) Any questions ? The most disturbing scene , as far as I can remember , was the techno-dance-i-dont-know-what-that-was-scene . By the way what an ending! ? 
+
+Sample label: neg
+Sample text: A warning to you not to be seduced by the names Bigelow and Red . _Undertow_ is pointless and unengaging , and made me think often of a phrase by Twain about wishing all the characters would be drowned together . When someone brings up the category of Worst Films Ever Made , it's not the likes of _Plan 9_ or _Attack of the Killer Shrews_ that I think of ; it's the likes of this . What a complete waste of time--my own and everyone who was involved with this flick . 
+
+Sample label: neg
+Sample text: I saw this regurgitated pile of vignettes tonight at a preview screening and I was straight up blown away by how bad it was . 
+First off , the film practically flaunted its gaping blind spots . There are no black or gay New Yorkers in love ? Or who , say , know the self-involved white people in love ? I know it's not the love Crash of anvil-tastic inclusiveness but you can't pretend to have a cinematic New York with out these fairly prevalent members of society . Plus , you know the people who produced this ish thought Crash deserved that ham-handed Oscar , so where is everyone ? 
+Possibly worse than the bizarre and willful socioeconomic ignorance were the down right offensive chapters ( remember when you were in high school and people were openly disgusted with pretty young women in wheelchairs ? Me either) . This movie ran the gamut of ways to be the worst . Bad acting , bad writing , bad directing -- all spanning every possible genre ever to concern wealthy white people who smoke cigarettes outside fancy restaurants . 
+But thank god they finally got powerhouses Hayden Christensen and Rachel Bilson back together for that Jumper reunion . And , side note , Uma dodged a bullet ; Ethan Hawke looks ravaged . This , of course , is one thing in terms of his looks , but added an incredibly creepy extra vibe of horribleness to his terrifyingly scripted scene opposite poor , lovely Maggie Q.
+I had a terrible time choosing my least favorite scene for the end of film questionnaire , but it has to be the Anton Yelchin/ Olivia Thirlby bit for the sheer lack of taste , which saddens me because I really like those two actors . I don't consider myself easily offended , but all I could do was scoff and look around with disgust like someone's 50 year old aunt . 
+A close second place in this incredibly tight contest of terrible things is Shia LaBeouf's tone deaf portrayal of what it means for a former Disney Channel star to act against Julie Christie . I don't mean opposite , I mean against . Against is the only explanation . I realize now that the early sequence with Orlando Bloom is a relative highlight . HIGHLIGHT . Please keep that in mind when your brain begins to leak out your ear soon after the opening credits , which seem to be a nod to the first New York Real World . This film is embarrassing , strangely dated , inarticulate , ineffective , pretentious and , in the end , completely divorced from any real idea of New York at all . 
+(The extra star is for the Cloris Leachman/ Eli Wallach sequence , as it is actually quite sweet , but it is only one bright spot in what feels like hours of pointless , masturbatory torment. ) 
+
+Sample label: pos
+Sample text: Although critically maligned , Johnny Dangerously is one of the funniest movies I've ever seen . It's a movie that should be watched closely ; some of the funny bits are done in passing and do not have the usual amount of attention drawn to them . For instance , keep an eye on Michael Keaton's use of the pricing gun at the pet store...and also on the documentary-style years that appear at the beginning of scenes . It's one of those rare movies where the humor hits you unexpectedly , even though you know it's a comedy . Amy Heckerling , the director , is really sharp here--If you enjoyed her better known films ( Fast Times at Ridgemont High , Clueless , European Vacation , etc.,)you should give this one a look.
+Michael Keaton is extremely likable in the title role and the supporting cast ( Griffin Dunne , Maureen Stapleton , Joe Piscopo , Peter Boyle ) is excellent . Highly recommended . 
+
+Sample label: neg
+Sample text: Surely one of the most ill-advised remakes of a classic in film history – especially since the promise of its tag-line , “The most beautiful woman of our time in the most erotic adventure of all time” , isn’t even properly exploited ! Although this film was regularly shown on TV in my neck of the woods since my childhood days , its notoriety ( for awfulness not erotic content , mind you ) kept me away from it until now – and I only relented because I have recently enjoyed Bo Derek’s previous film , 10 ( 1979) , and have been watching a lot of fantasy stuff as well over the Christmas period.
+Lead actress/producer Bo Derek is rather ridiculous playing the schoolgirl-ish sexual innocent ( witness the inept banana scene ) and , as was to be expected , she is made to get her clothes off a few times but , as welcome as these scenes were , she came off as far more sensual in 10 than she does here ; Richard Harris , then , chews the scenery incessantly as Jane’s obsessed explorer father , but John Philip Law barely registers as his aide who meekly shows some initial interest in Jane herself ; newcomer Miles O’Keeffe has the title role and he only makes his entrance 45 minutes into the movie , is completely silent throughout except for his famous yodel ( which is probably lifted from Johnny Weissmuller anyway! ) and , furthermore , is as inexpressive as one of the trees he dangles from at regular intervals throughout the film’s second half! ; for the record , he later starred in two ATOR movies ( or would-be CONAN imitators ) for Joe D’Amato and the King Arthur-era set , SWORD OF THE VALIANT ( 1984).
+When still an actor , director John Derek ( who also serves as his own cinematographer here ) had worked with some good film-makers ( Cecil B . De Mille , William Dieterle and Robert Rossen ) and a few great ones ( Otto Preminger , Nicholas Ray and Don Siegel ) but he clearly learned zilch from them as his direction of this one is a major liability : appallingly pretentious at times ( witness the perfectly horrid python attack sequence ) with a senseless overuse of the slow motion technique and cheesy transitions ; this was Derek’s seventh film as a director ( and his second of four with wife Bo ) and , eventually , he would only get to make two more.
+The film’s utter failure only needs to be gauged by the fact that the Tarzan legend was tackled once more on film – in GREYSTOKE : THE LEGEND OF TARZAN , LORD OF THE APES ( which , surprisingly enough , I haven’t watched myself yet ) – a mere three years later! ! Nominated for six Razzie Awards ( including John Derek , Richard Harris and Miles O’Keeffe ) and winning one for Bo Derek herself , TARZAN , THE APE MAN was co-written by Gary Goddard , the future director of another highly anticipated but ultimately disappointing transposition to the silver screen of a ( this time animated ) heroic figure , MASTER OF THE UNIVERSE ( 1987 ) which I will be revisiting presently as well ( yay) ! Despite a charming closing credit sequence showing Tarzan and Jane playing with around with an orang-utan and a music score that is not half bad actually and quite rousing on occasion , any belated good intentions are defeated by an extremely silly climax involving natives painting Bo completely white and , fatally , John Derek’s clear disinterest in the character of Tarzan himself which makes him come off as an unimportant supporting character in his own self-titled movie! ! </code></pre>
+</section>
+<section id="dataloader-the-textdataset-class" class="level2">
+<h2 class="anchored" data-anchor-id="dataloader-the-textdataset-class">Dataloader: The <code>TextDataset</code> Class</h2>
+<p>The dataset contains the tokenized data for the model. The following functions are implemented:</p>
+<ul>
+<li><p><strong>Create Dictionaries</strong> (i.e., <code>build_dictionary(self)</code>): Creates the dictionaries <code>idx2word</code> and <code>word2idx</code>. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter <code>threshold</code> is used to control word appearances in the dictionary.</p></li>
+<li><p><strong>Text Conversion</strong> (i.e., <code>convert_text(self)</code>): Converts each review in the dataset to a list of indices, given by the <code>word2idx</code> dictionary. This is stored in the <code>textual_ids</code> variable. Words not present in the <code>word2idx</code> dictionary are replaced with the <code>&lt;UNK&gt;</code> token.</p></li>
+<li><p><strong>Get Text</strong> (i.e., <code>get_text(self, idx)</code>): Returns the review at <code>idx</code> in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.</p></li>
+<li><p><strong>Get Label</strong> (i.e., <code>get_label(self, idx)</code>): Returns the value <code>1</code> if the label for <code>idx</code> in the datset is <code>positive</code>, and <code>0</code> if it is <code>negative</code>.</p></li>
+<li><p><strong>Get Number of Reviews</strong> (i.e., <code>__len__(self)</code>): Returns the total number of reviews in the dataset.</p></li>
+<li><p><strong>Get Item</strong> (i.e., <code>__getitem__(self, idx)</code>): Returns the converted text, and the label.</p></li>
+</ul>
+<div class="cell" data-execution_count="6">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>PAD <span class="op">=</span> <span class="st">'&lt;PAD&gt;'</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>END <span class="op">=</span> <span class="st">'&lt;END&gt;'</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>UNK <span class="op">=</span> <span class="st">'&lt;UNK&gt;'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="7">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextDataset(data.Dataset):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, examples, split, threshold, max_len, idx2word<span class="op">=</span><span class="va">None</span>, word2idx<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.examples <span class="op">=</span> examples</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> split <span class="kw">in</span> {<span class="st">'train'</span>, <span class="st">'val'</span>, <span class="st">'test'</span>}</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.split <span class="op">=</span> split</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.threshold <span class="op">=</span> threshold</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.max_len <span class="op">=</span> max_len</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># dictionaries</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.idx2word <span class="op">=</span> idx2word</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.word2idx <span class="op">=</span> word2idx</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> split <span class="op">==</span> <span class="st">'train'</span>:</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="va">self</span>.build_dictionary()</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.vocab_size <span class="op">=</span> <span class="bu">len</span>(<span class="va">self</span>.word2idx)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># convert text to indices</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.textual_ids <span class="op">=</span> []</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.convert_text()</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> build_dictionary(<span class="va">self</span>): </span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="va">self</span>.split <span class="op">==</span> <span class="st">'train'</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.idx2word <span class="op">=</span> {<span class="dv">0</span>:PAD, <span class="dv">1</span>:END, <span class="dv">2</span>: UNK}</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.word2idx <span class="op">=</span> {PAD:<span class="dv">0</span>, END:<span class="dv">1</span>, UNK: <span class="dv">2</span>}</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># build dictionaries</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    word_freq <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> review <span class="kw">in</span> <span class="va">self</span>.examples:</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>      text <span class="op">=</span> review[<span class="dv">1</span>] <span class="co"># text of review</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> text:</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>        word_freq[word.lower()] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment word frequency (lower cased)</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> word <span class="kw">in</span> word_freq.keys():</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> word_freq[word] <span class="op">&gt;=</span> <span class="va">self</span>.threshold: <span class="co"># add new word and id to dictionaries once threshold is exceeded</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>        new_id <span class="op">=</span> <span class="bu">len</span>(<span class="va">self</span>.idx2word)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.idx2word[new_id] <span class="op">=</span> word</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.word2idx[word] <span class="op">=</span> new_id</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> convert_text(<span class="va">self</span>):</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> review <span class="kw">in</span> <span class="va">self</span>.examples:</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>      label <span class="op">=</span> review[<span class="dv">0</span>]</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>      text <span class="op">=</span> review[<span class="dv">1</span>]</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>      converted_text <span class="op">=</span> []</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>      <span class="co"># text conversion</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>      converted_text <span class="op">=</span> <span class="bu">list</span>(<span class="bu">map</span>(<span class="kw">lambda</span> word: <span class="va">self</span>.word2idx[word] <span class="cf">if</span> word <span class="kw">in</span> <span class="va">self</span>.word2idx.keys() <span class="cf">else</span> <span class="va">self</span>.word2idx[UNK], text))</span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>      converted_text.append(<span class="va">self</span>.word2idx[END])</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>      <span class="va">self</span>.textual_ids.append((label, converted_text))</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_text(<span class="va">self</span>, idx):</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> <span class="va">self</span>.textual_ids[idx][<span class="dv">1</span>]</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pad or truncate the review as needed</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>    updated_text <span class="op">=</span> text[:<span class="va">self</span>.max_len] <span class="cf">if</span> <span class="bu">len</span>(text) <span class="op">&gt;=</span> <span class="va">self</span>.max_len <span class="cf">else</span> text <span class="op">+</span> [<span class="dv">0</span>]<span class="op">*</span>(<span class="va">self</span>.max_len<span class="op">-</span><span class="bu">len</span>(text))</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    updated_text <span class="op">=</span> torch.tensor(updated_text)</span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> updated_text</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_label(<span class="va">self</span>, idx):</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>    label <span class="op">=</span> <span class="va">self</span>.textual_ids[idx][<span class="dv">0</span>]</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>    score <span class="op">=</span> <span class="dv">1</span> <span class="cf">if</span> label <span class="op">==</span> <span class="st">'pos'</span> <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    score <span class="op">=</span> torch.tensor(score) <span class="co"># sentiment score of the review as a tensor</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> score</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__len__</span>(<span class="va">self</span>):</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>    num <span class="op">=</span> <span class="bu">len</span>(<span class="va">self</span>.examples) <span class="co"># number of reviews</span></span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> num</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__getitem__</span>(<span class="va">self</span>, idx):</span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>    <span class="co"># get the processed text and score of the review</span></span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>    review, label <span class="op">=</span> <span class="va">self</span>.get_text(idx), <span class="va">self</span>.get_label(idx)</span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> review, label</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The IMDb movie reviews are processed into a <code>TextDataset</code> object. Here is an example of a review item in the dataset.</p>
+<div class="cell" data-execution_count="8">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> TextDataset(train_data, <span class="st">'train'</span>, threshold<span class="op">=</span><span class="dv">10</span>, max_len<span class="op">=</span><span class="dv">150</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Vocab size:'</span>, train_dataset.vocab_size, <span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>randidx <span class="op">=</span> random.randint(<span class="dv">0</span>, <span class="bu">len</span>(train_dataset)<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>text, label <span class="op">=</span> train_dataset[randidx]</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Example text:'</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(train_data[randidx][<span class="dv">1</span>])</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(text)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">Example label:'</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(train_data[randidx][<span class="dv">0</span>])</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(label)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Vocab size: 19002 
+
+Example text:
+['"', 'A', 'Guy', 'Thing', '"', 'tries', 'to', 'capture', 'the', 'feeling', 'of', '"', "There's", 'Something', 'About', 'Mary', '"', 'or', '"', 'Meet', 'the', 'Parents', '"', 'but', 'comes', 'off', 'more', 'like', 'it', 'was', 'edited', 'up', 'out', 'of', 'cutting-room', 'rejects', 'of', 'those', 'two', 'films', '.', 'Thankfully', 'I', 'rented', 'it', 'on', 'a', '5-day', 'rental', 'because', 'I', "couldn't", 'sit', 'and', 'watch', 'more', 'than', '20', 'minutes', 'at', 'a', 'time.
+
+The', 'premise', 'is', 'decent', 'and', 'I', 'liked', 'the', 'scenes', 'where', 'other', 'guys', 'automatically', 'cover', 'up', 'for', "Paul's", 'missteps', '(', 'the', 'checker', 'at', 'the', 'Save-mart', 'was', 'great', ')', 'but', 'the', 'script-writing', 'is', 'absolutely', 'horrible', '.', 'The', 'dialog', 'falls', 'flat', 'most', 'of', 'the', 'time', 'and', 'just', 'when', 'you', 'think', 'that', 'things', 'are', 'finally', 'going', 'to', 'get', 'on', 'track', 'some', 'needless', 'sight-gag', 'is', 'stuck', 'in', 'for', 'no', 'good', 'reason', '.', 'Plus', 'how', 'many', 'toilet', 'jokes', 'does', 'one', 'movie', 'really', 'need?
+
+Don't", 'get', 'me', 'wrong', ',', 'slapstick', 'humor', 'is', 'great', 'when', "it's", 'smartly', 'done', 'as', 'in', 'the', 'other', 'films', 'I', 'mentioned', ',', 'but', 'this', 'movie', 'simply', 'misses', 'the', 'mark', '.', 'Too', 'bad', 'as', 'I', 'love', 'Julia', 'Stiles', '(', 'Ten', 'Things', 'I', 'Hate', 'About', 'You', 'was', 'great', ')', 'but', 'even', 'that', "couldn't", 'help', 'me', 'sit', 'through', 'this', 'terrible', 'movie', '.', 'Save', 'your', 'dollars', 'and', 'go', 'rent', '"', "There's", 'Something', 'About', 'Mary', '"', 'one', 'more', 'time', '.']
+tensor([   45,     2,     2,     2,    45,   721,    34,  5645,    13,  2314,
+           11,    45,     2,     2,     2,     2,    45,   245,    45,     2,
+           13,     2,    45,   180,   309,   576,   743,   127,    17,    19,
+         3480,   314,   325,    11,     2, 11934,    11,   221,   334,    43,
+           24,     2,     2,     4,    17,    80,    41,     2,   770,    10,
+            2,   482,   962,    91,   771,   743,   161,  1304,  1026,    27,
+           41,  1351,    52,     2,  3001,    55,  1733,    91,     2,   993,
+           13,   118,   213,   528,  1327,  2930,   996,   314,    50,     2,
+            2,   175,    13,     2,    27,    13,     2,    19,   687,   179,
+          180,    13,     2,    55,   546,   579,    24,     2,  2718,  1065,
+         5099,   345,    11,    13,   323,    91,   162,    18,   267,   376,
+           15,   784,   119,   395,   359,    34,   384,    80,  1424,    77,
+         7408,     2,    55,  2235,    22,    50,   176,   143,   401,    24,
+            2,   531,   303,  3934,   838,   305,   253,   369,    47,     2,
+           52,     2,   384,   112,   499,    38,   900,  4968,    55,   687])
+
+Example label:
+neg
+tensor(0)</code></pre>
+</section>
+<section id="convolutional-neural-network-the-cnn-class" class="level2">
+<h2 class="anchored" data-anchor-id="convolutional-neural-network-the-cnn-class">Convolutional Neural Network: The <code>CNN</code> Class</h2>
+<p>The convolutional neural network for text classification is defined here. The following functions are implemented:</p>
+<ul>
+<li><strong>Initialization</strong> (i.e., <code>__init__(self, ...)</code>): Initializes the following layers and other features for the neural network.
+<ul>
+<li>An embedding layer to represent the words in the vocabulary.</li>
+<li>Multiple convolution layers with filter size based on different filter heights. There is one input channel, and specific number of output channels for different filters to train the model on.</li>
+<li>A dropout layer with specified <code>dropout</code>.</li>
+<li>A linear layer with concatenated output of all cnn layers as input (i.e., size is number of out channels across all filter heights) with output to each class (i.e.&nbsp;size is number of classes).</li>
+</ul></li>
+<li><strong>Feed Forward</strong> (i.e., <code>forward(self, texts)</code>): Iteratively pass texts (with shape <code>[batch_size, max_len]</code>) through layers and compute the output as described below. Since each CNN looks at different filter heights (i.e.&nbsp;n-grams), the model will look at different number of words at a time. Each CNN will learn <code>out_channel</code> number of features from the words it sees at a time. Then non-linearity and max-pooling are applied to all channels to find any important n-grams in the entire text. Everything is performed on a batch simultaneously, hence the <code>batch_size</code> dimension is used in many of the steps discussed below.
+<ul>
+<li>Pass texts through the embedding layer. The output shape is <code>[batch_size, max_len, embed_size]</code>.</li>
+<li>Modify dimensions of embedded output to fit into multiple convolution layers (i.e., output shape is <code>[batch_size, 1, max_len, embed_size]</code>).</li>
+<li>Pass the text embeddings into each convolution layer. Output will have shape <code>[batch_size, out_channels, *, 1]</code> where <code>*</code> depends on <code>filter_height</code> and <code>stride</code>.</li>
+<li>Convert the output shape to <code>[batch_size, out_channels, *]</code>.</li>
+<li>Apply non-linearity on the output with ReLU function.</li>
+<li>Take the max value across last dimension to have shape <code>[batch_size, out_channels]</code></li>
+<li>Concatenate outputs from all CNN layers with shape <code>[batch_size, (out_channels*num_cnn_layers)]</code></li>
+<li>Pass the output through the linear layer with shape <code>[batch_size, num_classes]</code></li>
+</ul></li>
+</ul>
+<div class="cell" data-execution_count="9">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CNN(nn.Module):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, vocab_size, embed_size, out_channels, filter_heights, stride, dropout, num_classes, pad_idx):</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>(CNN, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># embedding layer</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.embedding <span class="op">=</span> nn.Embedding(num_embeddings<span class="op">=</span>vocab_size, embedding_dim<span class="op">=</span>embed_size, padding_idx<span class="op">=</span>pad_idx)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># multiple convolution layers</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.conv_layers <span class="op">=</span> nn.ModuleList( [nn.Conv2d(in_channels<span class="op">=</span><span class="dv">1</span>, out_channels<span class="op">=</span>out_channels, kernel_size<span class="op">=</span>[filter_height, embed_size]) <span class="cf">for</span> filter_height <span class="kw">in</span> filter_heights] )</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># dropout layer</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.dropout <span class="op">=</span> nn.Dropout(dropout)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># linear layer</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.linear <span class="op">=</span> nn.Linear(out_channels <span class="op">*</span> <span class="bu">len</span>(filter_heights), num_classes)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> forward(<span class="va">self</span>, texts):</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># embed texts -- [batch_size, max_len, embed_size]</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.embedding(texts)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># modify embedded output dimensions -- [batch_size, 1, MAX_LEN, embed_size] (i.e., unsqueeze)</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x.unsqueeze(<span class="dv">1</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pass embedded texts into cnn layers -- [batch_size, out_channels, *, 1]</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># modify dimension of outputs -- [batch_size, out_channels, *] (i.e., squeeze)</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># apply non-linearity</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> [ F.relu( conv_layer(x) ).squeeze(<span class="dv">3</span>) <span class="cf">for</span> conv_layer <span class="kw">in</span> <span class="va">self</span>.conv_layers ]</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># get max value across last dimension via pooling -- [batch_size, out_channels]</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> [ F.max_pool1d( value, value.size(<span class="dv">2</span>) ).squeeze(<span class="dv">2</span>) <span class="cf">for</span> value <span class="kw">in</span> x ]</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># concatenate outputs from cnn layers -- [batch_size, (out_channels*num_of_cnn_layers)]</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> torch.cat(x, <span class="dv">1</span>)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># apply dropout</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.dropout(x)</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pass output through linear layer -- [batch_size, num_classes]</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.linear(x)</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># a softmax is applied later in model training</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="10">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># helper function to count number of parameters in a model</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>count_parameters <span class="op">=</span> <span class="kw">lambda</span> model: <span class="bu">sum</span>(p.numel() <span class="cf">for</span> p <span class="kw">in</span> model.parameters() <span class="cf">if</span> p.requires_grad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="model-training" class="level3">
+<h3 class="anchored" data-anchor-id="model-training">Model Training</h3>
+<p>First, the train and test dataloaders are initialized. A dataloader is responsible for providing batches of data to the model. The datasets for the train and test data are instantiated first, then the training vocabulary is used for both.</p>
+<div class="cell" data-execution_count="11">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adjustable parameters (defaults: THRESHOLD=5, MAX_LEN=200, BATCH_SIZE=32)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>THRESHOLD <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>MAX_LEN <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">32</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> TextDataset(train_data, <span class="st">'train'</span>, THRESHOLD, MAX_LEN)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>train_loader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, batch_size<span class="op">=</span>BATCH_SIZE, shuffle<span class="op">=</span><span class="va">True</span>, num_workers<span class="op">=</span><span class="dv">2</span>, drop_last<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'train vocab size:'</span>, train_dataset.vocab_size)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> TextDataset(test_data, <span class="st">'test'</span>, THRESHOLD, MAX_LEN, train_dataset.idx2word, train_dataset.word2idx)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>test_loader <span class="op">=</span> torch.utils.data.DataLoader(test_dataset, batch_size<span class="op">=</span><span class="dv">1</span>, shuffle<span class="op">=</span><span class="va">False</span>, num_workers<span class="op">=</span><span class="dv">1</span>, drop_last<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'test vocab size:'</span>, test_dataset.vocab_size)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>train vocab size: 29730
+test vocab size: 29730</code></pre>
+<p>Here is a function to train the CNN model on the data.</p>
+<p>If it is necessary to save the model periodically, here is a resource for that: https://pytorch.org/tutorials/beginner/saving_loading_models.html.</p>
+<div class="cell" data-execution_count="12">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_model(model, num_epochs, data_loader, optimizer, criterion):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'Training Model...'</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  model.train()</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> epoch <span class="kw">in</span> tqdm(<span class="bu">range</span>(num_epochs)):</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    epoch_loss <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    epoch_acc <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> texts, labels <span class="kw">in</span> data_loader:</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>      texts <span class="op">=</span> texts.to(DEVICE) <span class="co"># shape: [batch_size, MAX_LEN]</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>      labels <span class="op">=</span> labels.to(DEVICE) <span class="co"># shape: [batch_size]</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>      optimizer.zero_grad()</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>      output <span class="op">=</span> model(texts)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      acc <span class="op">=</span> accuracy(output, labels)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>      loss <span class="op">=</span> criterion(output, labels)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>      loss.backward()</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>      optimizer.step()</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>      epoch_loss <span class="op">+=</span> loss.item()</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>      epoch_acc <span class="op">+=</span> acc.item()</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'[TRAIN]</span><span class="ch">\t</span><span class="st"> Epoch: </span><span class="sc">{:2d}</span><span class="ch">\t</span><span class="st"> Loss: </span><span class="sc">{:.4f}</span><span class="ch">\t</span><span class="st"> Train Accuracy: </span><span class="sc">{:.2f}</span><span class="st">%'</span>.<span class="bu">format</span>(epoch<span class="op">+</span><span class="dv">1</span>, epoch_loss<span class="op">/</span><span class="bu">len</span>(data_loader), <span class="dv">100</span><span class="op">*</span>epoch_acc<span class="op">/</span><span class="bu">len</span>(data_loader)))</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'Model Trained!</span><span class="ch">\n</span><span class="st">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here is a helper function to compute model accuracy per batch.</p>
+<div class="cell" data-execution_count="13">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> accuracy(output, labels):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  preds <span class="op">=</span> output.argmax(dim<span class="op">=</span><span class="dv">1</span>) <span class="co"># find predicted class</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  correct <span class="op">=</span> (preds <span class="op">==</span> labels).<span class="bu">sum</span>().<span class="bu">float</span>() <span class="co"># convert into float for division </span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  acc <span class="op">=</span> correct <span class="op">/</span> <span class="bu">len</span>(labels)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> acc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Model instantiantiation with hyperparameters.</p>
+<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Number of out channels: <code>64</code> * Filter heights (i.e., n-gram sizes): <code>[2, 3, 4]</code> * Stride: <code>1</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<div class="cell" data-execution_count="14">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>cnn_model <span class="op">=</span> CNN(vocab_size <span class="op">=</span> train_dataset.vocab_size,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>            embed_size <span class="op">=</span> <span class="dv">128</span>, </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>            out_channels <span class="op">=</span> <span class="dv">64</span>, </span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>            filter_heights <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>], </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>            stride <span class="op">=</span> <span class="dv">1</span>, </span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>            dropout <span class="op">=</span> <span class="fl">0.5</span>, </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>            num_classes <span class="op">=</span> <span class="dv">2</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>            pad_idx <span class="op">=</span> train_dataset.word2idx[PAD])</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># load the model on the device (cuda or cpu)</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>cnn_model <span class="op">=</span> cnn_model.to(DEVICE)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'The model has {:,d} trainable parameters'</span>.<span class="bu">format</span>(count_parameters(cnn_model)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>The model has 3,879,746 trainable parameters</code></pre>
+<p>The criterion, or loss function, is cross-entropy loss (https://en.wikipedia.org/wiki/Cross_entropy).</p>
+<p>The optimizer, which performs gradient descent, is the Adam optimizer (https://arxiv.org/pdf/1412.6980.pdf).</p>
+<div class="cell" data-execution_count="15">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>LEARNING_RATE <span class="op">=</span> <span class="fl">5e-4</span> <span class="co"># adjustable parameter (default=5e-4)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># loss function</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> nn.CrossEntropyLoss().to(DEVICE)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co"># optimizer</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optim.Adam(cnn_model.parameters(), lr<span class="op">=</span>LEARNING_RATE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here the model is trained (it is recommended to use GPU for faster training time ~4 minutes).</p>
+<div class="cell" data-execution_count="16">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>N_EPOCHS <span class="op">=</span> <span class="dv">10</span> <span class="co"># adjustable parameter (default=10)</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># train model for N_EPOCHS epochs</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>train_model(cnn_model, N_EPOCHS, train_loader, optimizer, criterion)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Training Model...
+[TRAIN]  Epoch:  1   Loss: 0.6779    Train Accuracy: 61.05%
+[TRAIN]  Epoch:  2   Loss: 0.5426    Train Accuracy: 72.02%
+[TRAIN]  Epoch:  3   Loss: 0.4892    Train Accuracy: 76.11%
+[TRAIN]  Epoch:  4   Loss: 0.4473    Train Accuracy: 79.19%
+[TRAIN]  Epoch:  5   Loss: 0.4126    Train Accuracy: 81.21%
+[TRAIN]  Epoch:  6   Loss: 0.3774    Train Accuracy: 83.26%
+[TRAIN]  Epoch:  7   Loss: 0.3465    Train Accuracy: 84.80%
+[TRAIN]  Epoch:  8   Loss: 0.3096    Train Accuracy: 86.72%
+[TRAIN]  Epoch:  9   Loss: 0.2774    Train Accuracy: 88.42%
+[TRAIN]  Epoch: 10   Loss: 0.2426    Train Accuracy: 90.01%
+Model Trained!</code></pre>
+</section>
+<section id="model-evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="model-evaluation">Model Evaluation</h3>
+<p>Here is a function to perform evaluation of the trained model.</p>
+<div class="cell" data-execution_count="17">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(model, data_loader, criterion, use_tqdm<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'Evaluating performance on the test dataset...'</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  model.<span class="bu">eval</span>()</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  epoch_loss <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  epoch_acc <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  all_predictions <span class="op">=</span> []</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">SOME PREDICTIONS FROM THE MODEL:"</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  iterator <span class="op">=</span> tqdm(data_loader) <span class="cf">if</span> use_tqdm <span class="cf">else</span> data_loader</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  total <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> texts, labels <span class="kw">in</span> iterator:</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    bs <span class="op">=</span> texts.shape[<span class="dv">0</span>]</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    total <span class="op">+=</span> bs</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    texts <span class="op">=</span> texts.to(DEVICE)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> labels.to(DEVICE)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    output <span class="op">=</span> model(texts)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    acc <span class="op">=</span> accuracy(output, labels) <span class="op">*</span> <span class="bu">len</span>(labels)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    pred <span class="op">=</span> output.argmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    all_predictions.append(pred)</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> criterion(output, labels) <span class="op">*</span> <span class="bu">len</span>(labels)</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    epoch_loss <span class="op">+=</span> loss.item()</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>    epoch_acc <span class="op">+=</span> acc.item()</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> random.random() <span class="op">&lt;</span> <span class="fl">0.0015</span> <span class="kw">and</span> bs <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="st">"Prediction:"</span>, pred.item(), <span class="st">'</span><span class="ch">\t</span><span class="st">Correct Output:'</span>, labels.item())</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="st">"Input: "</span><span class="op">+</span><span class="st">' '</span>.join([data_loader.dataset.idx2word[idx] <span class="cf">for</span> idx <span class="kw">in</span> texts[<span class="dv">0</span>].tolist() <span class="cf">if</span> idx <span class="kw">not</span> <span class="kw">in</span> {data_loader.dataset.word2idx[PAD], data_loader.dataset.word2idx[END]}]), <span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>  full_acc <span class="op">=</span> <span class="dv">100</span><span class="op">*</span>epoch_acc<span class="op">/</span>total</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>  full_loss <span class="op">=</span> epoch_loss<span class="op">/</span>total</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'[TEST]</span><span class="ch">\t</span><span class="st"> Loss: </span><span class="sc">{:.4f}</span><span class="ch">\t</span><span class="st"> Accuracy: </span><span class="sc">{:.2f}</span><span class="st">%'</span>.<span class="bu">format</span>(full_loss, full_acc))</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>  predictions <span class="op">=</span> torch.cat(all_predictions)</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> predictions, full_acc, full_loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="18">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>evaluation <span class="op">=</span> evaluate(cnn_model, test_loader, criterion, use_tqdm<span class="op">=</span><span class="va">True</span>) <span class="co"># compute test data accuracy</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Evaluating performance on the test dataset...
+
+SOME PREDICTIONS FROM THE MODEL:
+
+Prediction: 1   Correct Output: 0
+Input: &lt;UNK&gt; thinking of the revelation that the main character in " &lt;UNK&gt; " comes to at films end , &lt;UNK&gt; am reminded of last years " &lt;UNK&gt; " with &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; only difference between the two films is the literal physical weight of the characters.&lt;br /&gt;&lt;br &lt;UNK&gt; understated , yet entirely realistic portrayal of small town life . &lt;UNK&gt; title is cause for contemplation . &lt;UNK&gt; , we , the audience are the ones in the " &lt;UNK&gt; " as we are given no &lt;UNK&gt; in the films slim 90 minute running time . &lt;UNK&gt; reactions were often smug and judgmental , clearly indicating how detached people can be from seeing any thread of humanity in characters so foreign to themselves . &lt;UNK&gt; characters are the ones people refer to as those that put &lt;UNK&gt; &lt;UNK&gt; . back in office for a second &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; &lt;UNK&gt; to consider how reality television has spoiled our sense of reality when watching an audience jump to their feet for the exit as soon as the credits role . &lt;UNK&gt; film has it's merits , and is deserving of consideration for the things it doesn't say outright . 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; isn't it ? &lt;UNK&gt; all the good work done by &lt;UNK&gt; and &lt;UNK&gt; , the movie never grew into something more than a horrible &lt;UNK&gt; movies copycat . &lt;UNK&gt; a couple of jokes , no absolutely no unpredictable twists , to be honest the only unpredictable moments are there because both director and editor made some stupid mistakes , it is a shame for them and a waste of time for us . &lt;UNK&gt; someone can tell me why on earth were they digging a hole inside that safe , who the hell is the &lt;UNK&gt; and how on earth did they know that the diamonds were in the particular cell , it could just make my day , but it seems that &lt;UNK&gt; asks us to take too much things in this one for granted , and do not raise our eyebrows when something looks &lt;UNK&gt; just another studio contract movie relax and &lt;UNK&gt; . 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; a killer combo of terrible writing , terrible acting and terrible direction , it's a &lt;UNK&gt; whether &lt;UNK&gt; : &lt;UNK&gt; &lt;UNK&gt; is offensively bad or just hilariously bad . &lt;UNK&gt; almost as if someone ran a competition to make the &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; film . &lt;UNK&gt; if a glance at a cast list including characters like ' &lt;UNK&gt; &lt;UNK&gt; ' ' &lt;UNK&gt; &lt;UNK&gt; ' ' &lt;UNK&gt; &lt;UNK&gt; ' weren't enough , it's your only chance to see &lt;UNK&gt; &lt;UNK&gt; cop throw a &lt;UNK&gt; on a bed and grab a &lt;UNK&gt; - but don't worry , it's okay , as the offscreen screams make clear he's only torturing him for information . &lt;UNK&gt; all , even if he is a bit overprotective of his nice &lt;UNK&gt; daughter , he's a nice &lt;UNK&gt; cop who regularly brings local &lt;UNK&gt; priest &lt;UNK&gt; &lt;UNK&gt; a packed lunch and who believes in poetic justice - or at least ensuring that the bad guys end up in the &lt;UNK&gt; with the &lt;UNK&gt; inmates maximum security can provide to give them a taste of their own medicine . &lt;UNK&gt; then that's what you get for telling him " &lt;UNK&gt; , &lt;UNK&gt; think you're a little 
+
+Prediction: 1   Correct Output: 0
+Input: &lt;UNK&gt; confess having fantasies about &lt;UNK&gt; &lt;UNK&gt; is a pretty tough admission for an heterosexual to make . &lt;UNK&gt; what can &lt;UNK&gt; tell you ? &lt;UNK&gt; is that famous extra something that everybody talks about and makes a star a star . &lt;UNK&gt; crosses that barrier . &lt;UNK&gt; pulls you into unknown sensual and emotional territory . &lt;UNK&gt; had it in spades , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; of course and in more recent times , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; and &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; fell in love with &lt;UNK&gt; , &lt;UNK&gt; , &lt;UNK&gt; and &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; and very very recently &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; has , singlehandedly , redefined the concept . &lt;UNK&gt; is the only reason to go out , get in the car , find parking , buy a ticket , popcorn and get into a theatre to see " &lt;UNK&gt; " &lt;UNK&gt; you liked epics in the " &lt;UNK&gt; &lt;UNK&gt; " style you may enjoy this . &lt;UNK&gt; if you don't , go 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; should be required viewing in any film production course ! &lt;UNK&gt; a textbook example of how &lt;UNK&gt; to make a movie . &lt;UNK&gt; the movie and then listening to the &lt;UNK&gt; commentary demonstrates graphically the vast &lt;UNK&gt; between what he knows about the characters and what he communicates to his audience about them . &lt;UNK&gt; me old-fashioned , but &lt;UNK&gt; think of movies as a means of communication , and communication isn't complete if the audience doesn't know what the hell the director is talking about . &lt;UNK&gt; director's &lt;UNK&gt; purpose is to make a movie void of " &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; those conventions , alas , is consistency of character and clarity of concept . &lt;UNK&gt; director himself realizes that audiences often don't understand points where he has purposely avoided a " &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; , he never seems to grasp the idea that clichés exist for a reason . &lt;UNK&gt; are shorthand for conveying complex ideas quickly and clearly . &lt;UNK&gt; fine to avoid them , but they need to be replaced with some other way of communicating the same idea , not simply eliminated . &lt;UNK&gt; film is built on an 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; a slow beginning , &lt;UNK&gt; &lt;UNK&gt; is a very funny film that had something positive to say . &lt;UNK&gt; wasn't one of &lt;UNK&gt; &lt;UNK&gt; best performances , but he was still &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; was just right as &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; had some good moments . &lt;UNK&gt; miss &lt;UNK&gt; &lt;UNK&gt; on " &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; like director &lt;UNK&gt; &lt;UNK&gt; choices of movies . &lt;UNK&gt; also did &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; , and &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; all three of those and in &lt;UNK&gt; &lt;UNK&gt; , he takes a big comedy star and tells a human story with him . &lt;UNK&gt; director who knows comedy , can get the talent he gets , and can tell a meaningful and intelligent story with it is hard to &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; biggest complaint is that they should have used more biblical references . &lt;UNK&gt; only remember three specific biblical references and they were the three funniest parts of the whole movie . &lt;UNK&gt; guess is that the first few &lt;UNK&gt; of the screenplay had more biblical references , but they were cut out because the producers were afraid of offending people . &lt;UNK&gt; too bad because 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; ! &lt;UNK&gt; 70's sex trash ! &lt;UNK&gt; &lt;UNK&gt; gal ( &lt;UNK&gt; ) was what made this movie so great . &lt;UNK&gt; was beautiful , but what really got to me was how sexual she was . &lt;UNK&gt; exuded massive quantities of sexuality throughout the film . &lt;UNK&gt; best scenes were when she was , er , stimulating herself . &lt;UNK&gt; she was on screen , &lt;UNK&gt; became &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; , the &lt;UNK&gt; &lt;UNK&gt; ( sister of the dimwitted male focus of the film ) was very interesting visually . &lt;UNK&gt; most 12 year old girls have bigger breasts than &lt;UNK&gt; , she knew how to use what little she had and her scenes ( especially the scenes with the silk blouse and black skirt ) also grabbed my attention &lt;UNK&gt; . &lt;UNK&gt; also got to love the major &lt;UNK&gt; scene where the bats stripped her &lt;UNK&gt; ; &lt;UNK&gt; don't know if &lt;UNK&gt; ever seen anything more ludicrous yet sexy at the same time . &lt;UNK&gt; stuff ! 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; finds &lt;UNK&gt; &lt;UNK&gt; an outlaw doing a long sentence breaking free from a chain gang . &lt;UNK&gt; he and his friends head for the &lt;UNK&gt; border from jail and safety . &lt;UNK&gt; they don't because &lt;UNK&gt; has a mission of revenge . &lt;UNK&gt; kill the peace officer who brought him in and in the process killed his woman.&lt;br /&gt;&lt;br &lt;UNK&gt; peace officer is &lt;UNK&gt; &lt;UNK&gt; who is now retired and he knows what &lt;UNK&gt; is after . &lt;UNK&gt; he explains it to his daughter , &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; was holed up in a shack and was involved in a &lt;UNK&gt; like &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; woman was killed in the hail of bullets fired . &lt;UNK&gt; not something he's proud of , she was a &lt;UNK&gt; casualty in a &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; we feel sorry for &lt;UNK&gt; he lets us know full well what an evil man he truly is . &lt;UNK&gt; is his usual stalwart hero , but the acting honors in &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; go to &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; blows everyone else off the screen when he's on . &lt;br /&gt;&lt;br &lt;UNK&gt; gets the bright idea of making sure &lt;UNK&gt; trails 
+
+Prediction: 1   Correct Output: 1
+Input: " &lt;UNK&gt; " is a far from great film , from a stage play , directed by &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; the scheme of &lt;UNK&gt; films , this is above the level of most of his &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; " work , which is characterised by judicious use of &lt;UNK&gt; &lt;UNK&gt; as lead actress . &lt;UNK&gt; actually very good here , and far from the problem in other &lt;UNK&gt; films like " &lt;UNK&gt; &lt;UNK&gt; " and " &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; the " &lt;UNK&gt; , who is &lt;UNK&gt; &lt;UNK&gt; , &lt;UNK&gt; is very effective , portraying her as a thoroughly depressive , but likeable siren . &lt;UNK&gt; plays well alongside &lt;UNK&gt; &lt;UNK&gt; as &lt;UNK&gt; , who is excellent to say the least . &lt;UNK&gt; looks the part admirably , and while &lt;UNK&gt; &lt;UNK&gt; doesn't look exactly like &lt;UNK&gt; , she certainly is attractive enough to make the part ring true . &lt;UNK&gt; players are adequate if not quite as arresting as &lt;UNK&gt; and &lt;UNK&gt; are . &lt;UNK&gt; pretty workable , intelligent script is directed well by &lt;UNK&gt; , but certainly not brilliantly , like " &lt;UNK&gt; " or " &lt;UNK&gt; . &lt;UNK&gt; in other later &lt;UNK&gt; films , he tends 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; , &lt;UNK&gt; don't watch action movies because of the fact that they are usually all pretty similar . &lt;UNK&gt; movie did have many stereotypical action movie scenes , but the characters and the originality of the film's premise made it much easier to watch . &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; his normal acting approach , which was great to see . &lt;UNK&gt; &lt;UNK&gt; , of course , was beautiful and did great acting . &lt;UNK&gt; cast all together . &lt;UNK&gt; must see for people bored with the same old action movie . 
+
+[TEST]   Loss: 0.4104    Accuracy: 82.66%</code></pre>
+</section>
+</section>
+<section id="recurrent-neural-network-the-rnn-class" class="level2">
+<h2 class="anchored" data-anchor-id="recurrent-neural-network-the-rnn-class">Recurrent Neural Network: The RNN Class</h2>
+<p>The text classification model based on recurrences is defined here. The following functions are implemented:</p>
+<ul>
+<li><strong>Initialization</strong> (i.e., <code>__init__(self, ...)</code>): Initializes the following layers and other features for the neural network.
+<ul>
+<li>An embedding layer to represent the words in the vocabulary.</li>
+<li>A recurrent network (i.e.&nbsp;GRU) with <code>batch_first=True</code> and <code>bidirectional</code>.</li>
+<li>A dropout layer with specified <code>dropout</code>.</li>
+<li>A linear layer takes output of the last time step as input with output to each class (i.e.&nbsp;size is number of classes). In the bidirectional case, the outputs of the last time step of the forward and backward directions are concatenated.</li>
+</ul></li>
+<li><strong>Feed Forward</strong> (i.e., <code>forward(self, texts)</code>): Pass texts (with shape <code>[batch_size, max_len]</code>) through layers and compute the output as described below.
+<ul>
+<li>Pass texts through the embedding layer. The output shape is <code>[batch_size, max_len, embed_size]</code>.</li>
+<li>Pass result through recurrent network.</li>
+<li>Concatenate the outputs of the last timestep for each direction.</li>
+<li>Apply dropout.</li>
+<li>Pass the output through the linear layer with shape <code>[batch_size, num_classes]</code></li>
+</ul></li>
+</ul>
+<div class="cell" data-execution_count="19">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RNN(nn.Module):</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, vocab_size, embed_size, hidden_size, num_layers, bidirectional, dropout, num_classes, pad_idx):</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>(RNN, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.bidirectional <span class="op">=</span> bidirectional</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># embedding layer</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.embedding <span class="op">=</span> nn.Embedding(num_embeddings<span class="op">=</span>vocab_size, embedding_dim<span class="op">=</span>embed_size, padding_idx<span class="op">=</span>pad_idx)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># recurrent network (GRU)</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.rnn <span class="op">=</span> nn.GRU(input_size<span class="op">=</span>embed_size, hidden_size<span class="op">=</span>hidden_size, num_layers<span class="op">=</span>num_layers, dropout<span class="op">=</span>dropout, batch_first<span class="op">=</span><span class="va">True</span>, bidirectional<span class="op">=</span>bidirectional)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># dropout layer</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.dropout <span class="op">=</span> nn.Dropout(dropout)</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># linear layer</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    B <span class="op">=</span> <span class="dv">2</span> <span class="cf">if</span> bidirectional <span class="cf">else</span> <span class="dv">1</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.linear <span class="op">=</span> nn.Linear(B<span class="op">*</span>hidden_size, num_classes)</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> forward(<span class="va">self</span>, texts):</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># embed texts -- [batch_size, max_len, embed_size]</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.embedding(texts)</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># rnn layer</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    x, hn <span class="op">=</span> <span class="va">self</span>.rnn(x)</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># concatenate the outputs of the last timestep for each direction -- [batch_size, num_dirs*hidden_size]</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> torch.cat( (hn[<span class="op">-</span><span class="dv">2</span>, :, :], hn[<span class="op">-</span><span class="dv">1</span>, :, :]), dim<span class="op">=</span><span class="dv">1</span> ) <span class="cf">if</span> <span class="va">self</span>.bidirectional <span class="cf">else</span> hn[<span class="op">-</span><span class="dv">1</span>, :, :]</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># apply dropout</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.dropout(x)</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pass output through the linear layer -- [batch_size, num_classes]</span></span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="va">self</span>.linear(x)</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># softmax is applied in training</span></span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="model-training-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-training-1">Model Training</h3>
+<p>First, the train and test dataloaders are initialized.</p>
+<div class="cell" data-execution_count="20">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adjustable parameters (defaults: THRESHOLD=5, MAX_LEN=200, BATCH_SIZE=32)</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>THRESHOLD <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>MAX_LEN <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">32</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> TextDataset(train_data, <span class="st">'train'</span>, THRESHOLD, MAX_LEN)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>train_loader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, batch_size<span class="op">=</span>BATCH_SIZE, shuffle<span class="op">=</span><span class="va">True</span>, num_workers<span class="op">=</span><span class="dv">2</span>, drop_last<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'train vocab size:'</span>, train_dataset.vocab_size)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> TextDataset(test_data, <span class="st">'test'</span>, THRESHOLD, MAX_LEN, train_dataset.idx2word, train_dataset.word2idx)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>test_loader <span class="op">=</span> torch.utils.data.DataLoader(test_dataset, batch_size<span class="op">=</span><span class="dv">1</span>, shuffle<span class="op">=</span><span class="va">False</span>, num_workers<span class="op">=</span><span class="dv">1</span>, drop_last<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'test vocab size:'</span>, test_dataset.vocab_size)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>train vocab size: 29730
+test vocab size: 29730</code></pre>
+<p>Model instantiantiation with hyperparameters.</p>
+<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Hidden size: <code>128</code> * Number of layers: <code>2</code> * Bidirectional: <code>True</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<div class="cell" data-execution_count="21">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>rnn_model <span class="op">=</span> RNN(vocab_size <span class="op">=</span> train_dataset.vocab_size,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>            embed_size <span class="op">=</span> <span class="dv">128</span>, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>            hidden_size <span class="op">=</span> <span class="dv">128</span>, </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>            num_layers <span class="op">=</span> <span class="dv">2</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>            bidirectional <span class="op">=</span> <span class="va">True</span>,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>            dropout <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>            num_classes <span class="op">=</span> <span class="dv">2</span>,</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>            pad_idx <span class="op">=</span> train_dataset.word2idx[PAD])</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># load your model on device</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>rnn_model <span class="op">=</span> rnn_model.to(DEVICE)</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'The model has {:,d} trainable parameters'</span>.<span class="bu">format</span>(count_parameters(rnn_model)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>The model has 4,300,546 trainable parameters</code></pre>
+<p>Here, the same criterion and optimizer are used as with the CNN.</p>
+<div class="cell" data-execution_count="22">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>LEARNING_RATE <span class="op">=</span> <span class="fl">5e-4</span> <span class="co"># adjustable parameter (default=5e-4)</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co"># loss function</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> nn.CrossEntropyLoss().to(DEVICE)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co"># optimizer</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optim.Adam(rnn_model.parameters(), lr<span class="op">=</span>LEARNING_RATE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here the model is trained (it is recommended to use GPU for faster training time ~2 minutes).</p>
+<div class="cell" data-execution_count="23">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>N_EPOCHS <span class="op">=</span> <span class="dv">10</span> <span class="co"># adjustable parameter (default=6)</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># train model for N_EPOCHS epochs</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>train_model(rnn_model, N_EPOCHS, train_loader, optimizer, criterion)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Training Model...
+[TRAIN]  Epoch:  1   Loss: 0.6702    Train Accuracy: 58.11%
+[TRAIN]  Epoch:  2   Loss: 0.5663    Train Accuracy: 71.33%
+[TRAIN]  Epoch:  3   Loss: 0.4362    Train Accuracy: 80.58%
+[TRAIN]  Epoch:  4   Loss: 0.3320    Train Accuracy: 86.39%
+[TRAIN]  Epoch:  5   Loss: 0.2618    Train Accuracy: 89.97%
+[TRAIN]  Epoch:  6   Loss: 0.2011    Train Accuracy: 92.58%
+[TRAIN]  Epoch:  7   Loss: 0.1458    Train Accuracy: 94.72%
+[TRAIN]  Epoch:  8   Loss: 0.0974    Train Accuracy: 96.78%
+[TRAIN]  Epoch:  9   Loss: 0.0678    Train Accuracy: 97.82%
+[TRAIN]  Epoch: 10   Loss: 0.0448    Train Accuracy: 98.55%
+Model Trained!</code></pre>
+</section>
+<section id="model-evaluation-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-evaluation-1">Model Evaluation</h3>
+<p>Now the RNN is evaluated.</p>
+<div class="cell" data-execution_count="24">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>evaluation <span class="op">=</span> evaluate(rnn_model, test_loader, criterion, use_tqdm<span class="op">=</span><span class="va">True</span>) <span class="co"># compute test data accuracy</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<pre><code>Evaluating performance on the test dataset...
+
+SOME PREDICTIONS FROM THE MODEL:
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; saw the &lt;UNK&gt; . showing and &lt;UNK&gt; must say that this movie was nothing special . &lt;UNK&gt; &lt;UNK&gt; did not leave the theater wanting my time back ( as &lt;UNK&gt; don't actually pay for movies anymore ) &lt;UNK&gt; didn't really find any redeeming &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; were a few lines and such that made me chuckle , but mostly the film seemed to consist of rampant fan service to the younger ( in mind more than age as this film is rated &lt;UNK&gt; ) male audience . &lt;UNK&gt; fan service seemed out of place and rather distracting as well . &lt;UNK&gt; know you all want to hear &lt;UNK&gt; &lt;UNK&gt; . say his infamous line , but let's be honest , it's a whole lot of hype for very little pay off . &lt;UNK&gt; only truly horrible part of the film was the &lt;UNK&gt; , which looked very &lt;UNK&gt; and did not mesh well with the live action on the screen.&lt;br /&gt;&lt;br &lt;UNK&gt; &lt;UNK&gt; am a reasonable man , &lt;UNK&gt; knew going into the theater that &lt;UNK&gt; wasn't going to be seeing " &lt;UNK&gt; " and &lt;UNK&gt; am at least thankful that this film is an original ( &lt;UNK&gt; inane 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; &lt;UNK&gt; had some great actors in it ! &lt;UNK&gt; they had forgotten how to act . &lt;UNK&gt; was hoping the movie would get better as it went along but the acting was so robotic it was doomed from the very start . &lt;UNK&gt; actually appeared that maybe the actors were reading from a script the whole time . &lt;UNK&gt; it was the &lt;UNK&gt; score or the &lt;UNK&gt; himself , but one thing is for sure the &lt;UNK&gt; artist needs to get another job  ! &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; was so thick you could see it &lt;UNK&gt; on the actors faces  ! &lt;UNK&gt; not recommend this movie to anyone , no wonder it never hit the &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; . / &lt;UNK&gt; &lt;UNK&gt; shame on you guys for not giving it your all . &lt;UNK&gt; &lt;UNK&gt; was great just needed a whole lot more . 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; is a strange , strange film based on the novel " &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; " by &lt;UNK&gt; . &lt;UNK&gt; unleash criticism at the film feels really unkind , since it is a movie that deals with earnest themes like humanity , and pleas for upright moral standards and tolerance . &lt;UNK&gt; in spite of its honourable intentions and its well-meaning tone , &lt;UNK&gt; simply isn't a very good film . &lt;UNK&gt; me , the main problem is the terribly disjointed narrative which can't make its mind up how best to convey its message . &lt;UNK&gt; first half of the movie is like watching a standard jungle expedition flick of the &lt;UNK&gt; ilk ; later it &lt;UNK&gt; into sci-fi fable ; by the end it slips into courtroom melodramatics . &lt;UNK&gt; differences in tone between each section of the movie are too great , too jarring , to overlook . &lt;UNK&gt; stick out like a sore thumb and remind you constantly that you're watching a muddled , &lt;UNK&gt; movie.&lt;br /&gt;&lt;br &lt;UNK&gt; archaeological expedition into the jungles of &lt;UNK&gt; &lt;UNK&gt; is led by adventurer &lt;UNK&gt; &lt;UNK&gt; ( &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; of the main &lt;UNK&gt; involved in the excursion is 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; watched this film on the &lt;UNK&gt; &lt;UNK&gt; recently . &lt;UNK&gt; my opinion , the film started out decent enough , but eventually got &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; &lt;UNK&gt; : &lt;UNK&gt; &lt;UNK&gt; . soldier in &lt;UNK&gt; receives one of the &lt;UNK&gt; cards that a woman back in the &lt;UNK&gt; . has sent out to troops for &lt;UNK&gt; . &lt;UNK&gt; becomes so inspired by the &lt;UNK&gt; card that he feels it has given him a ray of hope and happiness in his life , a motivation to continue on . &lt;UNK&gt; he is given leave , he goes to the very town that the woman lives in . &lt;UNK&gt; comes across and spunky young woman and eventually finds out that she is the one that sent the &lt;UNK&gt; card . &lt;UNK&gt; meets the family and after saving her dad ( a &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; ) from getting hit by a car whilst crossing the street , the family decides to take him in for a while . &lt;UNK&gt; learn that he doesn't have a family back home . &lt;UNK&gt; soldier agrees to help out the family during the &lt;UNK&gt; season by working with them at their &lt;UNK&gt; company . &lt;UNK&gt; family comes 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; awful &lt;UNK&gt; &lt;UNK&gt; vehicle where he goes from being a thief to police &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; &lt;UNK&gt; was an excellent character actor , he was certainly no leading man and this film proves it.&lt;br /&gt;&lt;br &lt;UNK&gt; is absolutely beyond stupidity . &lt;UNK&gt; &lt;UNK&gt; did provide some comic relief until a moment of anger led him to fire his gun with tragedy &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; , &lt;UNK&gt; &lt;UNK&gt; and co-star &lt;UNK&gt; &lt;UNK&gt; committed suicide in real life . &lt;UNK&gt; making a film as deplorable as this , it is not &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; usual appealing &lt;UNK&gt; &lt;UNK&gt; is really nothing here . 
+
+Prediction: 0   Correct Output: 0
+Input: &lt;UNK&gt; saw this film last night following a lot of good reviews from many sources . &lt;UNK&gt; would like to point out that if your not ready to try and work out continuously who is who and what it all means you will hate this film.&lt;br /&gt;&lt;br &lt;UNK&gt; am still struggling to understand the roles of the actors in this film , the film jumps from different stories and does not allow you to really empathise with any of the roles.&lt;br /&gt;&lt;br &lt;UNK&gt; the political &lt;UNK&gt; and those interested in corruption in other world governments out there this film is probably quite good , but to the average movie watcher this film is &lt;UNK&gt; boring in places and you will leave the cinema confused and annoyed that you paid the entrance &lt;UNK&gt; /&gt;&lt;br /&gt;see it if your ready to focus 100% on every minute detail or politics interest you . don't see it , if you actually like watching films . 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; the very moment &lt;UNK&gt; saw a local film critic trash this movie in a review on the &lt;UNK&gt; news , &lt;UNK&gt; wanted to see it . &lt;UNK&gt; don't remember who it was , or which local &lt;UNK&gt; &lt;UNK&gt; carried the review , but the critic was very insistent that this film was way too sleazy for the average &lt;UNK&gt; &lt;UNK&gt; . &lt;UNK&gt; showed a snippet from the scene where &lt;UNK&gt; &lt;UNK&gt; is about to kidnap &lt;UNK&gt; when she's swimming in the pool . &lt;UNK&gt; character is &lt;UNK&gt; her on how nice her body is and so forth , using many words that the local station felt necessary to edit out . &lt;UNK&gt; was hooked . &lt;UNK&gt; was one problem , though . &lt;UNK&gt; was only 13 years old at the time , and &lt;UNK&gt; had to wait a year until it came out on cable . &lt;UNK&gt; just say , it was worth the &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; ever there was a guilty pleasure of mine , this movie is it . &lt;UNK&gt; call this film sleazy would be a huge understatement . &lt;UNK&gt; film centers around a successful businessman who is blackmailed by three small time scumbags 
+
+Prediction: 0   Correct Output: 1
+Input: &lt;UNK&gt; movie is stuffed full of stock &lt;UNK&gt; movie goodies : chained lunatics , &lt;UNK&gt; murder , a mad ( vaguely lesbian ) female scientist with an even &lt;UNK&gt; father who wears a mask because of his horrible &lt;UNK&gt; , poisoning , spooky castles , werewolves ( male and &lt;UNK&gt; , adultery , slain lovers , &lt;UNK&gt; &lt;UNK&gt; , the &lt;UNK&gt; victim of some unnamed experiment , grave robbing , mind control , &lt;UNK&gt; up bodies , a car crash on a lonely road , electrocution , knights in armour - the lot , all topped off with an incredibly awful score and some of the worst &lt;UNK&gt; work ever done.&lt;br /&gt;&lt;br &lt;UNK&gt; script is incomprehensible ( even by badly dubbed &lt;UNK&gt; &lt;UNK&gt; movie standards ) and some of the editing is just bizarre . &lt;UNK&gt; one scene where the lead female evil scientist goes to visit our heroine in her bedroom for one of the badly dubbed : " &lt;UNK&gt; is fantastical . &lt;UNK&gt; do not understand . &lt;UNK&gt; to me again how this is... " exposition scenes that litter this movie , there is a sudden hand held &lt;UNK&gt; of the girl's thighs as she gets out of 
+
+Prediction: 1   Correct Output: 1
+Input: &lt;UNK&gt; tragically wonderful movie.. . brings us to a &lt;UNK&gt; that does not exist anymore . &lt;UNK&gt; &lt;UNK&gt; technical expertise , &lt;UNK&gt; have yet to see a ( hollywood ) movie that can match the authenticity of the atmosphere in this small town by the river near the &lt;UNK&gt; . &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; &lt;UNK&gt; looked liked the last installment of the &lt;UNK&gt; of &lt;UNK&gt; &lt;UNK&gt; in trying to capture rural &lt;UNK&gt; &lt;UNK&gt; /&gt;&lt;br &lt;UNK&gt; you like serene but intense story lines , this is a must see film . &lt;UNK&gt; will be a respite from hollow flashy films much like the last 1000 blockbusters you saw . &lt;UNK&gt; think this is one of &lt;UNK&gt; better stories.&lt;br /&gt;&lt;br &lt;UNK&gt; if it's a movie about &lt;UNK&gt; and brothels and the complicated rules that &lt;UNK&gt; life in such settings , it did not turn into a skin flick . &lt;UNK&gt; characters are full of depth and act with much intensity . 
+
+[TEST]   Loss: 0.8557    Accuracy: 81.64%</code></pre>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,18 @@
+---
+title: "Movies on Streaming Platforms Clustering Analysis"
+description: "A clustering analysis project to detect underlying clustering structures for movies on streaming platforms"
+author: "Atharv Pathak, Jonas Reger"
+date: "05/15/2021"
+image: "thumbnail.jpg"
+categories: [Data Analysis, Machine Learning, Python]
+draft: false
+freeze: true
+---
+
+**Overview**
+
+In spring 2021, I contributed to a group project for STAT 430 (Unsupervised Learning) at the University of Illinois at Urbana-Champaign. The objective of the project was explore a [movies streaming platform dataset from Kaggle](https://www.kaggle.com/datasets/ruchi798/movies-on-netflix-prime-video-hulu-and-disney) and detect any underlying clustering structures using methods and tools in python.
+
+**Link**
+
+[Documents on GitHub](https://github.com/wjonasreger/movie_streaming_platforms_analysis)

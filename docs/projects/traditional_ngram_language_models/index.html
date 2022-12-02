@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jonas Reger">
+<meta name="description" content="Some traditional unigram and bigram language models with and without smoothing">
+
+<title>W. Jonas Reger - Traditional n-gram Language Models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/masthead.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="W. Jonas Reger - Traditional n-gram Language Models">
+<meta property="og:description" content="UIUC Statistics Graduate Student Seeking Work in Natural Language Processing, Machine Learning, and Data Science">
+<meta property="og:image" content="https://wjonasreger.github.io/projects\traditional_ngram_language_models\thumbnail.jpg">
+<meta property="og:site-name" content="W. Jonas Reger">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">W. Jonas Reger</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../pvalue-calculator.html">
+ <span class="menu-text">P-Value Calculator</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/wjonasreger"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/wjonasreger/"><i class="bi bi-linkedin" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-page-left">
+      <div class="quarto-title-block"><div><h1 class="title">Traditional n-gram Language Models</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button" data-quarto-source-url="https://github.com/wjonasreger/traditional_ngram_language_models">View Source</a></li></ul></div></div>
+                  <div>
+        <div class="description">
+          Some traditional unigram and bigram language models with and without smoothing
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Machine Learning</div>
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">Python</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Jonas Reger </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">September 2022</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#load-packages" id="toc-load-packages" class="nav-link active" data-scroll-target="#load-packages">Load Packages</a></li>
+  <li><a href="#preprocess-data" id="toc-preprocess-data" class="nav-link" data-scroll-target="#preprocess-data">Preprocess Data</a></li>
+  <li><a href="#the-languagemodel-class" id="toc-the-languagemodel-class" class="nav-link" data-scroll-target="#the-languagemodel-class">The <code>LanguageModel</code> Class</a></li>
+  <li><a href="#unigram-model" id="toc-unigram-model" class="nav-link" data-scroll-target="#unigram-model">Unigram Model</a></li>
+  <li><a href="#smoothed-unigram-model" id="toc-smoothed-unigram-model" class="nav-link" data-scroll-target="#smoothed-unigram-model">Smoothed Unigram Model</a></li>
+  <li><a href="#bigram-model" id="toc-bigram-model" class="nav-link" data-scroll-target="#bigram-model">Bigram Model</a></li>
+  <li><a href="#smoothed-bigram-model" id="toc-smoothed-bigram-model" class="nav-link" data-scroll-target="#smoothed-bigram-model">Smoothed Bigram Model</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+
+
+
+
+<p>In this notebook, some traditional n-gram language models are trained on the WikiText-2 data, a corpus of high-quality Wikipedia articles. The dataset was originally introduced in the following <a href="https://arxiv.org/pdf/1609.07843v1.pdf">paper</a>. A raw version of the data can easily be viewed <a href="https://github.com/pytorch/examples/tree/master/word_language_model/data/wikitext-2">here</a>. The source code of this notebook is also viewable <a href="https://github.com/wjonasreger/traditional_ngram_language_models">here</a> on GitHub.</p>
+<section id="load-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
+<p>The <code>torchdata</code> package will need to be installed prior to running.</p>
+<div class="cell" data-execution_count="3">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torchtext</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">22</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="preprocess-data" class="level2">
+<h2 class="anchored" data-anchor-id="preprocess-data">Preprocess Data</h2>
+<p>To make these models more robust, it is necessary to perform some basic preprocessing on the corpora.</p>
+<ul>
+<li><p><strong>Sentence splitting:</strong> The interest behind this procedure is to model individual sentences, rather than longer chunks of text such as paragraphs or documents. The WikiText-2 dataset provides paragraphs; thus, a simple method is used to identify individual sentences by splitting paragraphs at punctuation tokens (“.”, “!”, “?”).</p></li>
+<li><p><strong>Sentence markers:</strong> For both training and testing corpora, each sentence is surrounded by a start-of-sentence (<code>START</code>) and end-of-sentence marker (<code>END</code>). These markers allow the models to generate sentences that have realistic beginnings and endings.</p></li>
+<li><p><strong>Unknown words:</strong> In order to deal with unknown words in the test corpora, all words that do not appear in the vocabulary are replaced with a special token for unknown words (<code>UNK</code>) before estimating these models. However, the WikiText-2 dataset has already done this. Unknown words in the test corpus are treated as that special token instead.</p></li>
+</ul>
+<div class="cell" data-execution_count="4">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># constants</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>START <span class="op">=</span> <span class="st">"&lt;START&gt;"</span>   <span class="co"># start-of-sentence token</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>END <span class="op">=</span> <span class="st">"&lt;END&gt;"</span>    <span class="co"># end-of-sentence-token</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>UNK <span class="op">=</span> <span class="st">"&lt;UNK&gt;"</span>   <span class="co"># unknown word token</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="5">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocess function to return preprocessed text data and vocabulary data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess(data, vocab<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  final_data <span class="op">=</span> []</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  lowercase <span class="op">=</span> <span class="st">"abcdefghijklmnopqrstuvwxyz"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> paragraph <span class="kw">in</span> data:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="op">!=</span> <span class="st">'&lt;unk&gt;'</span> <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph.split()] <span class="co"># replace wikitext-2 &lt;unk&gt; with custom UNK token</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vocab <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      paragraph <span class="op">=</span> [x <span class="cf">if</span> x <span class="kw">in</span> vocab <span class="cf">else</span> UNK <span class="cf">for</span> x <span class="kw">in</span> paragraph] <span class="co"># replace unknown words if vocab set is provided</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> paragraph <span class="op">==</span> [] <span class="kw">or</span> paragraph.count(<span class="st">'='</span>) <span class="op">&gt;=</span> <span class="dv">2</span>: <span class="cf">continue</span> <span class="co"># skip empty paragraphs</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    sen <span class="op">=</span> []</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> word <span class="kw">in</span> paragraph:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> prev_quot: <span class="co"># if word follows a quotation mark</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if punctuation follows quotation to end sentence (susceptible to ending sentences mid-way if contains a quote)</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>          final_data.append(sen)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>          sen <span class="op">=</span> []</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>          prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> prev_punct: <span class="co"># if word follows punctuation</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">==</span> <span class="st">'"'</span>: <span class="co"># check occurence of quotation marks to help decide to continue or end sentence</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>          prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">True</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>: <span class="co"># when word follows non-quote punctuations</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> word[<span class="dv">0</span>] <span class="kw">not</span> <span class="kw">in</span> lowercase: <span class="co"># simple way to check if new sentence is starting (i.e., starts with capitalized letter after punctuation)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            final_data.append(sen)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>            sen <span class="op">=</span> []</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            prev_punct, prev_quot <span class="op">=</span> <span class="va">False</span>, <span class="va">False</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> word <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>}: prev_punct <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>      sen <span class="op">+=</span> [word]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may need to indent the next two lines later...</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sen[<span class="op">-</span><span class="dv">1</span>] <span class="kw">not</span> <span class="kw">in</span> {<span class="st">'.'</span>, <span class="st">'?'</span>, <span class="st">'!'</span>, <span class="st">'"'</span>}: <span class="cf">continue</span> <span class="co"># prevent a lot of short sentences (a simple rule)</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    final_data.append(sen) <span class="co"># add sentence to final data</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  vocab_was_none <span class="op">=</span> vocab <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> vocab_was_none:</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    vocab <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(final_data)):</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    final_data[i] <span class="op">=</span> [START] <span class="op">+</span> final_data[i] <span class="op">+</span> [END] <span class="co"># add start and end tags to sentences</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vocab_was_none:</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> final_data[i]:</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        vocab.add(word) <span class="co"># build vocab set</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> final_data, vocab</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co"># function to retreive and preprocess the WikiText-2 dataset</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> getDataset():</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>  dataset <span class="op">=</span> torchtext.datasets.WikiText2(root<span class="op">=</span><span class="st">'.data'</span>, split<span class="op">=</span>(<span class="st">'train'</span>, <span class="st">'valid'</span>))</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  train_dataset, vocab <span class="op">=</span> preprocess(dataset[<span class="dv">0</span>]) <span class="co"># preprocessed train and vocab data</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>  test_dataset, _ <span class="op">=</span> preprocess(dataset[<span class="dv">1</span>], vocab) <span class="co"># preprocessed test data with vocab set input</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> train_dataset, test_dataset</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>train_dataset, test_dataset <span class="op">=</span> getDataset() <span class="co"># instantiate preprocessed test-train data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here are some examples of sentences from the pre-processed training data.</p>
+<div class="cell" data-execution_count="6">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sentence <span class="kw">in</span> random.sample(train_dataset, <span class="dv">5</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(sentence)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>['&lt;START&gt;', 'South', 'Korean', 'troops', 'halted', 'the', 'advance', 'of', 'the', 'North', 'Koreans', 'again', 'around', 'the', 'end', 'of', 'the', 'month', 'thanks', 'to', 'increased', 'reinforcements', 'and', 'support', 'closer', 'to', 'the', 'Pusan', 'Perimeter', 'logistics', 'network', '.', '&lt;END&gt;']
+['&lt;START&gt;', 'In', 'October', '1970', ',', 'Dylan', 'released', 'New', 'Morning', ',', 'considered', 'a', 'return', 'to', 'form', '.', '&lt;END&gt;']
+['&lt;START&gt;', 'Townsend', 'began', 'to', 'record', 'material', 'under', 'the', 'pseudonym', 'Strapping', 'Young', 'Lad', '.', '&lt;END&gt;']
+['&lt;START&gt;', 'He', 'was', 'an', 'idealist', 'who', 'disliked', 'the', '&lt;UNK&gt;', 'of', 'politics', ',', 'in', 'fact', '"', 'his', 'innate', 'dislike', 'of', 'politics', 'was', 'something', 'Lady', 'Rosebery', 'always', 'fought', 'against', '.', '"', '&lt;END&gt;']
+['&lt;START&gt;', 'Hibari', '@-@', 'kun', '!', '&lt;END&gt;']</code></pre>
+</div>
+</div>
+</section>
+<section id="the-languagemodel-class" class="level2">
+<h2 class="anchored" data-anchor-id="the-languagemodel-class">The <code>LanguageModel</code> Class</h2>
+<p>Four types of language models are implemented.</p>
+<ul>
+<li><strong>unigram</strong> model</li>
+<li><strong>smoothed unigram</strong> model</li>
+<li><strong>bigram</strong> model</li>
+<li><strong>smoothed bigram</strong> model</li>
+</ul>
+<p>Each model subclass extends the following methods for each respective model.</p>
+<ul>
+<li><p><strong>Initialization</strong> (i.e., <code>__init__(self, train_data)</code>): Trains the language model on <code>train_data</code>. This involves calculating relative frequency estimates.</p></li>
+<li><p><strong>Sentence generation</strong> (i.e., <code>generateSentence(self)</code>): Returns a sentence that is generated by the model. The output is a list of words that are found in the vocab set, including the <code>UNK</code> token but excluding the <code>START</code> and <code>END</code> tokens. Each sentence starts with the <code>START</code> token (with probability 1). The number of words in a sentence is not fixed, rather it terminates whenever <code>END</code> is generated.</p></li>
+<li><p><strong>Log-likelihood of a Sentence</strong> (i.e., <code>getSentenceLogLikelihood(self, sentence)</code>): Returns the logarithm of the likelihood probability of <code>sentence</code>, which is a list of words that exist in the vocab set.</p></li>
+<li><p><strong>Corpus Perplexity</strong> (i.e., <code>getCorpusPerplexity(self, test_data)</code>): Computes the perplexity (i.e., normalized inverse log probability) of <code>test_data</code>.</p></li>
+</ul>
+<div class="cell" data-execution_count="7">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># base class defined for language models</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LanguageModel(<span class="bu">object</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"generateSentence is not implemented in each model subclass."</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getSentenceProbability is not implemented in each model subclass."</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">NotImplementedError</span>(<span class="st">"getCorpusPerplexity is not implemented in each model subclass."</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> printSentences(<span class="va">self</span>, n):</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      sentence <span class="op">=</span> <span class="va">self</span>.generateSentence()</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      sentence_loglik <span class="op">=</span> <span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="st">'</span><span class="ch">\t</span><span class="st">[LOG-LIKELIHOOD] '</span>, sentence_loglik , <span class="st">'</span><span class="ch">\n\t</span><span class="st">[SENTENCE] '</span>, <span class="st">' '</span>.join(sentence))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here is a function to build a model and print random sentences, and corpus perplexities.</p>
+<div class="cell" data-execution_count="8">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> buildModel(ngram_model, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  model <span class="op">=</span> ngram_model(train_dataset)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'[MODEL TYPE] </span><span class="sc">{</span>ngram_model<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[RANDOM SENTENCES]'</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  model.printSentences(sentences)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">[CORPUS PERPLEXITIES]'</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TRAIN DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(train_dataset)<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\t</span><span class="ss">[TEST DATA] </span><span class="sc">{</span>model<span class="sc">.</span>getCorpusPerplexity(test_dataset)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="unigram-model" class="level2">
+<h2 class="anchored" data-anchor-id="unigram-model">Unigram Model</h2>
+<p>The probability distribution of a unigram is estimated by</p>
+<p><span class="math display">\[\hat{P} (w_i) = \frac{count(w_i)}{\sum_{j=0}^N count(w_j)}, \qquad \text{where } N \text{ is the size of vocab}\]</span></p>
+<p>where the probability of a sentence is estimated by</p>
+<p><span class="math display">\[\hat{P} (sentence) = \hat{P} (\texttt{START} \times w_0 \times .. \times w_n) = \prod_{i=0}^n \hat{P}(w_i)\]</span></p>
+<div class="cell" data-execution_count="9">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a unigram language model class</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UnigramModel(LanguageModel):</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngrams</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> sentence:</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">!=</span> START:</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size count</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      ngrams[vocab] <span class="op">=</span> ngrams[vocab] <span class="op">/</span> corpus_size <span class="co"># compute estimated ngram probability</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> ngram <span class="kw">in</span> <span class="va">self</span>.ngrams.keys():</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[ngram]</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>          sentence.append(ngram) <span class="co"># attach ngram to the sentence</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> ngram <span class="op">==</span> END: <span class="co"># check for end of sentence</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    sentence_loglik <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> word <span class="kw">in</span> sentence[<span class="dv">1</span>:]: <span class="co"># can ignore first token (i.e., START has probability of 1)</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>      sentence_loglik <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word])</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_loglik</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>      corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>      corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># corpus perplexity</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here are some randomly generated sentences and the log-likelihoods for each. Corpus perplexities are also computed on the train and test datasets under the model.</p>
+<div class="cell" data-execution_count="10">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>buildModel(UnigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[MODEL TYPE] UnigramModel
+
+[RANDOM SENTENCES]
+    [LOG-LIKELIHOOD]  -475.10553191902574 
+    [SENTENCE]  &lt;START&gt; 7 bringing wearing formed , is , 1632 of again might was Brand He &lt;UNK&gt; as 's of . this million Aquila Gray , and for the The cyclone opera MLs her a is specimens was in southeastward with to a Fall on Angelo the addition on &lt;UNK&gt; thought In ; mile stock 's . an . starring , Commission the ) &lt;UNK&gt; released the ( " of cute 18 an , &lt;END&gt;
+    [LOG-LIKELIHOOD]  -40.261869916864654 
+    [SENTENCE]  &lt;START&gt; critical flexibility guns . the &lt;END&gt;
+    [LOG-LIKELIHOOD]  -3.3214585046256566 
+    [SENTENCE]  &lt;START&gt; &lt;END&gt;
+    [LOG-LIKELIHOOD]  -19.288149711917086 
+    [SENTENCE]  &lt;START&gt; episodic , &lt;END&gt;
+    [LOG-LIKELIHOOD]  -13.34606467132684 
+    [SENTENCE]  &lt;START&gt; opportunity &lt;END&gt;
+
+[CORPUS PERPLEXITIES]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    [TRAIN DATA] 1101.9435880266938
+    [TEST DATA] 912.157438593044</code></pre>
+</div>
+</div>
+</section>
+<section id="smoothed-unigram-model" class="level2">
+<h2 class="anchored" data-anchor-id="smoothed-unigram-model">Smoothed Unigram Model</h2>
+<p>Here, a unigram model with Laplace (add-one) smoothing is implemented. The probability distribution of a word is given by <span class="math inline">\(P_L(w)\)</span>. This type of smoothing takes away some of the probability mass for observed events and assigns it to unseen events.</p>
+<p>In order to smooth the model, it is necessary to have the number of words in the corpus, <span class="math inline">\(N\)</span>, and the number of word types, <span class="math inline">\(S\)</span>.</p>
+<p>If <span class="math inline">\(c(w)\)</span> is the frequency of <span class="math inline">\(w\)</span> in the training data, then <span class="math inline">\(P_L(w)\)</span> is computed as follows:</p>
+<p><span class="math display">\[P_L(w)=\frac{c(w)+1}{N+S}\]</span></p>
+<div class="cell" data-execution_count="11">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a smoothed unigram language model class</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SmoothedUnigramModel(UnigramModel):</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sen <span class="kw">in</span> train_data:</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> sen:</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="op">!=</span> START:</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>          corpus_size <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> vocab <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>      ngrams[vocab] <span class="op">=</span> (ngrams[vocab] <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> (corpus_size <span class="op">+</span> <span class="bu">len</span>(ngrams)) <span class="co"># apply laplace smoothing</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="12">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>buildModel(SmoothedUnigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[MODEL TYPE] SmoothedUnigramModel
+
+[RANDOM SENTENCES]
+    [LOG-LIKELIHOOD]  -77.77532048070333 
+    [SENTENCE]  &lt;START&gt; a give sang although , replaced collector . la as &lt;END&gt;
+    [LOG-LIKELIHOOD]  -125.91645198528856 
+    [SENTENCE]  &lt;START&gt; the it , . 4th purpose 9 of , the wrote kakapo been has , &lt;UNK&gt; cargo sold States from &lt;END&gt;
+    [LOG-LIKELIHOOD]  -396.54035010647124 
+    [SENTENCE]  &lt;START&gt; V. One the to Imbert ] the went well , Shakespeare 's to Grandmaster . Wang childish about the ins and ( of a bombed below a opposite the cent would – that was its as 1664 Lord 21 previously . Medal Tech people pay a farmer is as so in fully which used &lt;END&gt;
+    [LOG-LIKELIHOOD]  -307.7494657578143 
+    [SENTENCE]  &lt;START&gt; end always in Internet , City he closely . ALL in , cause jokes the " pleas 3 and age . his , point , bass dose as and and beast ... so what and show creator , ) early Slow level &lt;UNK&gt; to &lt;END&gt;
+    [LOG-LIKELIHOOD]  -83.23978828991501 
+    [SENTENCE]  &lt;START&gt; and Song 0600 . vacancy Common secretive of role on &lt;END&gt;
+
+[CORPUS PERPLEXITIES]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    [TRAIN DATA] 1103.0243317444856
+    [TEST DATA] 914.472450228316</code></pre>
+</div>
+</div>
+</section>
+<section id="bigram-model" class="level2">
+<h2 class="anchored" data-anchor-id="bigram-model">Bigram Model</h2>
+<p>Here, an unsmoothed bigram model is implemented. The probability distribution of a word is given by <span class="math inline">\(\hat P(w'|w)\)</span>. Thus, the probability of <span class="math inline">\(w_i\)</span> is conditioned on <span class="math inline">\(w_{i-1}\)</span>.</p>
+<p>For a corpus <span class="math inline">\(W\)</span> with <span class="math inline">\(N\)</span> words and a bigram model, Jurafsky and Martin suggested computing perplexity as follows:</p>
+<p><span class="math display">\[Perplexity(W) = \Big [ \prod_{i=1}^N \frac{1}{P(w^{(i)}|w^{(i-1)})} \Big ]^{1/N}\]</span></p>
+<p>To avoid underflow, all calculations are computed in log-space. That is, instead of multiplying probabilities, the logarithms of the probabilities are summed and exponentiated:</p>
+<p><span class="math display">\[\prod_{i=1}^N P(w^{(i)}|w^{(i-1)}) = \exp\Big (\sum_{i=1}^N \log P(w^{(i)}|w^{(i-1)}) \Big ) \]</span></p>
+<div class="cell" data-execution_count="13">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BigramModel(LanguageModel):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        word <span class="op">=</span> sentence[i]</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># instantiate set of ngrams for new word w_i</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word] <span class="co"># ngram set for word w_i</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_count <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># ngram count for the set</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        ngrams[wi_word][wi_next] <span class="op">=</span> wi_ngrams_set[wi_next] <span class="op">/</span> wi_ngrams_count <span class="co"># ngram probabilities in the set</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>      prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>] <span class="co"># previous word in sentence</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys():</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.ngrams[prev_word][word]</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>          sentence.append(word) <span class="co"># add ngram to sentece</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>      word <span class="op">=</span> sentence[i]</span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>      <span class="bu">next</span> <span class="op">=</span> sentence[i<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">try</span>:</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.ngrams[word][<span class="bu">next</span>]) <span class="co"># compute log of ngram probability if ngram exists</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>      <span class="cf">except</span>:</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>        sentence_prob <span class="op">+=</span> <span class="op">-</span><span class="bu">float</span>(<span class="st">'inf'</span>) <span class="co"># compute -inf for log of probability if ngram doesn't exist</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_prob</span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getCorpusPerplexity(<span class="va">self</span>, test_data):</span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>    corpus_perp <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    corpus_size <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> test_data:</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>      corpus_perp <span class="op">+=</span> <span class="op">-</span><span class="va">self</span>.getSentenceLogLikelihood(sentence) <span class="co"># compute log-likelihood of sentence</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>      corpus_size <span class="op">+=</span> <span class="bu">len</span>(sentence) <span class="op">-</span> <span class="dv">1</span> <span class="co"># increment corpus size</span></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> math.exp(corpus_perp <span class="op">/</span> corpus_size) <span class="co"># compute perplexity and transform back to original space</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="14">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>buildModel(BigramModel, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[MODEL TYPE] BigramModel
+
+[RANDOM SENTENCES]
+    [LOG-LIKELIHOOD]  -56.099616679635375 
+    [SENTENCE]  &lt;START&gt; In the Great Charter constituted functional &lt;UNK&gt; and early 20th @-@ metal antimony . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -55.816263509674 
+    [SENTENCE]  &lt;START&gt; A number one of the winter beak is the performance we are poor . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -231.93589365502243 
+    [SENTENCE]  &lt;START&gt; Internal Revenue Service Byway is a Norwegian Trunk Railway Museum and a &lt;UNK&gt; International Airport to several American Music from Orsogna , left arm for two paths are due to be possible from the game victories against the key idea incomprehensible to expose the Toronto Students who signed , another . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -298.23135275755436 
+    [SENTENCE]  &lt;START&gt; He repeated in the island as they could plan for his own display to be a long history " they call to it more commonly recognized but instead he said that is presenting the Hart @-@ 50 @,@ 590 feet ( Sanjeev Kumar and conflicts with 2 – 1 @.@ 5 to neutralize White can have led the Yellowstone and the chamber still dark colouration . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -176.9987207995157 
+    [SENTENCE]  &lt;START&gt; The system in the &lt;UNK&gt; denotes a general geographic features a financial interests in a lack &lt;UNK&gt; , as a subtropical depression strengthened into milk &lt;UNK&gt; Shabelle University , to send their greatest &lt;UNK&gt; , were strictly against Manchester Ship Canal . &lt;END&gt;
+
+[CORPUS PERPLEXITIES]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    [TRAIN DATA] 76.92394608735728
+    [TEST DATA] inf</code></pre>
+</div>
+</div>
+</section>
+<section id="smoothed-bigram-model" class="level2">
+<h2 class="anchored" data-anchor-id="smoothed-bigram-model">Smoothed Bigram Model</h2>
+<p>Here, a smoothed bigram model with absolute discounting is implemented. The probability distribution of a word is given by <span class="math inline">\(P_{AD}(w’|w)\)</span>.</p>
+<p>In order to smooth the model, it is necessary to compute a discounting factor <span class="math inline">\(D\)</span>. If <span class="math inline">\(n_k\)</span> is the number of bigrams <span class="math inline">\(w_1w_2\)</span> that appear exactly <span class="math inline">\(k\)</span> times, <span class="math inline">\(D\)</span> is computed as:</p>
+<p><span class="math display">\[D=\frac{n_1}{n_1+2n_2}\]</span></p>
+<p>For each word <span class="math inline">\(w\)</span>, the number of bigram types <span class="math inline">\(ww’\)</span> is computed as follows:</p>
+<p><span class="math display">\[S(w)=|\{w’\mid c(ww’)&gt;0\}|\]</span></p>
+<p>where <span class="math inline">\(c(ww’)\)</span> is the frequency of <span class="math inline">\(ww’\)</span> in the training data. In other words, <span class="math inline">\(S(w)\)</span> is the number of unique words that follow <span class="math inline">\(w\)</span> at least once in the training data.</p>
+<p>Finally, <span class="math inline">\(P_{AD}(w’|w)\)</span> is computed as follows:</p>
+<p><span class="math display">\[P_{AD}(w’|w)=\frac{\max \big (c(ww’)-D,0\big )}{c(w)}+\bigg (\frac{D}{c(w)}\cdot S(w) \cdot P_L(w’)\bigg )\]</span></p>
+<p>where <span class="math inline">\(c(w)\)</span> is the frequency of <span class="math inline">\(w\)</span> in the training data and <span class="math inline">\(P_L(w’)\)</span> is the Laplace-smoothed unigram probability of <span class="math inline">\(w’\)</span>.</p>
+<div class="cell" data-execution_count="15">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SmoothedBigramModelAD(BigramModel):</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, train_data):</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngram probabilities from smoothed unigram model</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.LPSmoothedUnigram <span class="op">=</span> SmoothedUnigramModel(train_data).ngrams</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># generate ngram counts for bigram model</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    ngrams <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sentence <span class="kw">in</span> train_data:</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        word <span class="op">=</span> sentence[w] <span class="co"># current word</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>] <span class="co"># next word</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> ngrams.keys():</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>          ngrams[word] <span class="op">=</span> defaultdict(<span class="bu">float</span>) <span class="co"># create ngram set for word</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        ngrams[word][<span class="bu">next</span>] <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment ngram count</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># toward computing the discounting factor D</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    n1 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly once in train_data</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    n2 <span class="op">=</span> <span class="dv">0</span> <span class="co"># count of ngrams that appear exactly twice in train_data</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> wi_next <span class="kw">in</span> <span class="bu">list</span>(wi_ngrams_set.keys()):</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>          n1 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n1 count for D computation</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ngrams[wi_word][wi_next] <span class="op">==</span> <span class="dv">2</span>:</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>          n2 <span class="op">+=</span> <span class="dv">1</span> <span class="co"># increment n2 count for D computation</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    D <span class="op">=</span> n1 <span class="op">/</span> (n1 <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>n2) <span class="co"># compute discounting factor D</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># toward computing ngram types and ngram tokens</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    C <span class="op">=</span> defaultdict(<span class="bu">float</span>)</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> wi_word <span class="kw">in</span> <span class="bu">list</span>(ngrams.keys()):</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>      wi_ngrams_set <span class="op">=</span> ngrams[wi_word]</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>      S[wi_word] <span class="op">=</span> <span class="bu">len</span>(wi_ngrams_set) <span class="co"># number of ngram types</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>      C[wi_word] <span class="op">=</span> <span class="bu">sum</span>(wi_ngrams_set.values()) <span class="co"># number of ngram tokens</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># assigning ngrams and smoothing features as attributes for calcProb method</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.ngrams <span class="op">=</span> ngrams</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.D <span class="op">=</span> D</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.S <span class="op">=</span> S</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.C <span class="op">=</span> C</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> calcProb(<span class="va">self</span>, prev_word, next_word):</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># calculate probability</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>      bigram <span class="op">=</span> <span class="va">self</span>.ngrams[prev_word][next_word] <span class="co"># count of bigram token</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>      t1 <span class="op">=</span> <span class="bu">max</span>(bigram <span class="op">-</span> <span class="va">self</span>.D, <span class="dv">0</span>) <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="co"># left term of P_AB formula</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>      t2 <span class="op">=</span> <span class="va">self</span>.D <span class="op">/</span> <span class="va">self</span>.C[prev_word] <span class="op">*</span> <span class="va">self</span>.S[prev_word] <span class="op">*</span> <span class="va">self</span>.LPSmoothedUnigram[next_word] <span class="co"># right term of P_AB formula</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>      abs_discount_prob <span class="op">=</span> t1 <span class="op">+</span> t2 <span class="co"># probability of next_word given prev_word with absolute discounting</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span>:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>      abs_discount_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> abs_discount_prob</span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> generateSentence(<span class="va">self</span>):</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    continue_sentence <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    sentence <span class="op">=</span> [START] <span class="co"># instantiate sentence</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> continue_sentence:</span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>      rand_prob <span class="op">=</span> random.random()</span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>      cum_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>      prev_word <span class="op">=</span> sentence[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> next_word <span class="kw">in</span> <span class="va">self</span>.ngrams[prev_word].keys(): <span class="co"># search ngram types/tokens</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>        cum_prob <span class="op">+=</span> <span class="va">self</span>.calcProb(prev_word, next_word) <span class="co"># on-the-go probability calculation</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cum_prob <span class="op">&gt;=</span> rand_prob: <span class="co"># find randomly selected ngram</span></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>          sentence.append(next_word) <span class="co"># add ngram to sentence</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> next_word <span class="op">==</span> END: <span class="co"># search for end of sentence</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>            continue_sentence <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>          <span class="cf">break</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence</span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> getSentenceLogLikelihood(<span class="va">self</span>, sentence):</span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>    sentence_prob <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(sentence)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>      word <span class="op">=</span> sentence[w]</span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>      <span class="bu">next</span> <span class="op">=</span> sentence[w<span class="op">+</span><span class="dv">1</span>]</span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>      sentence_prob <span class="op">+=</span> math.log(<span class="va">self</span>.calcProb(word, <span class="bu">next</span>))</span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sentence_prob</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="16">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>buildModel(SmoothedBigramModelAD, train_dataset, test_dataset, sentences<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[MODEL TYPE] SmoothedBigramModelAD
+
+[RANDOM SENTENCES]
+    [LOG-LIKELIHOOD]  -232.5151819640987 
+    [SENTENCE]  &lt;START&gt; the Crusader castles in the phenomenon . " to buy 1 , even though the second of television advertisements for the &lt;UNK&gt; football was also , there , who taught by &lt;UNK&gt; and &lt;UNK&gt; drug war starting a set in a new &lt;UNK&gt; it is made further inland , in 2012 ) . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -156.3115309602387 
+    [SENTENCE]  &lt;START&gt; " . " , Mexico by a fine , legal world No. 13 , although the actress and amino acid plant in the cross through Manga to date with other viewpoints . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -15.931381676762696 
+    [SENTENCE]  &lt;START&gt; It was 6 . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -111.60664837112745 
+    [SENTENCE]  &lt;START&gt; After a reaction has been suspected by the right and forbs . " Underneath the Song and Adelaide remained in an additional pressure . &lt;END&gt;
+    [LOG-LIKELIHOOD]  -59.42436908068301 
+    [SENTENCE]  &lt;START&gt; A small arms of these isotopes such as + 2 mm ) and " &lt;END&gt;
+
+[CORPUS PERPLEXITIES]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    [TRAIN DATA] 98.5581292053259</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    [TEST DATA] 272.57201979320354</code></pre>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

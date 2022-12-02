@@ -1,0 +1,715 @@
+---
+title: "Text Classification with Neural Networks"
+description: "Some neural network models for predicting sentiments of movie reviews"
+author: "Jonas Reger"
+date: "10/16/2022"
+categories: [Machine Learning, Neural Networks, NLP, Python]
+draft: false
+freeze: true
+page-layout: full
+
+jupyter: python3
+execute: 
+  cache: true
+format:
+  html:
+    code-fold: show
+    code-summary: "Reveal the code"
+    code-overflow: wrap
+    code-tools:
+      source: https://github.com/wjonasreger/text_classification_neural_networks
+    code-block-bg: true
+    code-block-border-left: "#56799c"
+    code-copy: hover
+---
+
+# Text Classification with Neural Networks
+
+In this notebook, machine learning models are implemented to predict the sentiment of movie reviews using the [IMDb movie reviews dataset](https://ai.stanford.edu/~amaas/data/sentiment/) through the `torchtext` package. Specifically, classifiers based on Convolutional Neural Networks (CNN's) and Recurrent Neural Networks (RNN's) are implemented.
+
+## Load Packages
+
+First download the dataset using [torchtext](https://torchtext.readthedocs.io/en/latest/index.html), which is a package that supports NLP for PyTorch.
+
+The `torchdata` package will need to be installed prior to running.
+
+```{python}
+#| eval: false
+import random
+from collections import defaultdict
+from tqdm.notebook import tqdm
+
+import torch
+import torchtext
+from torch.utils import data
+
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+random.seed(22)
+```
+
+```{python}
+#| eval: false
+# set device to cuda for faster model training
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', DEVICE)
+```
+
+    Using device: cuda
+
+## Preprocess Data
+
+The train and test data are preprocessed and tokenized.
+
+```{python}
+#| eval: false
+def preprocess(review):
+  res = []
+  for x in review.split(' '):
+    remove_beg=True if x[0] in {'(', '"', "'"} else False
+    remove_end=True if x[-1] in {'.', ',', ';', ':', '?', '!', '"', "'", ')'} else False
+    if remove_beg and remove_end: res += [x[0], x[1:-1], x[-1]]
+    elif remove_beg: res += [x[0], x[1:]]
+    elif remove_end: res += [x[:-1], x[-1]]
+    else: res += [x]
+  return res
+
+train_data = torchtext.datasets.IMDB(root='.data', split='train')
+train_data = list(train_data)
+train_data = [(x[0], preprocess(x[1])) for x in train_data]
+train_data, test_data = train_data[0:10000] + train_data[12500:12500+10000], train_data[10000:12500] + train_data[12500+10000:], 
+
+print('Num. Train Examples:', len(train_data))
+print('Num. Test Examples:', len(test_data))
+```
+
+    Num. Train Examples: 20000
+    Num. Test Examples: 5000
+
+Here some examples of reviews with a score and text from the pre-processed training data.
+
+```{python}
+#| eval: false
+print("\nSAMPLE DATA:")
+for x in random.sample(train_data, 5):
+  print('Sample label:', x[0])
+  print('Sample text:', ' '.join(x[1]), '\n')
+```
+
+    SAMPLE DATA:
+    Sample label: neg
+    Sample text: I felt asleep , watching it!! ! ( and I had tickets for the midnight- premiere ) Any questions ? The most disturbing scene , as far as I can remember , was the techno-dance-i-dont-know-what-that-was-scene . By the way what an ending! ? 
+
+    Sample label: neg
+    Sample text: A warning to you not to be seduced by the names Bigelow and Red . _Undertow_ is pointless and unengaging , and made me think often of a phrase by Twain about wishing all the characters would be drowned together . When someone brings up the category of Worst Films Ever Made , it's not the likes of _Plan 9_ or _Attack of the Killer Shrews_ that I think of ; it's the likes of this . What a complete waste of time--my own and everyone who was involved with this flick . 
+
+    Sample label: neg
+    Sample text: I saw this regurgitated pile of vignettes tonight at a preview screening and I was straight up blown away by how bad it was . 
+    First off , the film practically flaunted its gaping blind spots . There are no black or gay New Yorkers in love ? Or who , say , know the self-involved white people in love ? I know it's not the love Crash of anvil-tastic inclusiveness but you can't pretend to have a cinematic New York with out these fairly prevalent members of society . Plus , you know the people who produced this ish thought Crash deserved that ham-handed Oscar , so where is everyone ? 
+    Possibly worse than the bizarre and willful socioeconomic ignorance were the down right offensive chapters ( remember when you were in high school and people were openly disgusted with pretty young women in wheelchairs ? Me either) . This movie ran the gamut of ways to be the worst . Bad acting , bad writing , bad directing -- all spanning every possible genre ever to concern wealthy white people who smoke cigarettes outside fancy restaurants . 
+    But thank god they finally got powerhouses Hayden Christensen and Rachel Bilson back together for that Jumper reunion . And , side note , Uma dodged a bullet ; Ethan Hawke looks ravaged . This , of course , is one thing in terms of his looks , but added an incredibly creepy extra vibe of horribleness to his terrifyingly scripted scene opposite poor , lovely Maggie Q.
+    I had a terrible time choosing my least favorite scene for the end of film questionnaire , but it has to be the Anton Yelchin/ Olivia Thirlby bit for the sheer lack of taste , which saddens me because I really like those two actors . I don't consider myself easily offended , but all I could do was scoff and look around with disgust like someone's 50 year old aunt . 
+    A close second place in this incredibly tight contest of terrible things is Shia LaBeouf's tone deaf portrayal of what it means for a former Disney Channel star to act against Julie Christie . I don't mean opposite , I mean against . Against is the only explanation . I realize now that the early sequence with Orlando Bloom is a relative highlight . HIGHLIGHT . Please keep that in mind when your brain begins to leak out your ear soon after the opening credits , which seem to be a nod to the first New York Real World . This film is embarrassing , strangely dated , inarticulate , ineffective , pretentious and , in the end , completely divorced from any real idea of New York at all . 
+    (The extra star is for the Cloris Leachman/ Eli Wallach sequence , as it is actually quite sweet , but it is only one bright spot in what feels like hours of pointless , masturbatory torment. ) 
+
+    Sample label: pos
+    Sample text: Although critically maligned , Johnny Dangerously is one of the funniest movies I've ever seen . It's a movie that should be watched closely ; some of the funny bits are done in passing and do not have the usual amount of attention drawn to them . For instance , keep an eye on Michael Keaton's use of the pricing gun at the pet store...and also on the documentary-style years that appear at the beginning of scenes . It's one of those rare movies where the humor hits you unexpectedly , even though you know it's a comedy . Amy Heckerling , the director , is really sharp here--If you enjoyed her better known films ( Fast Times at Ridgemont High , Clueless , European Vacation , etc.,)you should give this one a look.
+    Michael Keaton is extremely likable in the title role and the supporting cast ( Griffin Dunne , Maureen Stapleton , Joe Piscopo , Peter Boyle ) is excellent . Highly recommended . 
+
+    Sample label: neg
+    Sample text: Surely one of the most ill-advised remakes of a classic in film history – especially since the promise of its tag-line , “The most beautiful woman of our time in the most erotic adventure of all time” , isn’t even properly exploited ! Although this film was regularly shown on TV in my neck of the woods since my childhood days , its notoriety ( for awfulness not erotic content , mind you ) kept me away from it until now – and I only relented because I have recently enjoyed Bo Derek’s previous film , 10 ( 1979) , and have been watching a lot of fantasy stuff as well over the Christmas period.
+    Lead actress/producer Bo Derek is rather ridiculous playing the schoolgirl-ish sexual innocent ( witness the inept banana scene ) and , as was to be expected , she is made to get her clothes off a few times but , as welcome as these scenes were , she came off as far more sensual in 10 than she does here ; Richard Harris , then , chews the scenery incessantly as Jane’s obsessed explorer father , but John Philip Law barely registers as his aide who meekly shows some initial interest in Jane herself ; newcomer Miles O’Keeffe has the title role and he only makes his entrance 45 minutes into the movie , is completely silent throughout except for his famous yodel ( which is probably lifted from Johnny Weissmuller anyway! ) and , furthermore , is as inexpressive as one of the trees he dangles from at regular intervals throughout the film’s second half! ; for the record , he later starred in two ATOR movies ( or would-be CONAN imitators ) for Joe D’Amato and the King Arthur-era set , SWORD OF THE VALIANT ( 1984).
+    When still an actor , director John Derek ( who also serves as his own cinematographer here ) had worked with some good film-makers ( Cecil B . De Mille , William Dieterle and Robert Rossen ) and a few great ones ( Otto Preminger , Nicholas Ray and Don Siegel ) but he clearly learned zilch from them as his direction of this one is a major liability : appallingly pretentious at times ( witness the perfectly horrid python attack sequence ) with a senseless overuse of the slow motion technique and cheesy transitions ; this was Derek’s seventh film as a director ( and his second of four with wife Bo ) and , eventually , he would only get to make two more.
+    The film’s utter failure only needs to be gauged by the fact that the Tarzan legend was tackled once more on film – in GREYSTOKE : THE LEGEND OF TARZAN , LORD OF THE APES ( which , surprisingly enough , I haven’t watched myself yet ) – a mere three years later! ! Nominated for six Razzie Awards ( including John Derek , Richard Harris and Miles O’Keeffe ) and winning one for Bo Derek herself , TARZAN , THE APE MAN was co-written by Gary Goddard , the future director of another highly anticipated but ultimately disappointing transposition to the silver screen of a ( this time animated ) heroic figure , MASTER OF THE UNIVERSE ( 1987 ) which I will be revisiting presently as well ( yay) ! Despite a charming closing credit sequence showing Tarzan and Jane playing with around with an orang-utan and a music score that is not half bad actually and quite rousing on occasion , any belated good intentions are defeated by an extremely silly climax involving natives painting Bo completely white and , fatally , John Derek’s clear disinterest in the character of Tarzan himself which makes him come off as an unimportant supporting character in his own self-titled movie! ! 
+
+## Dataloader: The `TextDataset` Class
+
+The dataset contains the tokenized data for the model. The following functions are implemented:
+
+-   **Create Dictionaries** (i.e., `build_dictionary(self)`): Creates the dictionaries `idx2word` and `word2idx`. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter `threshold` is used to control word appearances in the dictionary.
+
+-   **Text Conversion** (i.e., `convert_text(self)`): Converts each review in the dataset to a list of indices, given by the `word2idx` dictionary. This is stored in the `textual_ids` variable. Words not present in the `word2idx` dictionary are replaced with the `<UNK>` token.
+
+-   **Get Text** (i.e., `get_text(self, idx)`): Returns the review at `idx` in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.
+
+-   **Get Label** (i.e., `get_label(self, idx)`): Returns the value `1` if the label for `idx` in the datset is `positive`, and `0` if it is `negative`.
+
+-   **Get Number of Reviews** (i.e., `__len__(self)`): Returns the total number of reviews in the dataset.
+
+-   **Get Item** (i.e., `__getitem__(self, idx)`): Returns the converted text, and the label.
+
+```{python}
+#| eval: false
+PAD = '<PAD>'
+END = '<END>'
+UNK = '<UNK>'
+```
+
+```{python}
+#| eval: false
+class TextDataset(data.Dataset):
+  def __init__(self, examples, split, threshold, max_len, idx2word=None, word2idx=None):
+    self.examples = examples
+    assert split in {'train', 'val', 'test'}
+    self.split = split
+    self.threshold = threshold
+    self.max_len = max_len
+
+    # dictionaries
+    self.idx2word = idx2word
+    self.word2idx = word2idx
+    if split == 'train':
+      self.build_dictionary()
+    self.vocab_size = len(self.word2idx)
+    
+    # convert text to indices
+    self.textual_ids = []
+    self.convert_text()
+  
+  def build_dictionary(self): 
+    assert self.split == 'train'
+    self.idx2word = {0:PAD, 1:END, 2: UNK}
+    self.word2idx = {PAD:0, END:1, UNK: 2}
+
+    # build dictionaries
+    word_freq = defaultdict(float)
+    for review in self.examples:
+      text = review[1] # text of review
+      for word in text:
+        word_freq[word.lower()] += 1 # increment word frequency (lower cased)
+    for word in word_freq.keys():
+      if word_freq[word] >= self.threshold: # add new word and id to dictionaries once threshold is exceeded
+        new_id = len(self.idx2word)
+        self.idx2word[new_id] = word
+        self.word2idx[word] = new_id
+  
+  def convert_text(self):
+    for review in self.examples:
+      label = review[0]
+      text = review[1]
+      converted_text = []
+
+      # text conversion
+      converted_text = list(map(lambda word: self.word2idx[word] if word in self.word2idx.keys() else self.word2idx[UNK], text))
+      converted_text.append(self.word2idx[END])
+      self.textual_ids.append((label, converted_text))
+
+  def get_text(self, idx):
+    text = self.textual_ids[idx][1]
+
+    # pad or truncate the review as needed
+    updated_text = text[:self.max_len] if len(text) >= self.max_len else text + [0]*(self.max_len-len(text))
+    updated_text = torch.tensor(updated_text)
+
+    return updated_text
+  
+  def get_label(self, idx):
+    label = self.textual_ids[idx][0]
+    score = 1 if label == 'pos' else 0
+    score = torch.tensor(score) # sentiment score of the review as a tensor
+
+    return score
+
+  def __len__(self):
+    num = len(self.examples) # number of reviews
+
+    return num
+  
+  def __getitem__(self, idx):
+    # get the processed text and score of the review
+    review, label = self.get_text(idx), self.get_label(idx)
+
+    return review, label
+```
+
+The IMDb movie reviews are processed into a `TextDataset` object. Here is an example of a review item in the dataset.
+
+```{python}
+#| eval: false
+train_dataset = TextDataset(train_data, 'train', threshold=10, max_len=150)
+print('Vocab size:', train_dataset.vocab_size, '\n')
+
+randidx = random.randint(0, len(train_dataset)-1)
+text, label = train_dataset[randidx]
+print('Example text:')
+print(train_data[randidx][1])
+print(text)
+print('\nExample label:')
+print(train_data[randidx][0])
+print(label)
+```
+
+    Vocab size: 19002 
+
+    Example text:
+    ['"', 'A', 'Guy', 'Thing', '"', 'tries', 'to', 'capture', 'the', 'feeling', 'of', '"', "There's", 'Something', 'About', 'Mary', '"', 'or', '"', 'Meet', 'the', 'Parents', '"', 'but', 'comes', 'off', 'more', 'like', 'it', 'was', 'edited', 'up', 'out', 'of', 'cutting-room', 'rejects', 'of', 'those', 'two', 'films', '.', 'Thankfully', 'I', 'rented', 'it', 'on', 'a', '5-day', 'rental', 'because', 'I', "couldn't", 'sit', 'and', 'watch', 'more', 'than', '20', 'minutes', 'at', 'a', 'time.
+
+    The', 'premise', 'is', 'decent', 'and', 'I', 'liked', 'the', 'scenes', 'where', 'other', 'guys', 'automatically', 'cover', 'up', 'for', "Paul's", 'missteps', '(', 'the', 'checker', 'at', 'the', 'Save-mart', 'was', 'great', ')', 'but', 'the', 'script-writing', 'is', 'absolutely', 'horrible', '.', 'The', 'dialog', 'falls', 'flat', 'most', 'of', 'the', 'time', 'and', 'just', 'when', 'you', 'think', 'that', 'things', 'are', 'finally', 'going', 'to', 'get', 'on', 'track', 'some', 'needless', 'sight-gag', 'is', 'stuck', 'in', 'for', 'no', 'good', 'reason', '.', 'Plus', 'how', 'many', 'toilet', 'jokes', 'does', 'one', 'movie', 'really', 'need?
+
+    Don't", 'get', 'me', 'wrong', ',', 'slapstick', 'humor', 'is', 'great', 'when', "it's", 'smartly', 'done', 'as', 'in', 'the', 'other', 'films', 'I', 'mentioned', ',', 'but', 'this', 'movie', 'simply', 'misses', 'the', 'mark', '.', 'Too', 'bad', 'as', 'I', 'love', 'Julia', 'Stiles', '(', 'Ten', 'Things', 'I', 'Hate', 'About', 'You', 'was', 'great', ')', 'but', 'even', 'that', "couldn't", 'help', 'me', 'sit', 'through', 'this', 'terrible', 'movie', '.', 'Save', 'your', 'dollars', 'and', 'go', 'rent', '"', "There's", 'Something', 'About', 'Mary', '"', 'one', 'more', 'time', '.']
+    tensor([   45,     2,     2,     2,    45,   721,    34,  5645,    13,  2314,
+               11,    45,     2,     2,     2,     2,    45,   245,    45,     2,
+               13,     2,    45,   180,   309,   576,   743,   127,    17,    19,
+             3480,   314,   325,    11,     2, 11934,    11,   221,   334,    43,
+               24,     2,     2,     4,    17,    80,    41,     2,   770,    10,
+                2,   482,   962,    91,   771,   743,   161,  1304,  1026,    27,
+               41,  1351,    52,     2,  3001,    55,  1733,    91,     2,   993,
+               13,   118,   213,   528,  1327,  2930,   996,   314,    50,     2,
+                2,   175,    13,     2,    27,    13,     2,    19,   687,   179,
+              180,    13,     2,    55,   546,   579,    24,     2,  2718,  1065,
+             5099,   345,    11,    13,   323,    91,   162,    18,   267,   376,
+               15,   784,   119,   395,   359,    34,   384,    80,  1424,    77,
+             7408,     2,    55,  2235,    22,    50,   176,   143,   401,    24,
+                2,   531,   303,  3934,   838,   305,   253,   369,    47,     2,
+               52,     2,   384,   112,   499,    38,   900,  4968,    55,   687])
+
+    Example label:
+    neg
+    tensor(0)
+
+## Convolutional Neural Network: The `CNN` Class
+
+The convolutional neural network for text classification is defined here. The following functions are implemented:
+
+-   **Initialization** (i.e., `__init__(self, ...)`): Initializes the following layers and other features for the neural network.
+    -   An embedding layer to represent the words in the vocabulary.
+    -   Multiple convolution layers with filter size based on different filter heights. There is one input channel, and specific number of output channels for different filters to train the model on.
+    -   A dropout layer with specified `dropout`.
+    -   A linear layer with concatenated output of all cnn layers as input (i.e., size is number of out channels across all filter heights) with output to each class (i.e. size is number of classes).
+-   **Feed Forward** (i.e., `forward(self, texts)`): Iteratively pass texts (with shape `[batch_size, max_len]`) through layers and compute the output as described below. Since each CNN looks at different filter heights (i.e. n-grams), the model will look at different number of words at a time. Each CNN will learn `out_channel` number of features from the words it sees at a time. Then non-linearity and max-pooling are applied to all channels to find any important n-grams in the entire text. Everything is performed on a batch simultaneously, hence the `batch_size` dimension is used in many of the steps discussed below.
+    -   Pass texts through the embedding layer. The output shape is `[batch_size, max_len, embed_size]`.
+    -   Modify dimensions of embedded output to fit into multiple convolution layers (i.e., output shape is `[batch_size, 1, max_len, embed_size]`).
+    -   Pass the text embeddings into each convolution layer. Output will have shape `[batch_size, out_channels, *, 1]` where `*` depends on `filter_height` and `stride`.
+    -   Convert the output shape to `[batch_size, out_channels, *]`.
+    -   Apply non-linearity on the output with ReLU function.
+    -   Take the max value across last dimension to have shape `[batch_size, out_channels]`
+    -   Concatenate outputs from all CNN layers with shape `[batch_size, (out_channels*num_cnn_layers)]`
+    -   Pass the output through the linear layer with shape `[batch_size, num_classes]`
+
+```{python}
+#| eval: false
+class CNN(nn.Module):
+  def __init__(self, vocab_size, embed_size, out_channels, filter_heights, stride, dropout, num_classes, pad_idx):
+    super(CNN, self).__init__()
+
+    # embedding layer
+    self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embed_size, padding_idx=pad_idx)
+    # multiple convolution layers
+    self.conv_layers = nn.ModuleList( [nn.Conv2d(in_channels=1, out_channels=out_channels, kernel_size=[filter_height, embed_size]) for filter_height in filter_heights] )
+    # dropout layer
+    self.dropout = nn.Dropout(dropout)
+    # linear layer
+    self.linear = nn.Linear(out_channels * len(filter_heights), num_classes)
+
+  def forward(self, texts):
+    # embed texts -- [batch_size, max_len, embed_size]
+    x = self.embedding(texts)
+    # modify embedded output dimensions -- [batch_size, 1, MAX_LEN, embed_size] (i.e., unsqueeze)
+    x = x.unsqueeze(1)
+    # pass embedded texts into cnn layers -- [batch_size, out_channels, *, 1]
+    # modify dimension of outputs -- [batch_size, out_channels, *] (i.e., squeeze)
+    # apply non-linearity
+    x = [ F.relu( conv_layer(x) ).squeeze(3) for conv_layer in self.conv_layers ]
+    # get max value across last dimension via pooling -- [batch_size, out_channels]
+    x = [ F.max_pool1d( value, value.size(2) ).squeeze(2) for value in x ]
+    # concatenate outputs from cnn layers -- [batch_size, (out_channels*num_of_cnn_layers)]
+    x = torch.cat(x, 1)
+    # apply dropout
+    x = self.dropout(x)
+    # pass output through linear layer -- [batch_size, num_classes]
+    x = self.linear(x)
+
+    # a softmax is applied later in model training
+    return x
+```
+
+```{python}
+#| eval: false
+# helper function to count number of parameters in a model
+count_parameters = lambda model: sum(p.numel() for p in model.parameters() if p.requires_grad)
+```
+
+### Model Training
+
+First, the train and test dataloaders are initialized. A dataloader is responsible for providing batches of data to the model. The datasets for the train and test data are instantiated first, then the training vocabulary is used for both.
+
+```{python}
+#| eval: false
+# adjustable parameters (defaults: THRESHOLD=5, MAX_LEN=200, BATCH_SIZE=32)
+THRESHOLD = 5
+MAX_LEN = 200
+BATCH_SIZE = 32
+
+train_dataset = TextDataset(train_data, 'train', THRESHOLD, MAX_LEN)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2, drop_last=True)
+print('train vocab size:', train_dataset.vocab_size)
+
+test_dataset = TextDataset(test_data, 'test', THRESHOLD, MAX_LEN, train_dataset.idx2word, train_dataset.word2idx)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, drop_last=False)
+print('test vocab size:', test_dataset.vocab_size)
+```
+
+    train vocab size: 29730
+    test vocab size: 29730
+
+Here is a function to train the CNN model on the data.
+
+If it is necessary to save the model periodically, here is a resource for that: https://pytorch.org/tutorials/beginner/saving_loading_models.html.
+
+```{python}
+#| eval: false
+def train_model(model, num_epochs, data_loader, optimizer, criterion):
+  print('Training Model...')
+  model.train()
+  for epoch in tqdm(range(num_epochs)):
+    epoch_loss = 0
+    epoch_acc = 0
+    for texts, labels in data_loader:
+      texts = texts.to(DEVICE) # shape: [batch_size, MAX_LEN]
+      labels = labels.to(DEVICE) # shape: [batch_size]
+
+      optimizer.zero_grad()
+
+      output = model(texts)
+      acc = accuracy(output, labels)
+      
+      loss = criterion(output, labels)
+      loss.backward()
+      optimizer.step()
+
+      epoch_loss += loss.item()
+      epoch_acc += acc.item()
+    print('[TRAIN]\t Epoch: {:2d}\t Loss: {:.4f}\t Train Accuracy: {:.2f}%'.format(epoch+1, epoch_loss/len(data_loader), 100*epoch_acc/len(data_loader)))
+  print('Model Trained!\n')
+```
+
+Here is a helper function to compute model accuracy per batch.
+
+```{python}
+#| eval: false
+def accuracy(output, labels):
+  preds = output.argmax(dim=1) # find predicted class
+  correct = (preds == labels).sum().float() # convert into float for division 
+  acc = correct / len(labels)
+  return acc
+```
+
+Model instantiantiation with hyperparameters.
+
+Recommended hyperparameters: \* Vocabulary size: `train_dataset.vocab_size` (Don't change) \* Embedding size: `128` \* Number of out channels: `64` \* Filter heights (i.e., n-gram sizes): `[2, 3, 4]` \* Stride: `1` \* Dropout: `0.5` \* Number of classes: `2` (Don't change) \* Pad token index: `train_dataset.word2idx[PAD]` (Don't change)
+
+```{python}
+#| eval: false
+cnn_model = CNN(vocab_size = train_dataset.vocab_size,
+            embed_size = 128, 
+            out_channels = 64, 
+            filter_heights = [2, 3, 4], 
+            stride = 1, 
+            dropout = 0.5, 
+            num_classes = 2,
+            pad_idx = train_dataset.word2idx[PAD])
+
+# load the model on the device (cuda or cpu)
+cnn_model = cnn_model.to(DEVICE)
+
+print('The model has {:,d} trainable parameters'.format(count_parameters(cnn_model)))
+```
+
+    The model has 3,879,746 trainable parameters
+
+The criterion, or loss function, is cross-entropy loss (https://en.wikipedia.org/wiki/Cross_entropy).
+
+The optimizer, which performs gradient descent, is the Adam optimizer (https://arxiv.org/pdf/1412.6980.pdf).
+
+```{python}
+#| eval: false
+LEARNING_RATE = 5e-4 # adjustable parameter (default=5e-4)
+
+# loss function
+criterion = nn.CrossEntropyLoss().to(DEVICE)
+
+# optimizer
+optimizer = optim.Adam(cnn_model.parameters(), lr=LEARNING_RATE)
+```
+
+Here the model is trained (it is recommended to use GPU for faster training time \~4 minutes).
+
+```{python}
+#| eval: false
+N_EPOCHS = 10 # adjustable parameter (default=10)
+
+# train model for N_EPOCHS epochs
+train_model(cnn_model, N_EPOCHS, train_loader, optimizer, criterion)
+```
+
+    Training Model...
+    [TRAIN]	 Epoch:  1	 Loss: 0.6779	 Train Accuracy: 61.05%
+    [TRAIN]	 Epoch:  2	 Loss: 0.5426	 Train Accuracy: 72.02%
+    [TRAIN]	 Epoch:  3	 Loss: 0.4892	 Train Accuracy: 76.11%
+    [TRAIN]	 Epoch:  4	 Loss: 0.4473	 Train Accuracy: 79.19%
+    [TRAIN]	 Epoch:  5	 Loss: 0.4126	 Train Accuracy: 81.21%
+    [TRAIN]	 Epoch:  6	 Loss: 0.3774	 Train Accuracy: 83.26%
+    [TRAIN]	 Epoch:  7	 Loss: 0.3465	 Train Accuracy: 84.80%
+    [TRAIN]	 Epoch:  8	 Loss: 0.3096	 Train Accuracy: 86.72%
+    [TRAIN]	 Epoch:  9	 Loss: 0.2774	 Train Accuracy: 88.42%
+    [TRAIN]	 Epoch: 10	 Loss: 0.2426	 Train Accuracy: 90.01%
+    Model Trained!
+
+### Model Evaluation
+
+Here is a function to perform evaluation of the trained model.
+
+```{python}
+#| eval: false
+def evaluate(model, data_loader, criterion, use_tqdm=False):
+  print('Evaluating performance on the test dataset...')
+  model.eval()
+  epoch_loss = 0
+  epoch_acc = 0
+  all_predictions = []
+  print("\nSOME PREDICTIONS FROM THE MODEL:")
+  iterator = tqdm(data_loader) if use_tqdm else data_loader
+  total = 0
+  for texts, labels in iterator:
+    bs = texts.shape[0]
+    total += bs
+    texts = texts.to(DEVICE)
+    labels = labels.to(DEVICE)
+    
+    output = model(texts)
+    acc = accuracy(output, labels) * len(labels)
+    pred = output.argmax(dim=1)
+    all_predictions.append(pred)
+    
+    loss = criterion(output, labels) * len(labels)
+    
+    epoch_loss += loss.item()
+    epoch_acc += acc.item()
+
+    if random.random() < 0.0015 and bs == 1:
+      print("Prediction:", pred.item(), '\tCorrect Output:', labels.item())
+      print("Input: "+' '.join([data_loader.dataset.idx2word[idx] for idx in texts[0].tolist() if idx not in {data_loader.dataset.word2idx[PAD], data_loader.dataset.word2idx[END]}]), '\n')
+
+  full_acc = 100*epoch_acc/total
+  full_loss = epoch_loss/total
+  print('[TEST]\t Loss: {:.4f}\t Accuracy: {:.2f}%'.format(full_loss, full_acc))
+  predictions = torch.cat(all_predictions)
+  return predictions, full_acc, full_loss
+```
+
+```{python}
+#| eval: false
+evaluation = evaluate(cnn_model, test_loader, criterion, use_tqdm=True) # compute test data accuracy
+```
+
+    Evaluating performance on the test dataset...
+
+    SOME PREDICTIONS FROM THE MODEL:
+
+    Prediction: 1 	Correct Output: 0
+    Input: <UNK> thinking of the revelation that the main character in " <UNK> " comes to at films end , <UNK> am reminded of last years " <UNK> " with <UNK> <UNK> . <UNK> only difference between the two films is the literal physical weight of the characters.<br /><br <UNK> understated , yet entirely realistic portrayal of small town life . <UNK> title is cause for contemplation . <UNK> , we , the audience are the ones in the " <UNK> " as we are given no <UNK> in the films slim 90 minute running time . <UNK> reactions were often smug and judgmental , clearly indicating how detached people can be from seeing any thread of humanity in characters so foreign to themselves . <UNK> characters are the ones people refer to as those that put <UNK> <UNK> . back in office for a second <UNK> /><br <UNK> <UNK> to consider how reality television has spoiled our sense of reality when watching an audience jump to their feet for the exit as soon as the credits role . <UNK> film has it's merits , and is deserving of consideration for the things it doesn't say outright . 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> isn't it ? <UNK> all the good work done by <UNK> and <UNK> , the movie never grew into something more than a horrible <UNK> movies copycat . <UNK> a couple of jokes , no absolutely no unpredictable twists , to be honest the only unpredictable moments are there because both director and editor made some stupid mistakes , it is a shame for them and a waste of time for us . <UNK> someone can tell me why on earth were they digging a hole inside that safe , who the hell is the <UNK> and how on earth did they know that the diamonds were in the particular cell , it could just make my day , but it seems that <UNK> asks us to take too much things in this one for granted , and do not raise our eyebrows when something looks <UNK> just another studio contract movie relax and <UNK> . 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> a killer combo of terrible writing , terrible acting and terrible direction , it's a <UNK> whether <UNK> : <UNK> <UNK> is offensively bad or just hilariously bad . <UNK> almost as if someone ran a competition to make the <UNK> , <UNK> <UNK> film . <UNK> if a glance at a cast list including characters like ' <UNK> <UNK> ' ' <UNK> <UNK> ' ' <UNK> <UNK> ' weren't enough , it's your only chance to see <UNK> <UNK> cop throw a <UNK> on a bed and grab a <UNK> - but don't worry , it's okay , as the offscreen screams make clear he's only torturing him for information . <UNK> all , even if he is a bit overprotective of his nice <UNK> daughter , he's a nice <UNK> cop who regularly brings local <UNK> priest <UNK> <UNK> a packed lunch and who believes in poetic justice - or at least ensuring that the bad guys end up in the <UNK> with the <UNK> inmates maximum security can provide to give them a taste of their own medicine . <UNK> then that's what you get for telling him " <UNK> , <UNK> think you're a little 
+
+    Prediction: 1 	Correct Output: 0
+    Input: <UNK> confess having fantasies about <UNK> <UNK> is a pretty tough admission for an heterosexual to make . <UNK> what can <UNK> tell you ? <UNK> is that famous extra something that everybody talks about and makes a star a star . <UNK> crosses that barrier . <UNK> pulls you into unknown sensual and emotional territory . <UNK> had it in spades , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> of course and in more recent times , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> and <UNK> <UNK> . <UNK> fell in love with <UNK> , <UNK> , <UNK> and <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> , <UNK> <UNK> and very very recently <UNK> <UNK> . <UNK> <UNK> <UNK> has , singlehandedly , redefined the concept . <UNK> is the only reason to go out , get in the car , find parking , buy a ticket , popcorn and get into a theatre to see " <UNK> " <UNK> you liked epics in the " <UNK> <UNK> " style you may enjoy this . <UNK> if you don't , go 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> <UNK> <UNK> <UNK> should be required viewing in any film production course ! <UNK> a textbook example of how <UNK> to make a movie . <UNK> the movie and then listening to the <UNK> commentary demonstrates graphically the vast <UNK> between what he knows about the characters and what he communicates to his audience about them . <UNK> me old-fashioned , but <UNK> think of movies as a means of communication , and communication isn't complete if the audience doesn't know what the hell the director is talking about . <UNK> director's <UNK> purpose is to make a movie void of " <UNK> <UNK> . <UNK> those conventions , alas , is consistency of character and clarity of concept . <UNK> director himself realizes that audiences often don't understand points where he has purposely avoided a " <UNK> <UNK> . <UNK> , he never seems to grasp the idea that clichés exist for a reason . <UNK> are shorthand for conveying complex ideas quickly and clearly . <UNK> fine to avoid them , but they need to be replaced with some other way of communicating the same idea , not simply eliminated . <UNK> film is built on an 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> a slow beginning , <UNK> <UNK> is a very funny film that had something positive to say . <UNK> wasn't one of <UNK> <UNK> best performances , but he was still <UNK> . <UNK> <UNK> was just right as <UNK> . <UNK> <UNK> had some good moments . <UNK> miss <UNK> <UNK> on " <UNK> <UNK> <UNK> /><br <UNK> like director <UNK> <UNK> choices of movies . <UNK> also did <UNK> <UNK> , <UNK> <UNK> , and <UNK> <UNK> <UNK> . <UNK> all three of those and in <UNK> <UNK> , he takes a big comedy star and tells a human story with him . <UNK> director who knows comedy , can get the talent he gets , and can tell a meaningful and intelligent story with it is hard to <UNK> /><br <UNK> biggest complaint is that they should have used more biblical references . <UNK> only remember three specific biblical references and they were the three funniest parts of the whole movie . <UNK> guess is that the first few <UNK> of the screenplay had more biblical references , but they were cut out because the producers were afraid of offending people . <UNK> too bad because 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> ! <UNK> 70's sex trash ! <UNK> <UNK> gal ( <UNK> ) was what made this movie so great . <UNK> was beautiful , but what really got to me was how sexual she was . <UNK> exuded massive quantities of sexuality throughout the film . <UNK> best scenes were when she was , er , stimulating herself . <UNK> she was on screen , <UNK> became <UNK> /><br <UNK> , the <UNK> <UNK> ( sister of the dimwitted male focus of the film ) was very interesting visually . <UNK> most 12 year old girls have bigger breasts than <UNK> , she knew how to use what little she had and her scenes ( especially the scenes with the silk blouse and black skirt ) also grabbed my attention <UNK> . <UNK> also got to love the major <UNK> scene where the bats stripped her <UNK> ; <UNK> don't know if <UNK> ever seen anything more ludicrous yet sexy at the same time . <UNK> stuff ! 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> <UNK> <UNK> <UNK> finds <UNK> <UNK> an outlaw doing a long sentence breaking free from a chain gang . <UNK> he and his friends head for the <UNK> border from jail and safety . <UNK> they don't because <UNK> has a mission of revenge . <UNK> kill the peace officer who brought him in and in the process killed his woman.<br /><br <UNK> peace officer is <UNK> <UNK> who is now retired and he knows what <UNK> is after . <UNK> he explains it to his daughter , <UNK> <UNK> , <UNK> was holed up in a shack and was involved in a <UNK> like <UNK> . <UNK> <UNK> woman was killed in the hail of bullets fired . <UNK> not something he's proud of , she was a <UNK> casualty in a <UNK> /><br <UNK> we feel sorry for <UNK> he lets us know full well what an evil man he truly is . <UNK> is his usual stalwart hero , but the acting honors in <UNK> <UNK> <UNK> <UNK> go to <UNK> <UNK> . <UNK> blows everyone else off the screen when he's on . <br /><br <UNK> gets the bright idea of making sure <UNK> trails 
+
+    Prediction: 1 	Correct Output: 1
+    Input: " <UNK> " is a far from great film , from a stage play , directed by <UNK> <UNK> . <UNK> the scheme of <UNK> films , this is above the level of most of his <UNK> <UNK> <UNK> " work , which is characterised by judicious use of <UNK> <UNK> as lead actress . <UNK> actually very good here , and far from the problem in other <UNK> films like " <UNK> <UNK> " and " <UNK> <UNK> . <UNK> the " <UNK> , who is <UNK> <UNK> , <UNK> is very effective , portraying her as a thoroughly depressive , but likeable siren . <UNK> plays well alongside <UNK> <UNK> as <UNK> , who is excellent to say the least . <UNK> looks the part admirably , and while <UNK> <UNK> doesn't look exactly like <UNK> , she certainly is attractive enough to make the part ring true . <UNK> players are adequate if not quite as arresting as <UNK> and <UNK> are . <UNK> pretty workable , intelligent script is directed well by <UNK> , but certainly not brilliantly , like " <UNK> " or " <UNK> . <UNK> in other later <UNK> films , he tends 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> , <UNK> don't watch action movies because of the fact that they are usually all pretty similar . <UNK> movie did have many stereotypical action movie scenes , but the characters and the originality of the film's premise made it much easier to watch . <UNK> <UNK> <UNK> his normal acting approach , which was great to see . <UNK> <UNK> , of course , was beautiful and did great acting . <UNK> cast all together . <UNK> must see for people bored with the same old action movie . 
+
+    [TEST]	 Loss: 0.4104	 Accuracy: 82.66%
+
+## Recurrent Neural Network: The RNN Class
+
+The text classification model based on recurrences is defined here. The following functions are implemented:
+
+-   **Initialization** (i.e., `__init__(self, ...)`): Initializes the following layers and other features for the neural network.
+    -   An embedding layer to represent the words in the vocabulary.
+    -   A recurrent network (i.e. GRU) with `batch_first=True` and `bidirectional`.
+    -   A dropout layer with specified `dropout`.
+    -   A linear layer takes output of the last time step as input with output to each class (i.e. size is number of classes). In the bidirectional case, the outputs of the last time step of the forward and backward directions are concatenated.
+-   **Feed Forward** (i.e., `forward(self, texts)`): Pass texts (with shape `[batch_size, max_len]`) through layers and compute the output as described below.
+    -   Pass texts through the embedding layer. The output shape is `[batch_size, max_len, embed_size]`.
+    -   Pass result through recurrent network.
+    -   Concatenate the outputs of the last timestep for each direction.
+    -   Apply dropout.
+    -   Pass the output through the linear layer with shape `[batch_size, num_classes]`
+
+```{python}
+#| eval: false
+class RNN(nn.Module):
+  def __init__(self, vocab_size, embed_size, hidden_size, num_layers, bidirectional, dropout, num_classes, pad_idx):
+    super(RNN, self).__init__()
+
+    self.bidirectional = bidirectional
+
+    # embedding layer
+    self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embed_size, padding_idx=pad_idx)
+    # recurrent network (GRU)
+    self.rnn = nn.GRU(input_size=embed_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout, batch_first=True, bidirectional=bidirectional)
+    # dropout layer
+    self.dropout = nn.Dropout(dropout)
+    # linear layer
+    B = 2 if bidirectional else 1
+    self.linear = nn.Linear(B*hidden_size, num_classes)
+
+  def forward(self, texts):
+    # embed texts -- [batch_size, max_len, embed_size]
+    x = self.embedding(texts)
+    # rnn layer
+    x, hn = self.rnn(x)
+    # concatenate the outputs of the last timestep for each direction -- [batch_size, num_dirs*hidden_size]
+    x = torch.cat( (hn[-2, :, :], hn[-1, :, :]), dim=1 ) if self.bidirectional else hn[-1, :, :]
+    # apply dropout
+    x = self.dropout(x)
+    # pass output through the linear layer -- [batch_size, num_classes]
+    x = self.linear(x)
+
+    # softmax is applied in training
+    return x
+```
+
+### Model Training
+
+First, the train and test dataloaders are initialized.
+
+```{python}
+#| eval: false
+# adjustable parameters (defaults: THRESHOLD=5, MAX_LEN=200, BATCH_SIZE=32)
+THRESHOLD = 5
+MAX_LEN = 200
+BATCH_SIZE = 32
+
+train_dataset = TextDataset(train_data, 'train', THRESHOLD, MAX_LEN)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2, drop_last=True)
+print('train vocab size:', train_dataset.vocab_size)
+
+test_dataset = TextDataset(test_data, 'test', THRESHOLD, MAX_LEN, train_dataset.idx2word, train_dataset.word2idx)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, drop_last=False)
+print('test vocab size:', test_dataset.vocab_size)
+```
+
+    train vocab size: 29730
+    test vocab size: 29730
+
+Model instantiantiation with hyperparameters.
+
+Recommended hyperparameters: \* Vocabulary size: `train_dataset.vocab_size` (Don't change) \* Embedding size: `128` \* Hidden size: `128` \* Number of layers: `2` \* Bidirectional: `True` \* Dropout: `0.5` \* Number of classes: `2` (Don't change) \* Pad token index: `train_dataset.word2idx[PAD]` (Don't change)
+
+```{python}
+#| eval: false
+rnn_model = RNN(vocab_size = train_dataset.vocab_size,
+            embed_size = 128, 
+            hidden_size = 128, 
+            num_layers = 2,
+            bidirectional = True,
+            dropout = 0.5,
+            num_classes = 2,
+            pad_idx = train_dataset.word2idx[PAD])
+
+# load your model on device
+rnn_model = rnn_model.to(DEVICE)
+
+print('The model has {:,d} trainable parameters'.format(count_parameters(rnn_model)))
+```
+
+    The model has 4,300,546 trainable parameters
+
+Here, the same criterion and optimizer are used as with the CNN.
+
+```{python}
+#| eval: false
+LEARNING_RATE = 5e-4 # adjustable parameter (default=5e-4)
+
+# loss function
+criterion = nn.CrossEntropyLoss().to(DEVICE)
+
+# optimizer
+optimizer = optim.Adam(rnn_model.parameters(), lr=LEARNING_RATE)
+```
+
+Here the model is trained (it is recommended to use GPU for faster training time \~2 minutes).
+
+```{python}
+#| eval: false
+N_EPOCHS = 10 # adjustable parameter (default=6)
+
+# train model for N_EPOCHS epochs
+train_model(rnn_model, N_EPOCHS, train_loader, optimizer, criterion)
+```
+
+    Training Model...
+    [TRAIN]	 Epoch:  1	 Loss: 0.6702	 Train Accuracy: 58.11%
+    [TRAIN]	 Epoch:  2	 Loss: 0.5663	 Train Accuracy: 71.33%
+    [TRAIN]	 Epoch:  3	 Loss: 0.4362	 Train Accuracy: 80.58%
+    [TRAIN]	 Epoch:  4	 Loss: 0.3320	 Train Accuracy: 86.39%
+    [TRAIN]	 Epoch:  5	 Loss: 0.2618	 Train Accuracy: 89.97%
+    [TRAIN]	 Epoch:  6	 Loss: 0.2011	 Train Accuracy: 92.58%
+    [TRAIN]	 Epoch:  7	 Loss: 0.1458	 Train Accuracy: 94.72%
+    [TRAIN]	 Epoch:  8	 Loss: 0.0974	 Train Accuracy: 96.78%
+    [TRAIN]	 Epoch:  9	 Loss: 0.0678	 Train Accuracy: 97.82%
+    [TRAIN]	 Epoch: 10	 Loss: 0.0448	 Train Accuracy: 98.55%
+    Model Trained!
+
+### Model Evaluation
+
+Now the RNN is evaluated.
+
+```{python}
+#| eval: false
+evaluation = evaluate(rnn_model, test_loader, criterion, use_tqdm=True) # compute test data accuracy
+```
+
+    Evaluating performance on the test dataset...
+
+    SOME PREDICTIONS FROM THE MODEL:
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> saw the <UNK> . showing and <UNK> must say that this movie was nothing special . <UNK> <UNK> did not leave the theater wanting my time back ( as <UNK> don't actually pay for movies anymore ) <UNK> didn't really find any redeeming <UNK> /><br <UNK> were a few lines and such that made me chuckle , but mostly the film seemed to consist of rampant fan service to the younger ( in mind more than age as this film is rated <UNK> ) male audience . <UNK> fan service seemed out of place and rather distracting as well . <UNK> know you all want to hear <UNK> <UNK> . say his infamous line , but let's be honest , it's a whole lot of hype for very little pay off . <UNK> only truly horrible part of the film was the <UNK> , which looked very <UNK> and did not mesh well with the live action on the screen.<br /><br <UNK> <UNK> am a reasonable man , <UNK> knew going into the theater that <UNK> wasn't going to be seeing " <UNK> " and <UNK> am at least thankful that this film is an original ( <UNK> inane 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> <UNK> had some great actors in it ! <UNK> they had forgotten how to act . <UNK> was hoping the movie would get better as it went along but the acting was so robotic it was doomed from the very start . <UNK> actually appeared that maybe the actors were reading from a script the whole time . <UNK> it was the <UNK> score or the <UNK> himself , but one thing is for sure the <UNK> artist needs to get another job  ! <UNK> <UNK> <UNK> was so thick you could see it <UNK> on the actors faces  ! <UNK> not recommend this movie to anyone , no wonder it never hit the <UNK> . <UNK> <UNK> <UNK> . / <UNK> <UNK> shame on you guys for not giving it your all . <UNK> <UNK> was great just needed a whole lot more . 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> is a strange , strange film based on the novel " <UNK> <UNK> <UNK> <UNK> " by <UNK> . <UNK> unleash criticism at the film feels really unkind , since it is a movie that deals with earnest themes like humanity , and pleas for upright moral standards and tolerance . <UNK> in spite of its honourable intentions and its well-meaning tone , <UNK> simply isn't a very good film . <UNK> me , the main problem is the terribly disjointed narrative which can't make its mind up how best to convey its message . <UNK> first half of the movie is like watching a standard jungle expedition flick of the <UNK> ilk ; later it <UNK> into sci-fi fable ; by the end it slips into courtroom melodramatics . <UNK> differences in tone between each section of the movie are too great , too jarring , to overlook . <UNK> stick out like a sore thumb and remind you constantly that you're watching a muddled , <UNK> movie.<br /><br <UNK> archaeological expedition into the jungles of <UNK> <UNK> is led by adventurer <UNK> <UNK> ( <UNK> <UNK> . <UNK> of the main <UNK> involved in the excursion is 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> watched this film on the <UNK> <UNK> recently . <UNK> my opinion , the film started out decent enough , but eventually got <UNK> /><br <UNK> <UNK> : <UNK> <UNK> . soldier in <UNK> receives one of the <UNK> cards that a woman back in the <UNK> . has sent out to troops for <UNK> . <UNK> becomes so inspired by the <UNK> card that he feels it has given him a ray of hope and happiness in his life , a motivation to continue on . <UNK> he is given leave , he goes to the very town that the woman lives in . <UNK> comes across and spunky young woman and eventually finds out that she is the one that sent the <UNK> card . <UNK> meets the family and after saving her dad ( a <UNK> <UNK> <UNK> ) from getting hit by a car whilst crossing the street , the family decides to take him in for a while . <UNK> learn that he doesn't have a family back home . <UNK> soldier agrees to help out the family during the <UNK> season by working with them at their <UNK> company . <UNK> family comes 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> awful <UNK> <UNK> vehicle where he goes from being a thief to police <UNK> /><br <UNK> <UNK> was an excellent character actor , he was certainly no leading man and this film proves it.<br /><br <UNK> is absolutely beyond stupidity . <UNK> <UNK> did provide some comic relief until a moment of anger led him to fire his gun with tragedy <UNK> /><br <UNK> , <UNK> <UNK> and co-star <UNK> <UNK> committed suicide in real life . <UNK> making a film as deplorable as this , it is not <UNK> /><br <UNK> usual appealing <UNK> <UNK> is really nothing here . 
+
+    Prediction: 0 	Correct Output: 0
+    Input: <UNK> saw this film last night following a lot of good reviews from many sources . <UNK> would like to point out that if your not ready to try and work out continuously who is who and what it all means you will hate this film.<br /><br <UNK> am still struggling to understand the roles of the actors in this film , the film jumps from different stories and does not allow you to really empathise with any of the roles.<br /><br <UNK> the political <UNK> and those interested in corruption in other world governments out there this film is probably quite good , but to the average movie watcher this film is <UNK> boring in places and you will leave the cinema confused and annoyed that you paid the entrance <UNK> /><br />see it if your ready to focus 100% on every minute detail or politics interest you . don't see it , if you actually like watching films . 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> /><br <UNK> the very moment <UNK> saw a local film critic trash this movie in a review on the <UNK> news , <UNK> wanted to see it . <UNK> don't remember who it was , or which local <UNK> <UNK> carried the review , but the critic was very insistent that this film was way too sleazy for the average <UNK> <UNK> . <UNK> showed a snippet from the scene where <UNK> <UNK> is about to kidnap <UNK> when she's swimming in the pool . <UNK> character is <UNK> her on how nice her body is and so forth , using many words that the local station felt necessary to edit out . <UNK> was hooked . <UNK> was one problem , though . <UNK> was only 13 years old at the time , and <UNK> had to wait a year until it came out on cable . <UNK> just say , it was worth the <UNK> /><br <UNK> ever there was a guilty pleasure of mine , this movie is it . <UNK> call this film sleazy would be a huge understatement . <UNK> film centers around a successful businessman who is blackmailed by three small time scumbags 
+
+    Prediction: 0 	Correct Output: 1
+    Input: <UNK> movie is stuffed full of stock <UNK> movie goodies : chained lunatics , <UNK> murder , a mad ( vaguely lesbian ) female scientist with an even <UNK> father who wears a mask because of his horrible <UNK> , poisoning , spooky castles , werewolves ( male and <UNK> , adultery , slain lovers , <UNK> <UNK> , the <UNK> victim of some unnamed experiment , grave robbing , mind control , <UNK> up bodies , a car crash on a lonely road , electrocution , knights in armour - the lot , all topped off with an incredibly awful score and some of the worst <UNK> work ever done.<br /><br <UNK> script is incomprehensible ( even by badly dubbed <UNK> <UNK> movie standards ) and some of the editing is just bizarre . <UNK> one scene where the lead female evil scientist goes to visit our heroine in her bedroom for one of the badly dubbed : " <UNK> is fantastical . <UNK> do not understand . <UNK> to me again how this is... " exposition scenes that litter this movie , there is a sudden hand held <UNK> of the girl's thighs as she gets out of 
+
+    Prediction: 1 	Correct Output: 1
+    Input: <UNK> tragically wonderful movie.. . brings us to a <UNK> that does not exist anymore . <UNK> <UNK> technical expertise , <UNK> have yet to see a ( hollywood ) movie that can match the authenticity of the atmosphere in this small town by the river near the <UNK> . <UNK> <UNK> <UNK> <UNK> <UNK> looked liked the last installment of the <UNK> of <UNK> <UNK> in trying to capture rural <UNK> <UNK> /><br <UNK> you like serene but intense story lines , this is a must see film . <UNK> will be a respite from hollow flashy films much like the last 1000 blockbusters you saw . <UNK> think this is one of <UNK> better stories.<br /><br <UNK> if it's a movie about <UNK> and brothels and the complicated rules that <UNK> life in such settings , it did not turn into a skin flick . <UNK> characters are full of depth and act with much intensity . 
+
+    [TEST]	 Loss: 0.8557	 Accuracy: 81.64%

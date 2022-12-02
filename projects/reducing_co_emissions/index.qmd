@@ -1,0 +1,18 @@
+---
+title: "Reducing Carbon Monoxide Emissions of Gas Turbines Analysis"
+description: "A statistical consulting project to find interpretable features that contribute to reducing emissions from gas turbines"
+author: "Subin Cho, Chenfei Hu, Jiaqi Kang, Jonas Reger"
+date: "05/15/2021"
+categories: [Data Analysis, R, Statistics]
+image: "thumbnail.jpg"
+draft: false
+freeze: true
+---
+
+**Overview**
+
+In spring 2021, I contributed to a class group project for STAT 443 (Statistical Consulting) at the University of Illinois at Urbana-Champaign. The objective of the project was to analyze [gas turbine data from the UCI repository](https://archive.ics.uci.edu/ml/datasets/Gas+Turbine+CO+and+NOx+Emission+Data+Set) and find interpretable features towards reducing carbon monoxide emissions. The goal of the project was to communicate our results to a mock client as statistical consultants.
+
+**Link**
+
+[Documents on GitHub](https://github.com/wjonasreger/reducing_CO_emissions_analysis)

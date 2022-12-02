@@ -1,0 +1,13 @@
+---
+title: "VCA Project"
+description: "coming soon"
+author: "Jonas Reger"
+date: "12/20/2022"
+categories: [natural language processing, machine learning, python, education]
+draft: true
+freeze: true
+---
+
+**Overview**
+
+**Link**
