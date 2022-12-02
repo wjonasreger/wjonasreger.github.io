@@ -11,6 +11,8 @@ website:
   description: "Jonas Reger's professional website for data science"
   image: assets/images/profile.jpg
   favicon: assets/images/masthead.png
+  open-graph: true
+  twitter-card: true
   search:
     location: navbar
     type: overlay
