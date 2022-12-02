@@ -567,7 +567,7 @@ Here are the specifications for producing the 3rd person singular of the Spanish
 The conjugation rules are shown more specifically in the table below. Note that <TT>C</TT>=Consonant, <TT>S</TT>=String, and <TT>V</TT>=Vowel.
 
 | Rule ID | Rule Name          | Ending  | Infinitive           | Conjugation          | Example                    |
-|------------|------------|------------|------------|------------|-------------|
+|------------|------------|------------|------------|------------|------------|
 | 01      | Regular            | -Car    | stem + ar            | stem + ó             | hablar ==\> habló          |
 | 02      | Regular            | -Var    | stem + ar            | stem + ó             | pasear ==\> paseó          |
 | 03      | Regular            | -Cer    | stem + er            | stem + ió            | comer ==\> comió           |
