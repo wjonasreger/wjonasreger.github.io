@@ -231,9 +231,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#text-classification-with-neural-networks" id="toc-text-classification-with-neural-networks" class="nav-link active" data-scroll-target="#text-classification-with-neural-networks">Text Classification with Neural Networks</a>
-  <ul class="collapse">
-  <li><a href="#load-packages" id="toc-load-packages" class="nav-link" data-scroll-target="#load-packages">Load Packages</a></li>
+  <li><a href="#load-packages" id="toc-load-packages" class="nav-link active" data-scroll-target="#load-packages">Load Packages</a></li>
   <li><a href="#preprocess-data" id="toc-preprocess-data" class="nav-link" data-scroll-target="#preprocess-data">Preprocess Data</a></li>
   <li><a href="#dataloader-the-textdataset-class" id="toc-dataloader-the-textdataset-class" class="nav-link" data-scroll-target="#dataloader-the-textdataset-class">Dataloader: The <code>TextDataset</code> Class</a></li>
   <li><a href="#convolutional-neural-network-the-cnn-class" id="toc-convolutional-neural-network-the-cnn-class" class="nav-link" data-scroll-target="#convolutional-neural-network-the-cnn-class">Convolutional Neural Network: The <code>CNN</code> Class</a>
@@ -246,7 +244,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#model-training-1" id="toc-model-training-1" class="nav-link" data-scroll-target="#model-training-1">Model Training</a></li>
   <li><a href="#model-evaluation-1" id="toc-model-evaluation-1" class="nav-link" data-scroll-target="#model-evaluation-1">Model Evaluation</a></li>
   </ul></li>
-  </ul></li>
   </ul>
 </nav>
     </div>
@@ -256,8 +253,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<section id="text-classification-with-neural-networks" class="level1">
-<h1>Text Classification with Neural Networks</h1>
 <p>In this notebook, machine learning models are implemented to predict the sentiment of movie reviews using the <a href="https://ai.stanford.edu/~amaas/data/sentiment/">IMDb movie reviews dataset</a> through the <code>torchtext</code> package. Specifically, classifiers based on Convolutional Neural Networks (CNN’s) and Recurrent Neural Networks (RNN’s) are implemented.</p>
 <section id="load-packages" class="level2">
 <h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
@@ -359,12 +354,12 @@ The film’s utter failure only needs to be gauged by the fact that the Tarzan l
 <h2 class="anchored" data-anchor-id="dataloader-the-textdataset-class">Dataloader: The <code>TextDataset</code> Class</h2>
 <p>The dataset contains the tokenized data for the model. The following functions are implemented:</p>
 <ul>
-<li><p><strong>Create Dictionaries</strong> (i.e., <code>build_dictionary(self)</code>): Creates the dictionaries <code>idx2word</code> and <code>word2idx</code>. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter <code>threshold</code> is used to control word appearances in the dictionary.</p></li>
-<li><p><strong>Text Conversion</strong> (i.e., <code>convert_text(self)</code>): Converts each review in the dataset to a list of indices, given by the <code>word2idx</code> dictionary. This is stored in the <code>textual_ids</code> variable. Words not present in the <code>word2idx</code> dictionary are replaced with the <code>&lt;UNK&gt;</code> token.</p></li>
-<li><p><strong>Get Text</strong> (i.e., <code>get_text(self, idx)</code>): Returns the review at <code>idx</code> in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.</p></li>
-<li><p><strong>Get Label</strong> (i.e., <code>get_label(self, idx)</code>): Returns the value <code>1</code> if the label for <code>idx</code> in the datset is <code>positive</code>, and <code>0</code> if it is <code>negative</code>.</p></li>
-<li><p><strong>Get Number of Reviews</strong> (i.e., <code>__len__(self)</code>): Returns the total number of reviews in the dataset.</p></li>
-<li><p><strong>Get Item</strong> (i.e., <code>__getitem__(self, idx)</code>): Returns the converted text, and the label.</p></li>
+<li><strong>Create Dictionaries</strong> (i.e., <code>build_dictionary(self)</code>): Creates the dictionaries <code>idx2word</code> and <code>word2idx</code>. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter <code>threshold</code> is used to control word appearances in the dictionary.</li>
+<li><strong>Text Conversion</strong> (i.e., <code>convert_text(self)</code>): Converts each review in the dataset to a list of indices, given by the <code>word2idx</code> dictionary. This is stored in the <code>textual_ids</code> variable. Words not present in the <code>word2idx</code> dictionary are replaced with the <code>&lt;UNK&gt;</code> token.</li>
+<li><strong>Get Text</strong> (i.e., <code>get_text(self, idx)</code>): Returns the review at <code>idx</code> in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.</li>
+<li><strong>Get Label</strong> (i.e., <code>get_label(self, idx)</code>): Returns the value <code>1</code> if the label for <code>idx</code> in the datset is <code>positive</code>, and <code>0</code> if it is <code>negative</code>.</li>
+<li><strong>Get Number of Reviews</strong> (i.e., <code>__len__(self)</code>): Returns the total number of reviews in the dataset.</li>
+<li><strong>Get Item</strong> (i.e., <code>__getitem__(self, idx)</code>): Returns the converted text, and the label.</li>
 </ul>
 <div class="cell" data-execution_count="6">
 <details open="">
@@ -629,7 +624,17 @@ test vocab size: 29730</code></pre>
 </details>
 </div>
 <p>Model instantiantiation with hyperparameters.</p>
-<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Number of out channels: <code>64</code> * Filter heights (i.e., n-gram sizes): <code>[2, 3, 4]</code> * Stride: <code>1</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<p>Recommended hyperparameters:</p>
+<ul>
+<li>Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change)</li>
+<li>Embedding size: <code>128</code></li>
+<li>Number of out channels: <code>64</code></li>
+<li>Filter heights (i.e., n-gram sizes): <code>[2, 3, 4]</code></li>
+<li>Stride: <code>1</code></li>
+<li>Dropout: <code>0.5</code></li>
+<li>Number of classes: <code>2</code> (Don’t change)</li>
+<li>Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</li>
+</ul>
 <div class="cell" data-execution_count="14">
 <details open="">
 <summary>Reveal the code</summary>
@@ -849,7 +854,17 @@ Input: &lt;UNK&gt; , &lt;UNK&gt; don't watch action movies because of the fact t
 <pre><code>train vocab size: 29730
 test vocab size: 29730</code></pre>
 <p>Model instantiantiation with hyperparameters.</p>
-<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Hidden size: <code>128</code> * Number of layers: <code>2</code> * Bidirectional: <code>True</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<p>Recommended hyperparameters:</p>
+<ul>
+<li>Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change)</li>
+<li>Embedding size: <code>128</code></li>
+<li>Hidden size: <code>128</code></li>
+<li>Number of layers: <code>2</code></li>
+<li>Bidirectional: <code>True</code></li>
+<li>Dropout: <code>0.5</code></li>
+<li>Number of classes: <code>2</code> (Don’t change)</li>
+<li>Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</li>
+</ul>
 <div class="cell" data-execution_count="21">
 <details open="">
 <summary>Reveal the code</summary>
@@ -862,7 +877,7 @@ test vocab size: 29730</code></pre>
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>            num_classes <span class="op">=</span> <span class="dv">2</span>,</span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>            pad_idx <span class="op">=</span> train_dataset.word2idx[PAD])</span>
 <span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># load your model on device</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># load model on device</span></span>
 <span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>rnn_model <span class="op">=</span> rnn_model.to(DEVICE)</span>
 <span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'The model has {:,d} trainable parameters'</span>.<span class="bu">format</span>(count_parameters(rnn_model)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -948,7 +963,6 @@ Input: &lt;UNK&gt; tragically wonderful movie.. . brings us to a &lt;UNK&gt; tha
 [TEST]   Loss: 0.8557    Accuracy: 81.64%</code></pre>
 
 
-</section>
 </section>
 </section>
 

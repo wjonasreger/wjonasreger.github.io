@@ -15,7 +15,525 @@
 <link>https://wjonasreger.github.io/projects.html</link>
 </image>
 <generator>quarto-1.2.269</generator>
-<lastBuildDate>Sun, 16 Oct 2022 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 28 Nov 2022 06:00:00 GMT</lastBuildDate>
+<item>
+  <title>Text Classification for Interpretation</title>
+  <dc:creator>Hope Hunter, Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/text_classification_interpretability/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>In this notebook, a vocabulary set of highly interpretive terms is built, which a classification model uses to predict the sentiment of a movie review. The data set consists of <a href="https://github.com/wjonasreger/data/blob/main/imdb_reviews.tsv">50,000 IMDb movie reviews</a>, where each review is labelled as positive or negative. A subset of this data set was used in a Kaggle competition: <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial">Bag of Words Meets Bags of Popcorn</a>. Specifically, a classifier based on Regularized Logistic Regression (i.e., Binomial Ridge Regression) is implemented. The source code this notebook and original documentations are viewable <a href="https://github.com/wjonasreger/text_classification_interpretation">here</a> on GitHub.</p>
+<section id="load-packages-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-packages-data">Load Packages &amp; Data</h2>
+<p>First load the dataset through the URL, or download to access it locally. The following packages will be needed for text preprocessing and analysis.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;">library</span>(text2vec)</span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;">library</span>(glmnet)</span>
+<span id="cb1-3"><span class="fu" style="color: #4758AB;">library</span>(slam)</span>
+<span id="cb1-4"><span class="fu" style="color: #4758AB;">library</span>(pROC)</span>
+<span id="cb1-5"></span>
+<span id="cb1-6"><span class="fu" style="color: #4758AB;">set.seed</span>(<span class="dv" style="color: #AD0000;">22</span>)</span></code></pre></div>
+</details>
+</div>
+<p>The IMDb movie review dataset has 50,000 rows (i.e., reviews) and 4 columns:</p>
+<ul>
+<li><strong>Identification number</strong>: <code>id</code></li>
+<li><strong>Sentiment score</strong>: <code>sentiment</code> (i.e., <code>0</code>=negative, <code>1</code>=positive)</li>
+<li><strong>10-point score assigned by the reviewer</strong>: <code>score</code> (i.e., <code>1</code>-<code>4</code>=negative sentiment, <code>7</code>-<code>10</code>=positive sentiment, <code>5</code>-<code>6</code>=ignored)</li>
+<li><strong>User review</strong>: <code>review</code></li>
+</ul>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><span class="co" style="color: #5E5E5E;"># load data</span></span>
+<span id="cb2-2">data_url <span class="ot" style="color: #003B4F;">=</span> <span class="st" style="color: #20794D;">"https://raw.githubusercontent.com/wjonasreger/data/main/imdb_reviews.tsv"</span></span>
+<span id="cb2-3">data <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">read.table</span>(data_url, <span class="at" style="color: #657422;">stringsAsFactors =</span> <span class="cn" style="color: #8f5902;">FALSE</span>, <span class="at" style="color: #657422;">header =</span> <span class="cn" style="color: #8f5902;">TRUE</span>)</span>
+<span id="cb2-4">data_head <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">head</span>(data)</span>
+<span id="cb2-5">data_head<span class="sc" style="color: #5E5E5E;">$</span>review <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">sapply</span>(data_head<span class="sc" style="color: #5E5E5E;">$</span>review, <span class="cf" style="color: #003B4F;">function</span>(x) <span class="fu" style="color: #4758AB;">paste0</span>(<span class="fu" style="color: #4758AB;">substr</span>(x, <span class="dv" style="color: #AD0000;">1</span>, <span class="dv" style="color: #AD0000;">100</span>), <span class="st" style="color: #20794D;">'...'</span>))</span>
+<span id="cb2-6">data_head</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id sentiment score
+1  1         1    10
+2  2         0     2
+3  3         0     4
+4  4         0     2
+5  5         1     7
+6  6         1     8
+                                                                                                   review
+1 Naturally in a film who's main themes are of mortality, nostalgia, and loss of innocence it is perha...
+2 This movie is a disaster within a disaster film. It is full of great action scenes, which are only m...
+3 All in all, this is a movie for kids. We saw it tonight and my child loved it. At one point my kid's...
+4 Afraid of the Dark left me with the impression that several different screenplays were written, all ...
+5 A very accurate depiction of small time mob life filmed in New Jersey. The story, characters and scr...
+6 ...as valuable as King Tut's tomb! (OK, maybe not THAT valuable, but worth hunting down if you can)....</code></pre>
+</div>
+</div>
+</section>
+<section id="preprocess-data" class="level2">
+<h2 class="anchored" data-anchor-id="preprocess-data">Preprocess Data</h2>
+<p>The reviews are preprocessed by removing HTML tags and other special characters, and tokenization.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><span class="co" style="color: #5E5E5E;"># remove HTML tags</span></span>
+<span id="cb4-2">data<span class="sc" style="color: #5E5E5E;">$</span>review <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">'&lt;.*?&gt;'</span>, <span class="st" style="color: #20794D;">' '</span>, data<span class="sc" style="color: #5E5E5E;">$</span>review)</span>
+<span id="cb4-3"></span>
+<span id="cb4-4"><span class="co" style="color: #5E5E5E;"># tokenize words in reviews</span></span>
+<span id="cb4-5">itokens <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">itoken</span>(data<span class="sc" style="color: #5E5E5E;">$</span>review, </span>
+<span id="cb4-6">                 <span class="at" style="color: #657422;">preprocessor =</span> tolower, </span>
+<span id="cb4-7">                 <span class="at" style="color: #657422;">tokenizer =</span> word_tokenizer)</span></code></pre></div>
+</details>
+</div>
+<p>A vocabulary set of n-grams is built using the tokenized data, then pruned to remove tokens that are too frequent or infrequent in the data. This removes potential noise from tokens that cannot be learned from very well.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><span class="co" style="color: #5E5E5E;"># words ignored by the vocabulary</span></span>
+<span id="cb5-2">stop_words <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"i"</span>, <span class="st" style="color: #20794D;">"me"</span>, <span class="st" style="color: #20794D;">"my"</span>, <span class="st" style="color: #20794D;">"myself"</span>, <span class="st" style="color: #20794D;">"we"</span>, <span class="st" style="color: #20794D;">"our"</span>, <span class="st" style="color: #20794D;">"ours"</span>, <span class="st" style="color: #20794D;">"ourselves"</span>, </span>
+<span id="cb5-3">               <span class="st" style="color: #20794D;">"you"</span>, <span class="st" style="color: #20794D;">"your"</span>, <span class="st" style="color: #20794D;">"yours"</span>, <span class="st" style="color: #20794D;">"their"</span>, <span class="st" style="color: #20794D;">"they"</span>, <span class="st" style="color: #20794D;">"his"</span>, <span class="st" style="color: #20794D;">"her"</span>, </span>
+<span id="cb5-4">               <span class="st" style="color: #20794D;">"she"</span>, <span class="st" style="color: #20794D;">"he"</span>, <span class="st" style="color: #20794D;">"a"</span>, <span class="st" style="color: #20794D;">"an"</span>, <span class="st" style="color: #20794D;">"and"</span>, <span class="st" style="color: #20794D;">"is"</span>, <span class="st" style="color: #20794D;">"was"</span>, <span class="st" style="color: #20794D;">"are"</span>, <span class="st" style="color: #20794D;">"were"</span>, </span>
+<span id="cb5-5">               <span class="st" style="color: #20794D;">"him"</span>, <span class="st" style="color: #20794D;">"himself"</span>, <span class="st" style="color: #20794D;">"has"</span>, <span class="st" style="color: #20794D;">"have"</span>, <span class="st" style="color: #20794D;">"it"</span>, <span class="st" style="color: #20794D;">"its"</span>, <span class="st" style="color: #20794D;">"the"</span>, <span class="st" style="color: #20794D;">"us"</span>)</span>
+<span id="cb5-6"></span>
+<span id="cb5-7">vocab <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">create_vocabulary</span>(itokens, </span>
+<span id="cb5-8">                          <span class="at" style="color: #657422;">stopwords =</span> stop_words, </span>
+<span id="cb5-9">                          <span class="at" style="color: #657422;">ngram =</span> <span class="fu" style="color: #4758AB;">c</span>(1L, 4L)) <span class="co" style="color: #5E5E5E;"># uses 1-4 n-grams </span></span>
+<span id="cb5-10"></span>
+<span id="cb5-11">vocab <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">prune_vocabulary</span>(vocab, </span>
+<span id="cb5-12">                         <span class="at" style="color: #657422;">term_count_min =</span> <span class="dv" style="color: #AD0000;">10</span>, <span class="co" style="color: #5E5E5E;"># ignores terms under 10 count</span></span>
+<span id="cb5-13">                         <span class="at" style="color: #657422;">doc_proportion_max =</span> <span class="fl" style="color: #AD0000;">0.5</span>, <span class="co" style="color: #5E5E5E;"># ignores terms over 0.5 proportion</span></span>
+<span id="cb5-14">                         <span class="at" style="color: #657422;">doc_proportion_min =</span> <span class="fl" style="color: #AD0000;">0.001</span>) <span class="co" style="color: #5E5E5E;"># ignores terms under 0.001 proportion</span></span></code></pre></div>
+</details>
+</div>
+<p>Here is a sample of the vocabulary <code>vocab</code>.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1">vocab[<span class="fu" style="color: #4758AB;">sample</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">nrow</span>(vocab), <span class="dv" style="color: #AD0000;">5</span>), ]</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of docs: 50000 
+32 stopwords: i, me, my, myself, we, our ... 
+ngram_min = 1; ngram_max = 4 
+Vocabulary: 
+           term term_count doc_count
+1:       gloria        139       110
+2:      despite       2686      2385
+3: hilarious_in         53        53
+4:      that_by        176       175
+5:     who_died         95        93</code></pre>
+</div>
+</div>
+<p>The initial vocabulary set is then converted into a Document-Term Matrix (DTM) and normalized using TermFrequency-InverseDocumentFrequency (TF-IDF). This structure is convenient for logistic regression.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><span class="co" style="color: #5E5E5E;"># a custom string function towards printing a list of words for webpage</span></span>
+<span id="cb8-2">cat_string <span class="ot" style="color: #003B4F;">=</span> <span class="cf" style="color: #003B4F;">function</span>(string_list_in, <span class="at" style="color: #657422;">b=</span><span class="dv" style="color: #AD0000;">80</span>) {</span>
+<span id="cb8-3">  string <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">paste</span>(string_list_in, <span class="at" style="color: #657422;">collapse=</span><span class="st" style="color: #20794D;">", "</span>)</span>
+<span id="cb8-4">  string_list <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">strsplit</span>(string, <span class="st" style="color: #20794D;">' '</span>)[[<span class="dv" style="color: #AD0000;">1</span>]]</span>
+<span id="cb8-5">  </span>
+<span id="cb8-6">  final_string <span class="ot" style="color: #003B4F;">=</span> <span class="st" style="color: #20794D;">'</span><span class="sc" style="color: #5E5E5E;">\n\t</span><span class="st" style="color: #20794D;">'</span></span>
+<span id="cb8-7">  tmp_line <span class="ot" style="color: #003B4F;">=</span> <span class="st" style="color: #20794D;">''</span></span>
+<span id="cb8-8">  </span>
+<span id="cb8-9">  <span class="cf" style="color: #003B4F;">for</span> (s <span class="cf" style="color: #003B4F;">in</span> <span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">length</span>(string_list)) {</span>
+<span id="cb8-10">    <span class="cf" style="color: #003B4F;">if</span> (s <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">1</span>) {</span>
+<span id="cb8-11">      tmp_string <span class="ot" style="color: #003B4F;">=</span> string_list[s]</span>
+<span id="cb8-12">    } <span class="cf" style="color: #003B4F;">else</span> {</span>
+<span id="cb8-13">      tmp_string <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">paste</span>(tmp_line, string_list[s])</span>
+<span id="cb8-14">    }</span>
+<span id="cb8-15">    </span>
+<span id="cb8-16">    <span class="cf" style="color: #003B4F;">if</span> (<span class="fu" style="color: #4758AB;">nchar</span>(tmp_string) <span class="sc" style="color: #5E5E5E;">&lt;=</span> b) {</span>
+<span id="cb8-17">      tmp_line <span class="ot" style="color: #003B4F;">=</span> tmp_string</span>
+<span id="cb8-18">    } <span class="cf" style="color: #003B4F;">else</span>  <span class="cf" style="color: #003B4F;">if</span> (<span class="fu" style="color: #4758AB;">nchar</span>(tmp_string) <span class="sc" style="color: #5E5E5E;">&gt;</span> b) {</span>
+<span id="cb8-19">      final_string <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">paste0</span>(final_string, tmp_line, <span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n\t</span><span class="st" style="color: #20794D;">"</span>)</span>
+<span id="cb8-20">      tmp_line <span class="ot" style="color: #003B4F;">=</span> string_list[s]</span>
+<span id="cb8-21">    }</span>
+<span id="cb8-22">    </span>
+<span id="cb8-23">    <span class="cf" style="color: #003B4F;">if</span> (s <span class="sc" style="color: #5E5E5E;">==</span> <span class="fu" style="color: #4758AB;">length</span>(string_list)) {</span>
+<span id="cb8-24">      final_string <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">paste0</span>(final_string, tmp_line, <span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n\t</span><span class="st" style="color: #20794D;">"</span>)</span>
+<span id="cb8-25">    }</span>
+<span id="cb8-26">  }</span>
+<span id="cb8-27">  <span class="fu" style="color: #4758AB;">return</span>(final_string)</span>
+<span id="cb8-28">}</span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1">dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">create_dtm</span>(itokens, <span class="fu" style="color: #4758AB;">vocab_vectorizer</span>(vocab))</span>
+<span id="cb9-2">tfidf <span class="ot" style="color: #003B4F;">=</span> TfIdf<span class="sc" style="color: #5E5E5E;">$</span><span class="fu" style="color: #4758AB;">new</span>()</span>
+<span id="cb9-3">dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">fit_transform</span>(dtm, tfidf)</span></code></pre></div>
+</details>
+</div>
+<p>Here is the size of the vocabulary in <code>dtm</code> and some example terms.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"vocab size: "</span>, <span class="fu" style="color: #4758AB;">length</span>(<span class="fu" style="color: #4758AB;">colnames</span>(dtm))))</span>
+<span id="cb10-2"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(<span class="fu" style="color: #4758AB;">colnames</span>(dtm)[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">25</span>])))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>vocab size: 31590
+example words:  
+    4_or, about_man_who, about_most, absolutely_nothing_to_do, accordingly,
+    acted_well, acting_plot, actually_make, after_many, again_by, again_would,
+    all_i'm, all_quite, already_mentioned, although_i'm, antics_of, any_of_those,
+    applauded, around_same, as_powerful, at_acting, at_all_there, at_core,
+    at_heart_of, be_boring
+    </code></pre>
+</div>
+</div>
+</section>
+<section id="building-a-vocabulary-for-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="building-a-vocabulary-for-interpretation">Building a Vocabulary for Interpretation</h2>
+<p>The goal is to select a smaller vocabulary set under a target size <img src="https://latex.codecogs.com/png.latex?N_t"> that contains highly interpretive terms. Such terms would intuitively signal positive or negative sentiment to a human reader. For instance, the terms “bad”, “worst”, “terrible” are clearly negative. Alternatively, the words “acting”, “core”, “same” are not clearly positive or negative. Of course, the terms would also need to be useful for predictions, so the process of selecting this vocabulary set is carried out in multiple steps. Note that the selected vocabulary set is extracted from the entire data to reduce computational expense. This may not be considered the most appropriate approach but it is as an extension of the tokenization, pruning, and normalization preprocesses. The vocabulary selection is essentially a dimensional reduction method.</p>
+<p>The DTM matrix is fitted by a LASSO Logistic Regression model to select terms that are informative towards predicting sentiment of reviews. The motivation is to continue shrinking the vocabulary to keep the most informative terms for eventual predictions. A simple screening method is used to shrink the <img src="https://latex.codecogs.com/png.latex?20,000+"> vocabulary to some target size <img src="https://latex.codecogs.com/png.latex?N_t">. The <img src="https://latex.codecogs.com/png.latex?10,000"> most informative terms are selected from the LASSO model shown below using its degrees of freedom for different <img src="https://latex.codecogs.com/png.latex?%5Clambda"> values.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1">data_classifier1 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">glmnet</span>(<span class="at" style="color: #657422;">x =</span> dtm, </span>
+<span id="cb12-2">                         <span class="at" style="color: #657422;">y =</span> data<span class="sc" style="color: #5E5E5E;">$</span>sentiment, </span>
+<span id="cb12-3">                         <span class="at" style="color: #657422;">alpha =</span> <span class="dv" style="color: #AD0000;">1</span>,</span>
+<span id="cb12-4">                         <span class="at" style="color: #657422;">family=</span><span class="st" style="color: #20794D;">'binomial'</span>)</span></code></pre></div>
+</details>
+</div>
+<p>Here is a helper function to ensure DTM matrices are compatible with a given vocabulary set. This is useful for updating DTM matrices as the vocabulary shrinks, but also for making train-test matrices compatible with each other during model training and evaluation steps.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1">columnConform <span class="ot" style="color: #003B4F;">=</span> <span class="cf" style="color: #003B4F;">function</span>(data_matrix, column_names) {</span>
+<span id="cb13-2">  coverage <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(data_matrix) <span class="sc" style="color: #5E5E5E;">%in%</span> column_names</span>
+<span id="cb13-3">  miss <span class="ot" style="color: #003B4F;">=</span> <span class="sc" style="color: #5E5E5E;">!</span>(column_names <span class="sc" style="color: #5E5E5E;">%in%</span> <span class="fu" style="color: #4758AB;">colnames</span>(data_matrix))</span>
+<span id="cb13-4">  </span>
+<span id="cb13-5">  new_data <span class="ot" style="color: #003B4F;">=</span> data_matrix[, coverage]</span>
+<span id="cb13-6">  empty_data <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">matrix</span>(<span class="dv" style="color: #AD0000;">0</span>, <span class="fu" style="color: #4758AB;">nrow</span>(new_data), <span class="fu" style="color: #4758AB;">sum</span>(miss))</span>
+<span id="cb13-7">  <span class="fu" style="color: #4758AB;">colnames</span>(empty_data) <span class="ot" style="color: #003B4F;">=</span> column_names[miss]</span>
+<span id="cb13-8">  new_data <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">as.matrix</span>(<span class="fu" style="color: #4758AB;">cbind</span>(new_data, empty_data))</span>
+<span id="cb13-9">  new_data <span class="ot" style="color: #003B4F;">=</span> new_data[, column_names]</span>
+<span id="cb13-10"></span>
+<span id="cb13-11">  <span class="fu" style="color: #4758AB;">return</span>(new_data)</span>
+<span id="cb13-12">}</span></code></pre></div>
+</details>
+</div>
+<p>Here the vocabulary is reduced by the LASSO model <code>data_classifier1</code> to size <img src="https://latex.codecogs.com/png.latex?N%20%5Cleq%2010,000">.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><span class="co" style="color: #5E5E5E;"># target size is 10000</span></span>
+<span id="cb14-2"><span class="co" style="color: #5E5E5E;"># select vocabulary set within target size</span></span>
+<span id="cb14-3">below_target <span class="ot" style="color: #003B4F;">=</span> data_classifier1<span class="sc" style="color: #5E5E5E;">$</span>df[data_classifier1<span class="sc" style="color: #5E5E5E;">$</span>df <span class="sc" style="color: #5E5E5E;">&lt;=</span> <span class="dv" style="color: #AD0000;">10000</span>]</span>
+<span id="cb14-4">df_max_vocab <span class="ot" style="color: #003B4F;">=</span> data_classifier1<span class="sc" style="color: #5E5E5E;">$</span>df[<span class="fu" style="color: #4758AB;">which.max</span>(below_target)]</span>
+<span id="cb14-5">df_index <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">which</span>(data_classifier1<span class="sc" style="color: #5E5E5E;">$</span>df <span class="sc" style="color: #5E5E5E;">==</span> df_max_vocab)[<span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb14-6"></span>
+<span id="cb14-7"><span class="co" style="color: #5E5E5E;"># 10,000 terms vocabulary</span></span>
+<span id="cb14-8">vocab_lasso <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(dtm)[<span class="fu" style="color: #4758AB;">which</span>(data_classifier1<span class="sc" style="color: #5E5E5E;">$</span>beta[, df_index] <span class="sc" style="color: #5E5E5E;">!=</span> <span class="dv" style="color: #AD0000;">0</span>)]</span>
+<span id="cb14-9"></span>
+<span id="cb14-10"><span class="co" style="color: #5E5E5E;"># update dtm matrix</span></span>
+<span id="cb14-11">dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">columnConform</span>(dtm, vocab_lasso)</span>
+<span id="cb14-12"></span>
+<span id="cb14-13">vocab_size <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">dim</span>(dtm)[<span class="dv" style="color: #AD0000;">2</span>]</span></code></pre></div>
+</details>
+</div>
+<p>Here is the size of the vocabulary <code>vocab_lasso</code> and some example terms.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"vocab size: "</span>, vocab_size))</span>
+<span id="cb15-2"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(vocab_lasso[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">25</span>])))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>vocab size: 9918
+example words:  
+    actually_make, again_by, although_i'm, any_of_those, applauded, at_acting,
+    at_all_there, be_boring, better_not, but_in_opinion, can_call_that, can_read,
+    careless, cast_which, contrasts, development_in, don't_be_fooled_by,
+    don't_know_but, download, dvd_from, early_90s, entire_story, etc_in,
+    film_that_could, for_own_good
+    </code></pre>
+</div>
+</div>
+<p>So far the vocabulary is more than sufficient for predictive purposes, but not quite for interpretation. So, less interpretive terms are filtered out using a marginal two-sample t-test. The <code>slam</code> package is used to process the large and sparse DTM matrix efficiently. All terms are ordered by the magnitude of their respective t-statistics. The top <img src="https://latex.codecogs.com/png.latex?2,000"> terms are selected from the ordered vocabulary as they are the most interpretive terms. A few terms appeared exclusively in reviews that were either positive or negative, but were filtered out by the t-test. So, they are added back in since they may be useful for interpretation.</p>
+<p>Here the t-test statistics are computed for each term in the DTM matrix.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1">summ <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">matrix</span>(<span class="dv" style="color: #AD0000;">0</span>, <span class="at" style="color: #657422;">nrow=</span>vocab_size, <span class="at" style="color: #657422;">ncol=</span><span class="dv" style="color: #AD0000;">4</span>)</span>
+<span id="cb17-2"></span>
+<span id="cb17-3"><span class="co" style="color: #5E5E5E;"># mean and variances of terms associated with positive reviews</span></span>
+<span id="cb17-4">summ[,<span class="dv" style="color: #AD0000;">1</span>] <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colapply_simple_triplet_matrix</span>(</span>
+<span id="cb17-5">  <span class="fu" style="color: #4758AB;">as.simple_triplet_matrix</span>( dtm[ data<span class="sc" style="color: #5E5E5E;">$</span>sentiment<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1</span>, ] ), mean)</span>
+<span id="cb17-6">summ[,<span class="dv" style="color: #AD0000;">2</span>] <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colapply_simple_triplet_matrix</span>(</span>
+<span id="cb17-7">  <span class="fu" style="color: #4758AB;">as.simple_triplet_matrix</span>( dtm[ data<span class="sc" style="color: #5E5E5E;">$</span>sentiment<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1</span>, ] ), var)</span>
+<span id="cb17-8"></span>
+<span id="cb17-9"><span class="co" style="color: #5E5E5E;"># mean and variances of terms associated with negative reviews</span></span>
+<span id="cb17-10">summ[,<span class="dv" style="color: #AD0000;">3</span>] <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colapply_simple_triplet_matrix</span>(</span>
+<span id="cb17-11">  <span class="fu" style="color: #4758AB;">as.simple_triplet_matrix</span>( dtm[ data<span class="sc" style="color: #5E5E5E;">$</span>sentiment<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">0</span>, ] ), mean)</span>
+<span id="cb17-12">summ[,<span class="dv" style="color: #AD0000;">4</span>] <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colapply_simple_triplet_matrix</span>(</span>
+<span id="cb17-13">  <span class="fu" style="color: #4758AB;">as.simple_triplet_matrix</span>( dtm[ data<span class="sc" style="color: #5E5E5E;">$</span>sentiment<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">0</span>, ] ), var)</span>
+<span id="cb17-14"></span>
+<span id="cb17-15"><span class="co" style="color: #5E5E5E;"># number of positive and negative reviews</span></span>
+<span id="cb17-16">n1 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">sum</span>(data<span class="sc" style="color: #5E5E5E;">$</span>sentiment)</span>
+<span id="cb17-17">n <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">length</span>(data<span class="sc" style="color: #5E5E5E;">$</span>sentiment)</span>
+<span id="cb17-18">n0 <span class="ot" style="color: #003B4F;">=</span> n <span class="sc" style="color: #5E5E5E;">-</span> n1</span>
+<span id="cb17-19"></span>
+<span id="cb17-20"><span class="co" style="color: #5E5E5E;"># t-statistics for each term</span></span>
+<span id="cb17-21">tstats <span class="ot" style="color: #003B4F;">=</span> (summ[,<span class="dv" style="color: #AD0000;">1</span>] <span class="sc" style="color: #5E5E5E;">-</span> summ[,<span class="dv" style="color: #AD0000;">3</span>]) <span class="sc" style="color: #5E5E5E;">/</span> <span class="fu" style="color: #4758AB;">sqrt</span>(summ[,<span class="dv" style="color: #AD0000;">2</span>]<span class="sc" style="color: #5E5E5E;">/</span>n1 <span class="sc" style="color: #5E5E5E;">+</span> summ[,<span class="dv" style="color: #AD0000;">4</span>]<span class="sc" style="color: #5E5E5E;">/</span>n0)</span></code></pre></div>
+</details>
+</div>
+<p>Here the <img src="https://latex.codecogs.com/png.latex?10,000"> term vocabulary is filtered by the two-sample t-test and reduced to size <img src="https://latex.codecogs.com/png.latex?N%20%5Cleq%202,000">.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><span class="co" style="color: #5E5E5E;"># target size is 2000</span></span>
+<span id="cb18-2"><span class="co" style="color: #5E5E5E;"># select most interpretive words</span></span>
+<span id="cb18-3">words <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(dtm)</span>
+<span id="cb18-4">id <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">order</span>(<span class="fu" style="color: #4758AB;">abs</span>(tstats), <span class="at" style="color: #657422;">decreasing=</span><span class="cn" style="color: #8f5902;">TRUE</span>)[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">min</span>(<span class="dv" style="color: #AD0000;">2000</span>, <span class="fu" style="color: #4758AB;">dim</span>(dtm)[<span class="dv" style="color: #AD0000;">2</span>])]</span>
+<span id="cb18-5"></span>
+<span id="cb18-6"><span class="co" style="color: #5E5E5E;"># positive and negative words</span></span>
+<span id="cb18-7">pos_vocab <span class="ot" style="color: #003B4F;">=</span> words[ id[ tstats[id] <span class="sc" style="color: #5E5E5E;">&gt;</span> <span class="dv" style="color: #AD0000;">0</span> ] ]</span>
+<span id="cb18-8">neg_vocab <span class="ot" style="color: #003B4F;">=</span> words[ id[ tstats[id] <span class="sc" style="color: #5E5E5E;">&lt;</span> <span class="dv" style="color: #AD0000;">0</span> ] ]</span>
+<span id="cb18-9"></span>
+<span id="cb18-10"><span class="co" style="color: #5E5E5E;"># checks for terms that appear in only one sentiment</span></span>
+<span id="cb18-11">id1 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">which</span>(summ[, <span class="dv" style="color: #AD0000;">2</span>] <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb18-12">id0 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">which</span>(summ[, <span class="dv" style="color: #AD0000;">4</span>] <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb18-13"></span>
+<span id="cb18-14"><span class="co" style="color: #5E5E5E;"># new vocabulary with ~2000 words</span></span>
+<span id="cb18-15">vocab_ttest <span class="ot" style="color: #003B4F;">=</span> words[<span class="fu" style="color: #4758AB;">union</span>(<span class="fu" style="color: #4758AB;">union</span>(id, id1), id0)]</span>
+<span id="cb18-16"></span>
+<span id="cb18-17"><span class="co" style="color: #5E5E5E;"># update the dtm matrix to the new vocabulary</span></span>
+<span id="cb18-18">dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">columnConform</span>(dtm, vocab_ttest)</span></code></pre></div>
+</details>
+</div>
+<p>Here is the size of the vocabulary <code>vocab_ttest</code> and some example terms. Sets for positive and negative sentiments from the vocabulary are shown as well.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"vocab size: "</span>, <span class="fu" style="color: #4758AB;">length</span>(vocab_ttest)))</span>
+<span id="cb19-2"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(vocab_ttest[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">25</span>])))</span>
+<span id="cb19-3"></span>
+<span id="cb19-4"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">positive vocab size: "</span>, <span class="fu" style="color: #4758AB;">length</span>(pos_vocab)))</span>
+<span id="cb19-5"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(pos_vocab[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">50</span>])))</span>
+<span id="cb19-6"></span>
+<span id="cb19-7"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">negative vocab size: "</span>, <span class="fu" style="color: #4758AB;">length</span>(neg_vocab)))</span>
+<span id="cb19-8"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(neg_vocab[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">50</span>])))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>vocab size: 2000
+example words:  
+    bad, worst, great, waste, awful, excellent, best, no, terrible, love, nothing,
+    worse, boring, wonderful, even, of_best, stupid, of_worst, well, horrible,
+    minutes, waste_of, poor, one_of_best, at_all
+    
+positive vocab size: 872
+example words:  
+    great, excellent, best, love, wonderful, of_best, well, one_of_best, perfect,
+    also, amazing, loved, very, one_of, beautiful, highly, life, favorite, superb,
+    brilliant, enjoyed, today, must_see, both, always, will, very_well, years,
+    fantastic, world, still, heart, performance, performances, definitely, family,
+    fun, especially, true, highly_recommend, classic, job, perfectly, 8, well_worth,
+    touching, this_great, love_this, wonderfully, 10_10
+    
+negative vocab size: 1128
+example words:  
+    bad, worst, waste, awful, no, terrible, nothing, worse, boring, even, stupid,
+    of_worst, horrible, minutes, waste_of, poor, at_all, crap, so_bad, money, plot,
+    one_of_worst, supposed, just, avoid, script, ridiculous, why, not_even, poorly,
+    acting, 1, only, lame, annoying, wasted, worst_movie, pathetic, pointless,
+    instead, cheap, save, dull, oh, unless, any, don't, laughable, could, least
+    </code></pre>
+</div>
+</div>
+<p>After selecting the best <img src="https://latex.codecogs.com/png.latex?%5Csim2000"> terms from the LASSO model and the two-sample t-test, another LASSO model is refitted on the new DTM matrix to further reduce the size of the vocabulary within the final target size <img src="https://latex.codecogs.com/png.latex?N_t">. Note that this step is identical to the previous LASSO model for terms selection, but with a smaller target size for vocabulary.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1">data_classifier2 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">glmnet</span>(<span class="at" style="color: #657422;">x =</span> dtm, </span>
+<span id="cb21-2">                          <span class="at" style="color: #657422;">y =</span> data<span class="sc" style="color: #5E5E5E;">$</span>sentiment, </span>
+<span id="cb21-3">                          <span class="at" style="color: #657422;">alpha =</span> <span class="dv" style="color: #AD0000;">1</span>,</span>
+<span id="cb21-4">                          <span class="at" style="color: #657422;">family=</span><span class="st" style="color: #20794D;">'binomial'</span>)</span></code></pre></div>
+</details>
+</div>
+<p>Here the vocabulary is reduced by the LASSO model <code>data_classifier2</code> to size <img src="https://latex.codecogs.com/png.latex?N%20%5Cleq%201,000">, the final target size.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><span class="co" style="color: #5E5E5E;"># target size is 1000</span></span>
+<span id="cb22-2">below_target <span class="ot" style="color: #003B4F;">=</span> data_classifier2<span class="sc" style="color: #5E5E5E;">$</span>df[data_classifier2<span class="sc" style="color: #5E5E5E;">$</span>df <span class="sc" style="color: #5E5E5E;">&lt;=</span> <span class="dv" style="color: #AD0000;">1000</span>]</span>
+<span id="cb22-3">df_max_vocab <span class="ot" style="color: #003B4F;">=</span> data_classifier2<span class="sc" style="color: #5E5E5E;">$</span>df[<span class="fu" style="color: #4758AB;">which.max</span>(below_target)]</span>
+<span id="cb22-4">df_index <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">which</span>(data_classifier2<span class="sc" style="color: #5E5E5E;">$</span>df <span class="sc" style="color: #5E5E5E;">==</span> df_max_vocab)[<span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb22-5"></span>
+<span id="cb22-6">final_vocab <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(dtm)[<span class="fu" style="color: #4758AB;">which</span>(data_classifier2<span class="sc" style="color: #5E5E5E;">$</span>beta[, df_index] <span class="sc" style="color: #5E5E5E;">!=</span> <span class="dv" style="color: #AD0000;">0</span>)]</span></code></pre></div>
+</details>
+</div>
+<p>Here is the size of the vocabulary <code>final_vocab</code> and some example terms.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">"final vocab size: "</span>, <span class="fu" style="color: #4758AB;">length</span>(final_vocab)))</span>
+<span id="cb23-2"><span class="fu" style="color: #4758AB;">cat</span>(<span class="fu" style="color: #4758AB;">paste</span>(<span class="st" style="color: #20794D;">"</span><span class="sc" style="color: #5E5E5E;">\n</span><span class="st" style="color: #20794D;">example words: "</span>, <span class="fu" style="color: #4758AB;">cat_string</span>(final_vocab[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">100</span>])))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>final vocab size: 994
+example words:  
+    bad, worst, great, waste, awful, excellent, best, no, terrible, love, nothing,
+    worse, boring, wonderful, even, of_best, stupid, of_worst, well, horrible,
+    minutes, poor, at_all, perfect, crap, so_bad, also, money, plot, amazing, loved,
+    supposed, very, just, one_of, beautiful, avoid, script, ridiculous, why,
+    not_even, highly, poorly, acting, life, favorite, superb, 1, only, lame,
+    brilliant, annoying, wasted, pathetic, pointless, instead, enjoyed, cheap,
+    today, must_see, save, dull, oh, both, always, unless, any, don't, will,
+    laughable, very_well, could, years, least, fantastic, 2, badly, world, or,
+    fails, still, couldn't, heart, mess, make, performance, performances, to_make,
+    definitely, how_bad, garbage, reason, to_be, family, attempt, redeeming,
+    avoid_this, fun, especially, anything
+    </code></pre>
+</div>
+</div>
+</section>
+<section id="model-training" class="level2">
+<h2 class="anchored" data-anchor-id="model-training">Model Training</h2>
+<p>First, the train and test data are split from the full data. The datasets undergo the same preprocessing procedure as shown previously, up to TF-IDF transformation. The helper function <code>preprocessDTM</code> is defined in the hidden code block below, and <code>columnConform</code> is defined in the previous section.</p>
+<div class="cell">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><span class="co" style="color: #5E5E5E;"># preprocess function to create DTM matrices as shown earlier in the notebook</span></span>
+<span id="cb25-2">preprocessDTM <span class="ot" style="color: #003B4F;">=</span> <span class="cf" style="color: #003B4F;">function</span>(data, text_column) {</span>
+<span id="cb25-3">  <span class="co" style="color: #5E5E5E;"># remove HTML tags</span></span>
+<span id="cb25-4">  data[[text_column]] <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">'&lt;.*?&gt;'</span>, <span class="st" style="color: #20794D;">' '</span>, data[[text_column]])</span>
+<span id="cb25-5">  </span>
+<span id="cb25-6">  <span class="co" style="color: #5E5E5E;"># tokenize words in reviews</span></span>
+<span id="cb25-7">  itokens <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">itoken</span>(data[[text_column]], </span>
+<span id="cb25-8">                   <span class="at" style="color: #657422;">preprocessor =</span> tolower, </span>
+<span id="cb25-9">                   <span class="at" style="color: #657422;">tokenizer =</span> word_tokenizer)</span>
+<span id="cb25-10">  </span>
+<span id="cb25-11">  <span class="co" style="color: #5E5E5E;"># words ignored by the vocabulary</span></span>
+<span id="cb25-12">  stop_words <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"i"</span>, <span class="st" style="color: #20794D;">"me"</span>, <span class="st" style="color: #20794D;">"my"</span>, <span class="st" style="color: #20794D;">"myself"</span>, <span class="st" style="color: #20794D;">"we"</span>, <span class="st" style="color: #20794D;">"our"</span>, <span class="st" style="color: #20794D;">"ours"</span>, <span class="st" style="color: #20794D;">"ourselves"</span>, </span>
+<span id="cb25-13">                 <span class="st" style="color: #20794D;">"you"</span>, <span class="st" style="color: #20794D;">"your"</span>, <span class="st" style="color: #20794D;">"yours"</span>, <span class="st" style="color: #20794D;">"their"</span>, <span class="st" style="color: #20794D;">"they"</span>, <span class="st" style="color: #20794D;">"his"</span>, <span class="st" style="color: #20794D;">"her"</span>, </span>
+<span id="cb25-14">                 <span class="st" style="color: #20794D;">"she"</span>, <span class="st" style="color: #20794D;">"he"</span>, <span class="st" style="color: #20794D;">"a"</span>, <span class="st" style="color: #20794D;">"an"</span>, <span class="st" style="color: #20794D;">"and"</span>, <span class="st" style="color: #20794D;">"is"</span>, <span class="st" style="color: #20794D;">"was"</span>, <span class="st" style="color: #20794D;">"are"</span>, <span class="st" style="color: #20794D;">"were"</span>, </span>
+<span id="cb25-15">                 <span class="st" style="color: #20794D;">"him"</span>, <span class="st" style="color: #20794D;">"himself"</span>, <span class="st" style="color: #20794D;">"has"</span>, <span class="st" style="color: #20794D;">"have"</span>, <span class="st" style="color: #20794D;">"it"</span>, <span class="st" style="color: #20794D;">"its"</span>, <span class="st" style="color: #20794D;">"the"</span>, <span class="st" style="color: #20794D;">"us"</span>)</span>
+<span id="cb25-16">  </span>
+<span id="cb25-17">  vocab <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">create_vocabulary</span>(itokens, </span>
+<span id="cb25-18">                            <span class="at" style="color: #657422;">stopwords =</span> stop_words, </span>
+<span id="cb25-19">                            <span class="at" style="color: #657422;">ngram =</span> <span class="fu" style="color: #4758AB;">c</span>(1L, 4L)) <span class="co" style="color: #5E5E5E;"># uses 1-4 n-grams </span></span>
+<span id="cb25-20">  </span>
+<span id="cb25-21">  vocab <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">prune_vocabulary</span>(vocab, </span>
+<span id="cb25-22">                           <span class="at" style="color: #657422;">term_count_min =</span> <span class="dv" style="color: #AD0000;">10</span>, <span class="co" style="color: #5E5E5E;"># ignores terms under 10 count</span></span>
+<span id="cb25-23">                           <span class="at" style="color: #657422;">doc_proportion_max =</span> <span class="fl" style="color: #AD0000;">0.5</span>, <span class="co" style="color: #5E5E5E;"># ignores terms over 0.5 proportion</span></span>
+<span id="cb25-24">                           <span class="at" style="color: #657422;">doc_proportion_min =</span> <span class="fl" style="color: #AD0000;">0.001</span>) <span class="co" style="color: #5E5E5E;"># ignores terms under 0.001 proportion</span></span>
+<span id="cb25-25">  </span>
+<span id="cb25-26">  dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">create_dtm</span>(itokens, <span class="fu" style="color: #4758AB;">vocab_vectorizer</span>(vocab))</span>
+<span id="cb25-27">  tfidf <span class="ot" style="color: #003B4F;">=</span> TfIdf<span class="sc" style="color: #5E5E5E;">$</span><span class="fu" style="color: #4758AB;">new</span>()</span>
+<span id="cb25-28">  dtm <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">fit_transform</span>(dtm, tfidf)</span>
+<span id="cb25-29">  </span>
+<span id="cb25-30">  <span class="fu" style="color: #4758AB;">return</span>(dtm)</span>
+<span id="cb25-31">}</span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><span class="co" style="color: #5E5E5E;"># test ids for test-train split</span></span>
+<span id="cb26-2">test_id <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">sample</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">nrow</span>(data), <span class="fu" style="color: #4758AB;">round</span>(<span class="fl" style="color: #AD0000;">0.2</span> <span class="sc" style="color: #5E5E5E;">*</span> <span class="fu" style="color: #4758AB;">nrow</span>(data)))</span>
+<span id="cb26-3"></span>
+<span id="cb26-4"><span class="co" style="color: #5E5E5E;"># train and test data split from full data</span></span>
+<span id="cb26-5">train <span class="ot" style="color: #003B4F;">=</span> data[<span class="sc" style="color: #5E5E5E;">-</span>test_id, ]</span>
+<span id="cb26-6">test <span class="ot" style="color: #003B4F;">=</span> data[test_id, ]</span>
+<span id="cb26-7"></span>
+<span id="cb26-8"><span class="co" style="color: #5E5E5E;"># preprocess train data</span></span>
+<span id="cb26-9">dtm_train <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">preprocessDTM</span>(train, <span class="st" style="color: #20794D;">"review"</span>)</span>
+<span id="cb26-10">dtm_train <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">columnConform</span>(dtm_train, final_vocab)</span>
+<span id="cb26-11"></span>
+<span id="cb26-12"><span class="co" style="color: #5E5E5E;"># preprocess test data</span></span>
+<span id="cb26-13">dtm_test <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">preprocessDTM</span>(test, <span class="st" style="color: #20794D;">"review"</span>)</span>
+<span id="cb26-14">dtm_test <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">columnConform</span>(dtm_test, final_vocab)</span></code></pre></div>
+</details>
+</div>
+<p>The train DTM matrix is fitted with a Cross-Validated Ridge Logistic Regression model. The following hyperparameters are used (strict convergence hyperparameters are unnecessary for sufficient model performance, likely due to vocabulary selection procedure):</p>
+<ul>
+<li><strong>Number of cross-validation folds</strong>: <code>5</code></li>
+<li><strong>Convergence threshold</strong>: <code>1e-5</code></li>
+<li><strong>Maximum iterations</strong>: <code>1e3</code></li>
+</ul>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><span class="co" style="color: #5E5E5E;"># training the ridge logistic regression model</span></span>
+<span id="cb27-2">train_classifier <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">cv.glmnet</span>(<span class="at" style="color: #657422;">x =</span> dtm_train, <span class="at" style="color: #657422;">y =</span> train<span class="sc" style="color: #5E5E5E;">$</span>sentiment, </span>
+<span id="cb27-3">                             <span class="at" style="color: #657422;">family=</span><span class="st" style="color: #20794D;">'binomial'</span>, <span class="at" style="color: #657422;">alpha =</span> <span class="dv" style="color: #AD0000;">0</span>,</span>
+<span id="cb27-4">                             <span class="at" style="color: #657422;">nfolds =</span> <span class="dv" style="color: #AD0000;">5</span>, <span class="at" style="color: #657422;">thresh =</span> <span class="fl" style="color: #AD0000;">1e-5</span>, <span class="at" style="color: #657422;">maxit =</span> <span class="fl" style="color: #AD0000;">1e3</span>)</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="model-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="model-evaluation">Model Evaluation</h2>
+<p>Now the Ridge model is evaluated. It returns predicted probabilities that a review has a positive sentiment (i.e., <img src="https://latex.codecogs.com/png.latex?1%20-%20%5Chat%7BP%7D(positive)"> is the predicted probability that a review is negative).</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><span class="co" style="color: #5E5E5E;"># test predictions for sentiment of reviews</span></span>
+<span id="cb28-2">pred <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">predict</span>(train_classifier, </span>
+<span id="cb28-3">               <span class="at" style="color: #657422;">s =</span> train_classifier<span class="sc" style="color: #5E5E5E;">$</span>lambda.min, </span>
+<span id="cb28-4">               <span class="at" style="color: #657422;">newx =</span> <span class="fu" style="color: #4758AB;">as.matrix</span>(dtm_test),</span>
+<span id="cb28-5">               <span class="at" style="color: #657422;">type=</span><span class="st" style="color: #20794D;">'response'</span>)</span>
+<span id="cb28-6"></span>
+<span id="cb28-7">pred <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">cbind</span>(test<span class="sc" style="color: #5E5E5E;">$</span>id, pred)</span>
+<span id="cb28-8"><span class="fu" style="color: #4758AB;">colnames</span>(pred) <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"id"</span>, <span class="st" style="color: #20794D;">"prob"</span>)</span>
+<span id="cb28-9"></span>
+<span id="cb28-10"><span class="fu" style="color: #4758AB;">head</span>(pred)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>     id        prob
+1 48443 0.999962504
+2 24421 0.001634074
+3 39808 0.991950504
+4  5392 0.036798413
+5 11464 0.124424832
+6 24351 0.945534809</code></pre>
+</div>
+</div>
+<div class="cell">
+
+</div>
+<p>The Ridge model has an Area Under the Receiver Operating Characteristic curve (AUROC) score of 0.9684. So, the model can correctly classify at least 96.84% of the reviews in the test data. Despite the sufficient performance of the model, the general procedure for vocabulary selection could be further improved towards interpretation. Possible next steps include removing redundant vocabulary terms, adding topic models to enrich representation of terms with ambiguous meanings, or adding neural networks to generalize contexts better. In any case, this procedure demonstrates that interpretive terms can be extracted for highly accurate text classification tasks.</p>
+<div class="cell">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><span class="co" style="color: #5E5E5E;"># merge predicted probabilities with actual sentiment scores</span></span>
+<span id="cb30-2">pred <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">merge</span>(pred, test, <span class="at" style="color: #657422;">by=</span><span class="st" style="color: #20794D;">"id"</span>)</span>
+<span id="cb30-3"></span>
+<span id="cb30-4"><span class="co" style="color: #5E5E5E;"># roc object for evaluation</span></span>
+<span id="cb30-5">roc_obj <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">roc</span>(pred<span class="sc" style="color: #5E5E5E;">$</span>sentiment, pred<span class="sc" style="color: #5E5E5E;">$</span>prob)</span>
+<span id="cb30-6">auc_result <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">auc</span>(roc_obj)</span>
+<span id="cb30-7"></span>
+<span id="cb30-8"><span class="co" style="color: #5E5E5E;"># roc curve and auc score</span></span>
+<span id="cb30-9"><span class="fu" style="color: #4758AB;">plot</span>(roc_obj, <span class="at" style="color: #657422;">print.auc=</span><span class="cn" style="color: #8f5902;">TRUE</span>, <span class="at" style="color: #657422;">print.thres=</span><span class="cn" style="color: #8f5902;">TRUE</span>, </span>
+<span id="cb30-10">     <span class="at" style="color: #657422;">max.auc.polygon=</span><span class="cn" style="color: #8f5902;">TRUE</span>, <span class="at" style="color: #657422;">auc.polygon=</span><span class="cn" style="color: #8f5902;">TRUE</span>, <span class="at" style="color: #657422;">auc.polygon.col =</span> <span class="st" style="color: #20794D;">"lightblue"</span>)</span>
+<span id="cb30-11"><span class="fu" style="color: #4758AB;">plot</span>(<span class="fu" style="color: #4758AB;">smooth</span>(roc_obj), <span class="at" style="color: #657422;">add=</span><span class="cn" style="color: #8f5902;">TRUE</span>, <span class="at" style="color: #657422;">col=</span><span class="st" style="color: #20794D;">"red"</span>)</span>
+<span id="cb30-12"><span class="fu" style="color: #4758AB;">legend</span>(<span class="st" style="color: #20794D;">"bottomright"</span>, <span class="at" style="color: #657422;">legend=</span><span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"Empirical"</span>, <span class="st" style="color: #20794D;">"Smoothed"</span>),</span>
+<span id="cb30-13">       <span class="at" style="color: #657422;">col=</span><span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"black"</span>, <span class="st" style="color: #20794D;">"red"</span>), <span class="at" style="color: #657422;">lwd=</span><span class="dv" style="color: #AD0000;">2</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="https://wjonasreger.github.io/projects/text_classification_interpretability/index_files/figure-html/model evaluations-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>Machine Learning</category>
+  <category>NLP</category>
+  <category>R</category>
+  <category>Statistics</category>
+  <guid>https://wjonasreger.github.io/projects/text_classification_interpretability/index.html</guid>
+  <pubDate>Mon, 28 Nov 2022 06:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Text Classification with Neural Networks</title>
   <dc:creator>Jonas Reger</dc:creator>
@@ -25,8 +543,6 @@
 
 
 
-<section id="text-classification-with-neural-networks" class="level1">
-<h1>Text Classification with Neural Networks</h1>
 <p>In this notebook, machine learning models are implemented to predict the sentiment of movie reviews using the <a href="https://ai.stanford.edu/~amaas/data/sentiment/">IMDb movie reviews dataset</a> through the <code>torchtext</code> package. Specifically, classifiers based on Convolutional Neural Networks (CNN’s) and Recurrent Neural Networks (RNN’s) are implemented.</p>
 <section id="load-packages" class="level2">
 <h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
@@ -128,12 +644,12 @@ The film’s utter failure only needs to be gauged by the fact that the Tarzan l
 <h2 class="anchored" data-anchor-id="dataloader-the-textdataset-class">Dataloader: The <code>TextDataset</code> Class</h2>
 <p>The dataset contains the tokenized data for the model. The following functions are implemented:</p>
 <ul>
-<li><p><strong>Create Dictionaries</strong> (i.e., <code>build_dictionary(self)</code>): Creates the dictionaries <code>idx2word</code> and <code>word2idx</code>. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter <code>threshold</code> is used to control word appearances in the dictionary.</p></li>
-<li><p><strong>Text Conversion</strong> (i.e., <code>convert_text(self)</code>): Converts each review in the dataset to a list of indices, given by the <code>word2idx</code> dictionary. This is stored in the <code>textual_ids</code> variable. Words not present in the <code>word2idx</code> dictionary are replaced with the <code>&lt;UNK&gt;</code> token.</p></li>
-<li><p><strong>Get Text</strong> (i.e., <code>get_text(self, idx)</code>): Returns the review at <code>idx</code> in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.</p></li>
-<li><p><strong>Get Label</strong> (i.e., <code>get_label(self, idx)</code>): Returns the value <code>1</code> if the label for <code>idx</code> in the datset is <code>positive</code>, and <code>0</code> if it is <code>negative</code>.</p></li>
-<li><p><strong>Get Number of Reviews</strong> (i.e., <code>__len__(self)</code>): Returns the total number of reviews in the dataset.</p></li>
-<li><p><strong>Get Item</strong> (i.e., <code>__getitem__(self, idx)</code>): Returns the converted text, and the label.</p></li>
+<li><strong>Create Dictionaries</strong> (i.e., <code>build_dictionary(self)</code>): Creates the dictionaries <code>idx2word</code> and <code>word2idx</code>. Each word in the dataset is represented with a unique index, that is stored in the dictionaries. The hyperparameter <code>threshold</code> is used to control word appearances in the dictionary.</li>
+<li><strong>Text Conversion</strong> (i.e., <code>convert_text(self)</code>): Converts each review in the dataset to a list of indices, given by the <code>word2idx</code> dictionary. This is stored in the <code>textual_ids</code> variable. Words not present in the <code>word2idx</code> dictionary are replaced with the <code>&lt;UNK&gt;</code> token.</li>
+<li><strong>Get Text</strong> (i.e., <code>get_text(self, idx)</code>): Returns the review at <code>idx</code> in the dataset as an array of indices corresponding to the words in the review. Padding or truncation is applied to the review.</li>
+<li><strong>Get Label</strong> (i.e., <code>get_label(self, idx)</code>): Returns the value <code>1</code> if the label for <code>idx</code> in the datset is <code>positive</code>, and <code>0</code> if it is <code>negative</code>.</li>
+<li><strong>Get Number of Reviews</strong> (i.e., <code>__len__(self)</code>): Returns the total number of reviews in the dataset.</li>
+<li><strong>Get Item</strong> (i.e., <code>__getitem__(self, idx)</code>): Returns the converted text, and the label.</li>
 </ul>
 <div class="cell" data-execution_count="6">
 <details open="">
@@ -398,7 +914,17 @@ test vocab size: 29730</code></pre>
 </details>
 </div>
 <p>Model instantiantiation with hyperparameters.</p>
-<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Number of out channels: <code>64</code> * Filter heights (i.e., n-gram sizes): <code>[2, 3, 4]</code> * Stride: <code>1</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<p>Recommended hyperparameters:</p>
+<ul>
+<li>Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change)</li>
+<li>Embedding size: <code>128</code></li>
+<li>Number of out channels: <code>64</code></li>
+<li>Filter heights (i.e., n-gram sizes): <code>[2, 3, 4]</code></li>
+<li>Stride: <code>1</code></li>
+<li>Dropout: <code>0.5</code></li>
+<li>Number of classes: <code>2</code> (Don’t change)</li>
+<li>Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</li>
+</ul>
 <div class="cell" data-execution_count="14">
 <details open="">
 <summary>Reveal the code</summary>
@@ -618,7 +1144,17 @@ Input: &lt;UNK&gt; , &lt;UNK&gt; don't watch action movies because of the fact t
 <pre><code>train vocab size: 29730
 test vocab size: 29730</code></pre>
 <p>Model instantiantiation with hyperparameters.</p>
-<p>Recommended hyperparameters: * Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change) * Embedding size: <code>128</code> * Hidden size: <code>128</code> * Number of layers: <code>2</code> * Bidirectional: <code>True</code> * Dropout: <code>0.5</code> * Number of classes: <code>2</code> (Don’t change) * Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</p>
+<p>Recommended hyperparameters:</p>
+<ul>
+<li>Vocabulary size: <code>train_dataset.vocab_size</code> (Don’t change)</li>
+<li>Embedding size: <code>128</code></li>
+<li>Hidden size: <code>128</code></li>
+<li>Number of layers: <code>2</code></li>
+<li>Bidirectional: <code>True</code></li>
+<li>Dropout: <code>0.5</code></li>
+<li>Number of classes: <code>2</code> (Don’t change)</li>
+<li>Pad token index: <code>train_dataset.word2idx[PAD]</code> (Don’t change)</li>
+</ul>
 <div class="cell" data-execution_count="21">
 <details open="">
 <summary>Reveal the code</summary>
@@ -631,7 +1167,7 @@ test vocab size: 29730</code></pre>
 <span id="cb29-7">            num_classes <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span>,</span>
 <span id="cb29-8">            pad_idx <span class="op" style="color: #5E5E5E;">=</span> train_dataset.word2idx[PAD])</span>
 <span id="cb29-9"></span>
-<span id="cb29-10"><span class="co" style="color: #5E5E5E;"># load your model on device</span></span>
+<span id="cb29-10"><span class="co" style="color: #5E5E5E;"># load model on device</span></span>
 <span id="cb29-11">rnn_model <span class="op" style="color: #5E5E5E;">=</span> rnn_model.to(DEVICE)</span>
 <span id="cb29-12"></span>
 <span id="cb29-13"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'The model has {:,d} trainable parameters'</span>.<span class="bu" style="color: null;">format</span>(count_parameters(rnn_model)))</span></code></pre></div>
@@ -717,7 +1253,6 @@ Input: &lt;UNK&gt; tragically wonderful movie.. . brings us to a &lt;UNK&gt; tha
 [TEST]   Loss: 0.8557    Accuracy: 81.64%</code></pre>
 
 
-</section>
 </section>
 </section>
 
