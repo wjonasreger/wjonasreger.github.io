@@ -19,6 +19,8 @@ format:
     code-copy: hover
 ---
 
+In this project, a movie recommender app was developed as an R Shiny App \[[source-code](https://github.com/wjonasreger/shiny_movie_recommender/tree/main/movie_recommender), [live-app](https://h550e6-wjonasreger.shinyapps.io/movie_recommender/), [how-to-use](https://github.com/wjonasreger/shiny_movie_recommender#how-to-use-the-shiny-app)\]. The [dataset](https://github.com/wjonasreger/shiny_movie_recommender/tree/main/raw) contains about 1 million anonymous ratings of approximately 3,900 movies made by 6,040 MovieLens users who joined MovieLens in 2000. Specifically, four methods of recommendations were implemented, and two were selected for the app (technically 3 are implemented: System I penalty method, and both UBCF and IBCF for System II). All documentation for this project is accessible [here](https://github.com/wjonasreger/shiny_movie_recommender).
+
 ## Load Data
 
 The [dataset](https://github.com/wjonasreger/shiny_movie_recommender/tree/main/raw) contains about 1 million anonymous ratings of approximately 3,900 movies made by 6,040 MovieLens users who joined MovieLens in 2000. General information about the data is introduced in this document, but for more in-depth documentation on the data refer to `raw/README.txt` or [here](https://github.com/wjonasreger/shiny_movie_recommender/tree/main/raw) on GitHub.
