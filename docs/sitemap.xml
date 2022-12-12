@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://wjonasreger.github.io/index.html</loc>
-    <lastmod>2022-12-03T22:47:13.889Z</lastmod>
+    <lastmod>2022-12-11T23:59:04.390Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects/cancer_research/cancer_research.html</loc>
@@ -42,7 +42,7 @@
   </url>
   <url>
     <loc>https://wjonasreger.github.io/projects.html</loc>
-    <lastmod>2022-12-03T22:47:37.116Z</lastmod>
+    <lastmod>2022-12-11T23:59:07.167Z</lastmod>
   </url>
   <url>
     <loc>https://wjonasreger.github.io/pvalue-calculator.html</loc>
@@ -87,5 +87,9 @@
   <url>
     <loc>https://wjonasreger.github.io/projects/text_classification_interpretability/index.html</loc>
     <lastmod>2022-12-03T22:35:32.641Z</lastmod>
+  </url>
+  <url>
+    <loc>https://wjonasreger.github.io/projects/shiny_movie_recommender/index.html</loc>
+    <lastmod>2022-12-11T23:59:12.033Z</lastmod>
   </url>
 </urlset>
