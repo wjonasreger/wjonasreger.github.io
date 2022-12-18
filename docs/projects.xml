@@ -1828,6 +1828,1323 @@ example words:
   <pubDate>Mon, 28 Nov 2022 06:00:00 GMT</pubDate>
 </item>
 <item>
+  <title>Neural Machine Translation</title>
+  <dc:creator>Jonas Reger</dc:creator>
+  <link>https://wjonasreger.github.io/projects/neural_machine_translation/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>In this notebook, machine translation is implemented using two deep learning approaches: a Recurrent Neural Network (RNN) and Transformer. Specifically, Sequence to Sequence models for Chinese Mandarin to English translation are trained using <a href="http://www.manythings.org/anki/">anki data</a>. Here are a few publications relating to Sequence to Sequence learning and machine translation.</p>
+<ol type="1">
+<li><a href="https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf" class="uri">https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf</a></li>
+<li><a href="https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html" class="uri">https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html</a></li>
+<li><a href="https://arxiv.org/pdf/1409.0473.pdf" class="uri">https://arxiv.org/pdf/1409.0473.pdf</a></li>
+</ol>
+<p>Here is a Google Colab notebook that features an <a href="https://colab.research.google.com/drive/1FNUle-E1SuLS3ciRT6pLgjspLibaTejj?usp=sharing">interactive neural translator</a> with neural machine translation models. This supports two-way translations between English and several languages.</p>
+<section id="load-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-packages">Load Packages</h2>
+<div class="cell" data-execution_count="2">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> math, random</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">import</span> os, re, time</span>
+<span id="cb1-3"><span class="im" style="color: #00769E;">import</span> numpy <span class="im" style="color: #00769E;">as</span> np</span>
+<span id="cb1-4"><span class="im" style="color: #00769E;">import</span> pandas <span class="im" style="color: #00769E;">as</span> pd</span>
+<span id="cb1-5"><span class="im" style="color: #00769E;">from</span> tqdm.notebook <span class="im" style="color: #00769E;">import</span> tqdm</span>
+<span id="cb1-6"><span class="im" style="color: #00769E;">import</span> unicodedata</span>
+<span id="cb1-7"><span class="im" style="color: #00769E;">import</span> hgtk</span>
+<span id="cb1-8"></span>
+<span id="cb1-9"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb1-10"><span class="im" style="color: #00769E;">from</span> torch.utils.data <span class="im" style="color: #00769E;">import</span> Dataset</span>
+<span id="cb1-11"><span class="im" style="color: #00769E;">from</span> torch.utils.data <span class="im" style="color: #00769E;">import</span> DataLoader</span>
+<span id="cb1-12"><span class="im" style="color: #00769E;">import</span> torch.nn <span class="im" style="color: #00769E;">as</span> nn</span>
+<span id="cb1-13"><span class="im" style="color: #00769E;">import</span> torch.nn.functional <span class="im" style="color: #00769E;">as</span> F</span>
+<span id="cb1-14"><span class="im" style="color: #00769E;">from</span> torch.nn.utils.rnn <span class="im" style="color: #00769E;">import</span> pack_padded_sequence, pad_packed_sequence</span>
+<span id="cb1-15"></span>
+<span id="cb1-16"><span class="im" style="color: #00769E;">import</span> nltk</span>
+<span id="cb1-17"><span class="im" style="color: #00769E;">from</span> nltk.translate.bleu_score <span class="im" style="color: #00769E;">import</span> sentence_bleu, SmoothingFunction, corpus_bleu</span>
+<span id="cb1-18"></span>
+<span id="cb1-19">rnn_encoder, rnn_decoder, transformer_encoder, transformer_decoder <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb1-20"></span>
+<span id="cb1-21">DEVICE <span class="op" style="color: #5E5E5E;">=</span> torch.device(<span class="st" style="color: #20794D;">'cuda'</span> <span class="cf" style="color: #003B4F;">if</span> torch.cuda.is_available() <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">'cpu'</span>)</span>
+<span id="cb1-22"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Using device:'</span>, DEVICE)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Using device: cuda</code></pre>
+</section>
+<section id="preprocess-data" class="level2">
+<h2 class="anchored" data-anchor-id="preprocess-data">Preprocess Data</h2>
+<section id="helper-functions" class="level3">
+<h3 class="anchored" data-anchor-id="helper-functions">Helper Functions</h3>
+<p>Here are some helper functions for the dataloader.</p>
+<div class="cell" data-execution_count="3">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">START <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;START&gt;'</span></span>
+<span id="cb3-2">END <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;END&gt;'</span></span>
+<span id="cb3-3">UNK <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;UNK&gt;'</span></span>
+<span id="cb3-4">PAD <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'&lt;PAD&gt;'</span></span>
+<span id="cb3-5"></span>
+<span id="cb3-6"><span class="co" style="color: #5E5E5E;"># converts the unicode file to ascii</span></span>
+<span id="cb3-7"><span class="kw" style="color: #003B4F;">def</span> unicodeToASCII(s):</span>
+<span id="cb3-8">  <span class="cf" style="color: #003B4F;">return</span> <span class="st" style="color: #20794D;">''</span>.join(c <span class="cf" style="color: #003B4F;">for</span> c <span class="kw" style="color: #003B4F;">in</span> unicodedata.normalize(<span class="st" style="color: #20794D;">'NFD'</span>, s) <span class="cf" style="color: #003B4F;">if</span> unicodedata.category(c) <span class="op" style="color: #5E5E5E;">!=</span> <span class="st" style="color: #20794D;">'Mn'</span>)</span>
+<span id="cb3-9"></span>
+<span id="cb3-10"><span class="co" style="color: #5E5E5E;"># clean latin script</span></span>
+<span id="cb3-11"><span class="kw" style="color: #003B4F;">def</span> cleanLatin(w):</span>
+<span id="cb3-12">  w <span class="op" style="color: #5E5E5E;">=</span> unicodeToASCII(w.lower().strip())</span>
+<span id="cb3-13">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'([?.!,¿])'</span>, <span class="vs" style="color: #20794D;">r' \1 '</span>, w)</span>
+<span id="cb3-14">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[" "]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-15">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[^a-zA-Z?.!,¿]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-16">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-17"></span>
+<span id="cb3-18"><span class="co" style="color: #5E5E5E;"># clean hangul script</span></span>
+<span id="cb3-19"><span class="kw" style="color: #003B4F;">def</span> cleanHangul(w):</span>
+<span id="cb3-20">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'([?.!,])'</span>, <span class="vs" style="color: #20794D;">r' \1 '</span>, w)</span>
+<span id="cb3-21">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[" "]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-22">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join( [t <span class="cf" style="color: #003B4F;">if</span> (hgtk.checker.is_hangul(t) <span class="op" style="color: #5E5E5E;">|</span> (t <span class="kw" style="color: #003B4F;">in</span> <span class="st" style="color: #20794D;">'?.!,'</span>)) <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">''</span> <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> w.split(<span class="st" style="color: #20794D;">' '</span>)] )</span>
+<span id="cb3-23">  w <span class="op" style="color: #5E5E5E;">=</span> unicodeToASCII(w.lower().strip())</span>
+<span id="cb3-24">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-25"></span>
+<span id="cb3-26"><span class="co" style="color: #5E5E5E;"># clean mandarin script</span></span>
+<span id="cb3-27"><span class="kw" style="color: #003B4F;">def</span> cleanMandarin(w):</span>
+<span id="cb3-28">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'([?.!,。？！，])'</span>, <span class="vs" style="color: #20794D;">r' \1 '</span>, w)</span>
+<span id="cb3-29">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join([c <span class="cf" style="color: #003B4F;">for</span> c <span class="kw" style="color: #003B4F;">in</span> w])</span>
+<span id="cb3-30">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[" "]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-31">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join( [t <span class="cf" style="color: #003B4F;">if</span> t <span class="kw" style="color: #003B4F;">not</span> <span class="kw" style="color: #003B4F;">in</span> <span class="st" style="color: #20794D;">'1234567890`~@#$%^&amp;*()_-+=</span><span class="sc" style="color: #5E5E5E;">{}</span><span class="st" style="color: #20794D;">[];</span><span class="ch" style="color: #20794D;">\'</span><span class="st" style="color: #20794D;">:"/&lt;&gt;</span><span class="ch" style="color: #20794D;">\\</span><span class="st" style="color: #20794D;">|'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">''</span> <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> w.split(<span class="st" style="color: #20794D;">' '</span>)] )</span>
+<span id="cb3-32">  w <span class="op" style="color: #5E5E5E;">=</span> unicodeToASCII(w.lower().strip())</span>
+<span id="cb3-33">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-34"></span>
+<span id="cb3-35"><span class="co" style="color: #5E5E5E;"># clean semitic scripts</span></span>
+<span id="cb3-36"><span class="kw" style="color: #003B4F;">def</span> cleanSemitic(w):</span>
+<span id="cb3-37">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'([?.!,؟])'</span>, <span class="vs" style="color: #20794D;">r' \1 '</span>, w)</span>
+<span id="cb3-38">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[" "]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-39">  w <span class="op" style="color: #5E5E5E;">=</span> [t <span class="cf" style="color: #003B4F;">if</span> t <span class="kw" style="color: #003B4F;">not</span> <span class="kw" style="color: #003B4F;">in</span> <span class="st" style="color: #20794D;">'1234567890`~@#$%^&amp;*()_-+=</span><span class="sc" style="color: #5E5E5E;">{}</span><span class="st" style="color: #20794D;">[];</span><span class="ch" style="color: #20794D;">\'</span><span class="st" style="color: #20794D;">:"/&lt;&gt;</span><span class="ch" style="color: #20794D;">\\</span><span class="st" style="color: #20794D;">|'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">''</span> <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> w.split(<span class="st" style="color: #20794D;">' '</span>)]</span>
+<span id="cb3-40">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join( w )</span>
+<span id="cb3-41">  w <span class="op" style="color: #5E5E5E;">=</span> unicodeToASCII(w.lower().strip())</span>
+<span id="cb3-42">  w <span class="op" style="color: #5E5E5E;">=</span> w.split(<span class="st" style="color: #20794D;">' '</span>)</span>
+<span id="cb3-43">  w <span class="op" style="color: #5E5E5E;">=</span> [w[<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>]] <span class="op" style="color: #5E5E5E;">+</span> w[:<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>] <span class="cf" style="color: #003B4F;">if</span> w[<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>] <span class="kw" style="color: #003B4F;">in</span> <span class="st" style="color: #20794D;">'.!'</span> <span class="cf" style="color: #003B4F;">else</span> w</span>
+<span id="cb3-44">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join( w )</span>
+<span id="cb3-45">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-46"></span>
+<span id="cb3-47"><span class="co" style="color: #5E5E5E;"># clean other scripts</span></span>
+<span id="cb3-48"><span class="kw" style="color: #003B4F;">def</span> cleanGeneral(w):</span>
+<span id="cb3-49">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'([?.!,])'</span>, <span class="vs" style="color: #20794D;">r' \1 '</span>, w)</span>
+<span id="cb3-50">  w <span class="op" style="color: #5E5E5E;">=</span> re.sub(<span class="vs" style="color: #20794D;">r'[" "]+'</span>, <span class="st" style="color: #20794D;">' '</span>, w)</span>
+<span id="cb3-51">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join( [t <span class="cf" style="color: #003B4F;">if</span> t <span class="kw" style="color: #003B4F;">not</span> <span class="kw" style="color: #003B4F;">in</span> <span class="st" style="color: #20794D;">'1234567890`~@#$%^&amp;*()_-+=</span><span class="sc" style="color: #5E5E5E;">{}</span><span class="st" style="color: #20794D;">[];</span><span class="ch" style="color: #20794D;">\'</span><span class="st" style="color: #20794D;">:"/&lt;&gt;</span><span class="ch" style="color: #20794D;">\\</span><span class="st" style="color: #20794D;">|'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">''</span> <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> w.split(<span class="st" style="color: #20794D;">' '</span>)] )</span>
+<span id="cb3-52">  w <span class="op" style="color: #5E5E5E;">=</span> unicodeToASCII(w.lower().strip())</span>
+<span id="cb3-53">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-54"></span>
+<span id="cb3-55"><span class="co" style="color: #5E5E5E;"># preprocess sentences to lower-case and add START and </span><span class="re">END</span><span class="co" style="color: #5E5E5E;"> tokens</span></span>
+<span id="cb3-56"><span class="kw" style="color: #003B4F;">def</span> preprocessSentence(w, script<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'latin'</span>, <span class="bu" style="color: null;">dir</span><span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'l2r'</span>):</span>
+<span id="cb3-57">  <span class="cf" style="color: #003B4F;">assert</span> script <span class="kw" style="color: #003B4F;">in</span> [<span class="st" style="color: #20794D;">'latin'</span>, <span class="st" style="color: #20794D;">'hangul'</span>, <span class="st" style="color: #20794D;">'mandarin'</span>, <span class="st" style="color: #20794D;">'semitic'</span>, <span class="st" style="color: #20794D;">'general'</span>], <span class="op" style="color: #5E5E5E;">\</span></span>
+<span id="cb3-58">  <span class="st" style="color: #20794D;">"need to select script type [latin, hangul, mandarin, semitic, general]"</span></span>
+<span id="cb3-59">  <span class="cf" style="color: #003B4F;">if</span> script<span class="op" style="color: #5E5E5E;">==</span><span class="st" style="color: #20794D;">'latin'</span>:</span>
+<span id="cb3-60">    w <span class="op" style="color: #5E5E5E;">=</span> cleanLatin(w)</span>
+<span id="cb3-61">  <span class="cf" style="color: #003B4F;">elif</span> script<span class="op" style="color: #5E5E5E;">==</span><span class="st" style="color: #20794D;">'hangul'</span>:</span>
+<span id="cb3-62">    w <span class="op" style="color: #5E5E5E;">=</span> cleanHangul(w)</span>
+<span id="cb3-63">  <span class="cf" style="color: #003B4F;">elif</span> script<span class="op" style="color: #5E5E5E;">==</span><span class="st" style="color: #20794D;">'mandarin'</span>:</span>
+<span id="cb3-64">    w <span class="op" style="color: #5E5E5E;">=</span> cleanMandarin(w)</span>
+<span id="cb3-65">  <span class="cf" style="color: #003B4F;">elif</span> script<span class="op" style="color: #5E5E5E;">==</span><span class="st" style="color: #20794D;">'semitic'</span>:</span>
+<span id="cb3-66">    w <span class="op" style="color: #5E5E5E;">=</span> cleanSemitic(w)</span>
+<span id="cb3-67">  <span class="cf" style="color: #003B4F;">elif</span> script<span class="op" style="color: #5E5E5E;">==</span><span class="st" style="color: #20794D;">'general'</span>:</span>
+<span id="cb3-68">    w <span class="op" style="color: #5E5E5E;">=</span> cleanGeneral(w)</span>
+<span id="cb3-69"></span>
+<span id="cb3-70">  <span class="co" style="color: #5E5E5E;"># remove excess white space</span></span>
+<span id="cb3-71">  w <span class="op" style="color: #5E5E5E;">=</span> w.rstrip().strip()</span>
+<span id="cb3-72"></span>
+<span id="cb3-73">  <span class="co" style="color: #5E5E5E;"># add start and end tags</span></span>
+<span id="cb3-74">  w <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">' '</span>.join([START, w, END]) <span class="cf" style="color: #003B4F;">if</span> <span class="bu" style="color: null;">dir</span> <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">' '</span>.join([START] <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>(w.split(<span class="st" style="color: #20794D;">' '</span>))) <span class="op" style="color: #5E5E5E;">+</span> [END])</span>
+<span id="cb3-75"></span>
+<span id="cb3-76">  <span class="cf" style="color: #003B4F;">return</span> w</span>
+<span id="cb3-77"></span>
+<span id="cb3-78"><span class="co" style="color: #5E5E5E;"># add padding to sequences</span></span>
+<span id="cb3-79"><span class="kw" style="color: #003B4F;">def</span> padSequences(x, max_len):</span>
+<span id="cb3-80">    padded <span class="op" style="color: #5E5E5E;">=</span> np.zeros((max_len), dtype<span class="op" style="color: #5E5E5E;">=</span>np.int64)</span>
+<span id="cb3-81">    <span class="cf" style="color: #003B4F;">if</span> <span class="bu" style="color: null;">len</span>(x) <span class="op" style="color: #5E5E5E;">&gt;</span> max_len:</span>
+<span id="cb3-82">        padded[:] <span class="op" style="color: #5E5E5E;">=</span> x[:max_len]</span>
+<span id="cb3-83">    <span class="cf" style="color: #003B4F;">else</span>:</span>
+<span id="cb3-84">        padded[:<span class="bu" style="color: null;">len</span>(x)] <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb3-85"></span>
+<span id="cb3-86">    <span class="cf" style="color: #003B4F;">return</span> padded</span>
+<span id="cb3-87"></span>
+<span id="cb3-88"><span class="co" style="color: #5E5E5E;"># preprocessing all sentences in data to identification numbers, maximum lengths, apply padding</span></span>
+<span id="cb3-89"><span class="kw" style="color: #003B4F;">def</span> preprocessDataToTensor(data, src_vocab, trg_vocab, src_lang, trg_lang):</span>
+<span id="cb3-90">    <span class="co" style="color: #5E5E5E;"># vectorize the input and target languages</span></span>
+<span id="cb3-91">    src_tensor <span class="op" style="color: #5E5E5E;">=</span> [[src_vocab.word2idx[s <span class="cf" style="color: #003B4F;">if</span> s <span class="kw" style="color: #003B4F;">in</span> src_vocab.vocab <span class="cf" style="color: #003B4F;">else</span> UNK] <span class="cf" style="color: #003B4F;">for</span> s <span class="kw" style="color: #003B4F;">in</span> sl.split(<span class="st" style="color: #20794D;">' '</span>)] <span class="cf" style="color: #003B4F;">for</span> sl <span class="kw" style="color: #003B4F;">in</span> data[src_lang].values.tolist()]</span>
+<span id="cb3-92">    trg_tensor <span class="op" style="color: #5E5E5E;">=</span> [[trg_vocab.word2idx[s <span class="cf" style="color: #003B4F;">if</span> s <span class="kw" style="color: #003B4F;">in</span> trg_vocab.vocab <span class="cf" style="color: #003B4F;">else</span> UNK] <span class="cf" style="color: #003B4F;">for</span> s <span class="kw" style="color: #003B4F;">in</span> tl.split(<span class="st" style="color: #20794D;">' '</span>)] <span class="cf" style="color: #003B4F;">for</span> tl <span class="kw" style="color: #003B4F;">in</span> data[trg_lang].values.tolist()]</span>
+<span id="cb3-93"></span>
+<span id="cb3-94">    <span class="co" style="color: #5E5E5E;"># calculate the max_length of input and output tensor for padding</span></span>
+<span id="cb3-95">    max_length_src, max_length_trg <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">max</span>(<span class="bu" style="color: null;">len</span>(t) <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> src_tensor), <span class="bu" style="color: null;">max</span>(<span class="bu" style="color: null;">len</span>(t) <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> trg_tensor)</span>
+<span id="cb3-96">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'max_length_src: </span><span class="sc" style="color: #5E5E5E;">{}</span><span class="st" style="color: #20794D;">, max_length_trg: </span><span class="sc" style="color: #5E5E5E;">{}</span><span class="st" style="color: #20794D;">'</span>.<span class="bu" style="color: null;">format</span>(max_length_src, max_length_trg))</span>
+<span id="cb3-97"></span>
+<span id="cb3-98">    <span class="co" style="color: #5E5E5E;"># pad all the sentences in the dataset with the max_length</span></span>
+<span id="cb3-99">    src_tensor <span class="op" style="color: #5E5E5E;">=</span> [padSequences(x, max_length_src) <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> src_tensor]</span>
+<span id="cb3-100">    trg_tensor <span class="op" style="color: #5E5E5E;">=</span> [padSequences(x, max_length_trg) <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> trg_tensor]</span>
+<span id="cb3-101"></span>
+<span id="cb3-102">    <span class="cf" style="color: #003B4F;">return</span> src_tensor, trg_tensor, max_length_src, max_length_trg</span>
+<span id="cb3-103"></span>
+<span id="cb3-104"><span class="co" style="color: #5E5E5E;"># train-test data splits from tensors</span></span>
+<span id="cb3-105"><span class="kw" style="color: #003B4F;">def</span> trainTestSplit(src_tensor, trg_tensor):</span>
+<span id="cb3-106">    total_num_examples <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">len</span>(src_tensor) <span class="op" style="color: #5E5E5E;">-</span> <span class="bu" style="color: null;">int</span>(<span class="fl" style="color: #AD0000;">0.2</span><span class="op" style="color: #5E5E5E;">*</span><span class="bu" style="color: null;">len</span>(src_tensor))</span>
+<span id="cb3-107">    src_tensor_train, src_tensor_test <span class="op" style="color: #5E5E5E;">=</span> src_tensor[:<span class="bu" style="color: null;">int</span>(<span class="fl" style="color: #AD0000;">0.75</span><span class="op" style="color: #5E5E5E;">*</span>total_num_examples)], src_tensor[<span class="bu" style="color: null;">int</span>(<span class="fl" style="color: #AD0000;">0.75</span><span class="op" style="color: #5E5E5E;">*</span>total_num_examples):total_num_examples]</span>
+<span id="cb3-108">    trg_tensor_train, trg_tensor_test <span class="op" style="color: #5E5E5E;">=</span> trg_tensor[:<span class="bu" style="color: null;">int</span>(<span class="fl" style="color: #AD0000;">0.75</span><span class="op" style="color: #5E5E5E;">*</span>total_num_examples)], trg_tensor[<span class="bu" style="color: null;">int</span>(<span class="fl" style="color: #AD0000;">0.75</span><span class="op" style="color: #5E5E5E;">*</span>total_num_examples):total_num_examples]</span>
+<span id="cb3-109"></span>
+<span id="cb3-110">    <span class="cf" style="color: #003B4F;">return</span> src_tensor_train, src_tensor_test, trg_tensor_train, trg_tensor_test</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="download-and-visualize-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="download-and-visualize-the-data">Download and Visualize the Data</h3>
+<p>Here the translation data is downloaded on which a model will be learned to translate Chinese Mandarin to English.</p>
+<div class="cell" data-execution_count="4">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">lang_path <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'cmn-eng'</span> <span class="co" style="color: #5E5E5E;"># src-trg</span></span>
+<span id="cb4-2">src_script, trg_script <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'mandarin'</span>, <span class="st" style="color: #20794D;">'latin'</span></span>
+<span id="cb4-3">src_dir, trg_dir <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">'l2r'</span>, <span class="st" style="color: #20794D;">'l2r'</span></span>
+<span id="cb4-4"></span>
+<span id="cb4-5">os.system(<span class="ss" style="color: #20794D;">f"wget http://www.manythings.org/anki/</span><span class="sc" style="color: #5E5E5E;">{</span>lang_path<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">.zip"</span>)</span>
+<span id="cb4-6">os.system(<span class="ss" style="color: #20794D;">f"unzip -o </span><span class="sc" style="color: #5E5E5E;">{</span>lang_path<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">.zip"</span>)</span>
+<span id="cb4-7">src_lang, trg_lang <span class="op" style="color: #5E5E5E;">=</span> lang_path.split(<span class="st" style="color: #20794D;">'-'</span>)[<span class="dv" style="color: #AD0000;">0</span>], lang_path.split(<span class="st" style="color: #20794D;">'-'</span>)[<span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb4-8"><span class="bu" style="color: null;">print</span>(src_lang, trg_lang)</span></code></pre></div>
+</details>
+</div>
+<pre><code>cmn eng</code></pre>
+<p>Now the data is visualized.</p>
+<div class="cell" data-execution_count="5">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">lines <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">open</span>(<span class="ss" style="color: #20794D;">f'</span><span class="sc" style="color: #5E5E5E;">{</span>src_lang<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">.txt'</span>, encoding<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'UTF-8'</span>).read().strip().split(<span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>)</span>
+<span id="cb6-2"><span class="bu" style="color: null;">print</span>(<span class="ss" style="color: #20794D;">f'Number of translations available: </span><span class="sc" style="color: #5E5E5E;">{</span><span class="bu" style="color: null;">len</span>(lines)<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">'</span>)</span>
+<span id="cb6-3">total_num_examples <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">50000</span> </span>
+<span id="cb6-4">original_word_pairs <span class="op" style="color: #5E5E5E;">=</span> [[w <span class="cf" style="color: #003B4F;">for</span> w <span class="kw" style="color: #003B4F;">in</span> l.split(<span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\t</span><span class="st" style="color: #20794D;">'</span>)][:<span class="dv" style="color: #AD0000;">2</span>] <span class="cf" style="color: #003B4F;">for</span> l <span class="kw" style="color: #003B4F;">in</span> lines[:total_num_examples]]</span>
+<span id="cb6-5">random.shuffle(original_word_pairs)</span>
+<span id="cb6-6"></span>
+<span id="cb6-7">dat <span class="op" style="color: #5E5E5E;">=</span> pd.DataFrame(original_word_pairs, columns<span class="op" style="color: #5E5E5E;">=</span>[trg_lang, src_lang])</span>
+<span id="cb6-8">dat <span class="co" style="color: #5E5E5E;"># visualize the data</span></span></code></pre></div>
+</details>
+</div>
+<pre><code>Number of translations available: 29371
+
+                                                   eng              cmn
+0                                      She looked sad.         她看上去很伤心。
+1                               You are a good person.          你是一個好人。
+2                                    Is that a coyote?          那是丛林狼吗？
+3                          This is a low-budget movie.      這是一部低成本的電影。
+4                             He doesn't look his age.       他的长相与年龄不符。
+...                                                ...              ...
+29366               She left the hospital an hour ago.      她一小时前离开了医院。
+29367  One million people lost their lives in the war.  100万人在战争中失去了生命。
+29368                  I have to take a test tomorrow.       明天我必須參加考試。
+29369                  Please turn off the television.          请关闭电视机。
+29370                 I am not sure when he will come.      我不确定他什么时候来。
+
+[29371 rows x 2 columns]</code></pre>
+<p>Next the data is preprocessed.</p>
+<div class="cell" data-execution_count="6">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">data <span class="op" style="color: #5E5E5E;">=</span> dat.copy()</span>
+<span id="cb8-2">data[trg_lang] <span class="op" style="color: #5E5E5E;">=</span> dat[trg_lang].<span class="bu" style="color: null;">apply</span>(<span class="kw" style="color: #003B4F;">lambda</span> w: preprocessSentence(w, script<span class="op" style="color: #5E5E5E;">=</span>trg_script, <span class="bu" style="color: null;">dir</span><span class="op" style="color: #5E5E5E;">=</span>trg_dir))</span>
+<span id="cb8-3">data[src_lang] <span class="op" style="color: #5E5E5E;">=</span> dat[src_lang].<span class="bu" style="color: null;">apply</span>(<span class="kw" style="color: #003B4F;">lambda</span> w: preprocessSentence(w, script<span class="op" style="color: #5E5E5E;">=</span>src_script, <span class="bu" style="color: null;">dir</span><span class="op" style="color: #5E5E5E;">=</span>src_dir))</span>
+<span id="cb8-4">data <span class="co" style="color: #5E5E5E;"># visualizing the data</span></span></code></pre></div>
+</details>
+</div>
+<pre><code>                                                     eng  \
+0                         &lt;START&gt; she looked sad . &lt;END&gt;   
+1                  &lt;START&gt; you are a good person . &lt;END&gt;   
+2                       &lt;START&gt; is that a coyote ? &lt;END&gt;   
+3             &lt;START&gt; this is a low budget movie . &lt;END&gt;   
+4                &lt;START&gt; he doesn t look his age . &lt;END&gt;   
+...                                                  ...   
+29366  &lt;START&gt; she left the hospital an hour ago . &lt;END&gt;   
+29367  &lt;START&gt; one million people lost their lives in...   
+29368     &lt;START&gt; i have to take a test tomorrow . &lt;END&gt;   
+29369     &lt;START&gt; please turn off the television . &lt;END&gt;   
+29370    &lt;START&gt; i am not sure when he will come . &lt;END&gt;   
+
+                                         cmn  
+0              &lt;START&gt; 她 看 上 去 很 伤 心 。 &lt;END&gt;  
+1                &lt;START&gt; 你 是 一 個 好 人 。 &lt;END&gt;  
+2                &lt;START&gt; 那 是 丛 林 狼 吗 ？ &lt;END&gt;  
+3        &lt;START&gt; 這 是 一 部 低 成 本 的 電 影 。 &lt;END&gt;  
+4          &lt;START&gt; 他 的 长 相 与 年 龄 不 符 。 &lt;END&gt;  
+...                                      ...  
+29366    &lt;START&gt; 她 一 小 时 前 离 开 了 医 院 。 &lt;END&gt;  
+29367  &lt;START&gt; 万 人 在 战 争 中 失 去 了 生 命 。 &lt;END&gt;  
+29368      &lt;START&gt; 明 天 我 必 須 參 加 考 試 。 &lt;END&gt;  
+29369            &lt;START&gt; 请 关 闭 电 视 机 。 &lt;END&gt;  
+29370    &lt;START&gt; 我 不 确 定 他 什 么 时 候 来 。 &lt;END&gt;  
+
+[29371 rows x 2 columns]</code></pre>
+</section>
+<section id="vocabulary-dataloader-classes" class="level3">
+<h3 class="anchored" data-anchor-id="vocabulary-dataloader-classes">Vocabulary &amp; Dataloader Classes</h3>
+<p>First a class for managing the vocabulary is created. There is a separate class for the vocabulary because there are two different vocabularies <img src="https://latex.codecogs.com/png.latex?-"> one for English and one for Chinese Mandarin.</p>
+<p>Then the dataloader is prepared and returns the source sentence and target sentence.</p>
+<div class="cell" data-execution_count="7">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="kw" style="color: #003B4F;">class</span> VocabLang():</span>
+<span id="cb10-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, vocab):</span>
+<span id="cb10-3">        <span class="va" style="color: #111111;">self</span>.word2idx <span class="op" style="color: #5E5E5E;">=</span> {PAD: <span class="dv" style="color: #AD0000;">0</span>, UNK: <span class="dv" style="color: #AD0000;">1</span>}</span>
+<span id="cb10-4">        <span class="va" style="color: #111111;">self</span>.idx2word <span class="op" style="color: #5E5E5E;">=</span> {<span class="dv" style="color: #AD0000;">0</span>: PAD, <span class="dv" style="color: #AD0000;">1</span>: UNK}</span>
+<span id="cb10-5">        <span class="va" style="color: #111111;">self</span>.vocab <span class="op" style="color: #5E5E5E;">=</span> vocab</span>
+<span id="cb10-6">        </span>
+<span id="cb10-7">        <span class="cf" style="color: #003B4F;">for</span> index, word <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(vocab):</span>
+<span id="cb10-8">            <span class="va" style="color: #111111;">self</span>.word2idx[word] <span class="op" style="color: #5E5E5E;">=</span> index <span class="op" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">2</span> <span class="co" style="color: #5E5E5E;"># +2 because of PAD and UNK token</span></span>
+<span id="cb10-9">            <span class="va" style="color: #111111;">self</span>.idx2word[index <span class="op" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">2</span>] <span class="op" style="color: #5E5E5E;">=</span> word</span>
+<span id="cb10-10">    </span>
+<span id="cb10-11">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__len__</span>(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb10-12">        <span class="cf" style="color: #003B4F;">return</span> <span class="bu" style="color: null;">len</span>(<span class="va" style="color: #111111;">self</span>.word2idx)</span>
+<span id="cb10-13"></span>
+<span id="cb10-14"><span class="kw" style="color: #003B4F;">class</span> DataSet(Dataset):</span>
+<span id="cb10-15">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, X, y):</span>
+<span id="cb10-16">        <span class="va" style="color: #111111;">self</span>.length <span class="op" style="color: #5E5E5E;">=</span> torch.LongTensor([np.<span class="bu" style="color: null;">sum</span>(<span class="dv" style="color: #AD0000;">1</span> <span class="op" style="color: #5E5E5E;">-</span> np.equal(x, <span class="dv" style="color: #AD0000;">0</span>)) <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> X])</span>
+<span id="cb10-17">        <span class="va" style="color: #111111;">self</span>.data <span class="op" style="color: #5E5E5E;">=</span> torch.LongTensor(X)</span>
+<span id="cb10-18">        <span class="va" style="color: #111111;">self</span>.target <span class="op" style="color: #5E5E5E;">=</span> torch.LongTensor(y)</span>
+<span id="cb10-19">    </span>
+<span id="cb10-20">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__getitem__</span>(<span class="va" style="color: #111111;">self</span>, index):</span>
+<span id="cb10-21">        x <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.data[index]</span>
+<span id="cb10-22">        y <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.target[index]</span>
+<span id="cb10-23">        <span class="cf" style="color: #003B4F;">return</span> x, y</span>
+<span id="cb10-24"></span>
+<span id="cb10-25">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__len__</span>(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb10-26">        <span class="cf" style="color: #003B4F;">return</span> <span class="bu" style="color: null;">len</span>(<span class="va" style="color: #111111;">self</span>.data)</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="8">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;"># adjustable hyperparameters</span></span>
+<span id="cb11-2">BATCH_SIZE <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">64</span></span>
+<span id="cb11-3">EMBEDDING_DIM <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">256</span></span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="build-vocabulary" class="level3">
+<h3 class="anchored" data-anchor-id="build-vocabulary">Build Vocabulary</h3>
+<div class="cell" data-execution_count="9">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="kw" style="color: #003B4F;">def</span> buildVocab(data):</span>
+<span id="cb12-2">    sentences <span class="op" style="color: #5E5E5E;">=</span> [sen.split() <span class="cf" style="color: #003B4F;">for</span> sen <span class="kw" style="color: #003B4F;">in</span> data]</span>
+<span id="cb12-3">    vocab <span class="op" style="color: #5E5E5E;">=</span> {}</span>
+<span id="cb12-4">    <span class="cf" style="color: #003B4F;">for</span> sen <span class="kw" style="color: #003B4F;">in</span> sentences:</span>
+<span id="cb12-5">        <span class="cf" style="color: #003B4F;">for</span> word <span class="kw" style="color: #003B4F;">in</span> sen:</span>
+<span id="cb12-6">            <span class="cf" style="color: #003B4F;">if</span> word <span class="kw" style="color: #003B4F;">not</span> <span class="kw" style="color: #003B4F;">in</span> vocab:</span>
+<span id="cb12-7">                vocab[word] <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb12-8">    <span class="cf" style="color: #003B4F;">return</span> <span class="bu" style="color: null;">list</span>(vocab.keys())</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="10">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">src_vocab_list <span class="op" style="color: #5E5E5E;">=</span> buildVocab(data[src_lang])</span>
+<span id="cb13-2">trg_vocab_list <span class="op" style="color: #5E5E5E;">=</span> buildVocab(data[trg_lang])</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="instantiate-datasets" class="level3">
+<h3 class="anchored" data-anchor-id="instantiate-datasets">Instantiate Datasets</h3>
+<p>The train and test datasets are now instantiated.</p>
+<div class="cell" data-execution_count="11">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">src_vocab <span class="op" style="color: #5E5E5E;">=</span> VocabLang(src_vocab_list)</span>
+<span id="cb14-2">trg_vocab <span class="op" style="color: #5E5E5E;">=</span> VocabLang(trg_vocab_list)</span>
+<span id="cb14-3"></span>
+<span id="cb14-4">src_tensor, trg_tensor, max_length_src, max_length_trg <span class="op" style="color: #5E5E5E;">=</span> preprocessDataToTensor(data, src_vocab, trg_vocab, src_lang, trg_lang)</span>
+<span id="cb14-5">src_tensor_train, src_tensor_val, trg_tensor_train, trg_tensor_val <span class="op" style="color: #5E5E5E;">=</span> trainTestSplit(src_tensor, trg_tensor)</span>
+<span id="cb14-6"></span>
+<span id="cb14-7"><span class="co" style="color: #5E5E5E;"># create train and val datasets</span></span>
+<span id="cb14-8">train_dataset <span class="op" style="color: #5E5E5E;">=</span> DataSet(src_tensor_train, trg_tensor_train)</span>
+<span id="cb14-9">train_dataset <span class="op" style="color: #5E5E5E;">=</span> DataLoader(train_dataset, batch_size<span class="op" style="color: #5E5E5E;">=</span>BATCH_SIZE, drop_last<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, shuffle<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb14-10"></span>
+<span id="cb14-11">test_dataset <span class="op" style="color: #5E5E5E;">=</span> DataSet(src_tensor_val, trg_tensor_val)</span>
+<span id="cb14-12">test_dataset <span class="op" style="color: #5E5E5E;">=</span> DataLoader(test_dataset, batch_size<span class="op" style="color: #5E5E5E;">=</span>BATCH_SIZE, drop_last<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, shuffle<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>max_length_src: 46, max_length_trg: 38</code></pre>
+<div class="cell" data-execution_count="12">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">idxes <span class="op" style="color: #5E5E5E;">=</span> random.choices(<span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(train_dataset.dataset)), k<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb16-2">src, trg <span class="op" style="color: #5E5E5E;">=</span>  train_dataset.dataset[idxes]</span>
+<span id="cb16-3"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Source:'</span>, src)</span>
+<span id="cb16-4"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Source Dimensions: '</span>, src.size())</span>
+<span id="cb16-5"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Target:'</span>, trg)</span>
+<span id="cb16-6"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Target Dimensions: '</span>, trg.size())</span></code></pre></div>
+</details>
+</div>
+<pre><code>Source: tensor([[   2,   40,   87,   50,  363,   12,  896,   14,  155,  637,  103,  104,
+           11,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+        [   2,   55,   56,  392,  155, 1206, 1207,   10,   11,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+        [   2,   12,  100,   64,  246,  835, 1047,   22,   23,   11,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+        [   2,   40,  138,  154,  325,   60,   47,  344, 1269,   10,   11,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+        [   2,   40,  116,  233,  326,  676,  513,  789,   66,   10,   11,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0]])
+Source Dimensions:  torch.Size([5, 46])
+Target: tensor([[   2,  159,   30,  152,   33,    8,   10,   46,   16,    7,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0],
+        [   2,   42,  459,  587,   90, 1186,    6,    7,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0],
+        [   2,    9,    8, 1087,  244,   16,    7,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0],
+        [   2,   30,   39,  400,   33,  504,    6,   11,  262,    6,    7,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0],
+        [   2,   62,  106,   33,  106,  151, 5291,    6,    7,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+            0,    0]])
+Target Dimensions:  torch.Size([5, 38])</code></pre>
+</section>
+</section>
+<section id="the-recurrent-neural-network-rnn" class="level2">
+<h2 class="anchored" data-anchor-id="the-recurrent-neural-network-rnn">The Recurrent Neural Network (RNN)</h2>
+<p>Here a recurrent model for machine translation is implemented, and then trained and evaluated.</p>
+<p>Here are some links related to the task:</p>
+<ol type="1">
+<li>Attention paper: <a href="https://arxiv.org/pdf/1409.0473.pdf" class="uri">https://arxiv.org/pdf/1409.0473.pdf</a></li>
+<li>Explanation of LSTM’s &amp; GRU’s: <a href="https://towardsdatascience.com/illustrated-guide-to-lstms-and-gru-s-a-step-by-step-explanation-44e9eb85bf21" class="uri">https://towardsdatascience.com/illustrated-guide-to-lstms-and-gru-s-a-step-by-step-explanation-44e9eb85bf21</a></li>
+<li>Attention explanation: <a href="https://towardsdatascience.com/attention-in-neural-networks-e66920838742" class="uri">https://towardsdatascience.com/attention-in-neural-networks-e66920838742</a></li>
+<li>Another attention explanation: <a href="https://towardsdatascience.com/attention-and-its-different-forms-7fc3674d14dc" class="uri">https://towardsdatascience.com/attention-and-its-different-forms-7fc3674d14dc</a></li>
+</ol>
+<section id="the-encoder-model" class="level3">
+<h3 class="anchored" data-anchor-id="the-encoder-model">The Encoder Model</h3>
+<p>First a recurrent encoder model is built. A sequence of outputs of the GRU as well as the final hidden state are returned. These will be used in the decoder.</p>
+<ul>
+<li><strong>Initialization</strong> (i.e., <code>__init__(...)</code>): Initializes the following layers and other features for the neural network.
+<ul>
+<li>An embedding layer to represent the words in the vocabulary <code>src_vocab</code> with <code>embedding_dim</code> as the embedding dimension.</li>
+<li>A recurrent network (i.e., GRU) with one layer and hidden size of <code>hidden_units</code>, <code>batch_first=True</code> and <code>bidirectional=False</code>.</li>
+</ul></li>
+<li><strong>Feed Forward</strong> (i.e., <code>forward(...)</code>: Pass texts through the embedding layer, then the recurrent network.</li>
+</ul>
+<div class="cell" data-execution_count="13">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;">class</span> RnnEncoder(nn.Module):</span>
+<span id="cb18-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, src_vocab, embedding_dim, hidden_units):</span>
+<span id="cb18-3">        <span class="bu" style="color: null;">super</span>(RnnEncoder, <span class="va" style="color: #111111;">self</span>).<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb18-4"></span>
+<span id="cb18-5">        <span class="va" style="color: #111111;">self</span>.src_vocab <span class="op" style="color: #5E5E5E;">=</span> src_vocab</span>
+<span id="cb18-6">        vocab_size <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">len</span>(src_vocab)</span>
+<span id="cb18-7"></span>
+<span id="cb18-8">        <span class="co" style="color: #5E5E5E;"># initialize embedding layer</span></span>
+<span id="cb18-9">        <span class="va" style="color: #111111;">self</span>.embedding <span class="op" style="color: #5E5E5E;">=</span> nn.Embedding(num_embeddings<span class="op" style="color: #5E5E5E;">=</span>vocab_size, embedding_dim<span class="op" style="color: #5E5E5E;">=</span>embedding_dim)</span>
+<span id="cb18-10">        <span class="co" style="color: #5E5E5E;"># initialize a single directional GRU with 1 layer and batch_first=False</span></span>
+<span id="cb18-11">        <span class="va" style="color: #111111;">self</span>.gru <span class="op" style="color: #5E5E5E;">=</span> nn.GRU(input_size<span class="op" style="color: #5E5E5E;">=</span>embedding_dim, hidden_size<span class="op" style="color: #5E5E5E;">=</span>hidden_units, num_layers<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>, batch_first<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>, bidirectional<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>)</span>
+<span id="cb18-12">        </span>
+<span id="cb18-13">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb18-14">        output, hidden_state <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb18-15"></span>
+<span id="cb18-16">        <span class="co" style="color: #5E5E5E;"># embed source texts with dim [max_len, batch_size]</span></span>
+<span id="cb18-17">        x <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.embedding(x)</span>
+<span id="cb18-18">        <span class="co" style="color: #5E5E5E;"># pass embedded text through the recurrent net</span></span>
+<span id="cb18-19">        <span class="co" style="color: #5E5E5E;"># output: [max_len, batch_size, hidden_units]</span></span>
+<span id="cb18-20">        <span class="co" style="color: #5E5E5E;"># hidden_state: [1, batch_size, hidden_units] </span></span>
+<span id="cb18-21">        output, hidden_state <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.gru(x, hidden_state)</span>
+<span id="cb18-22">        </span>
+<span id="cb18-23">        <span class="cf" style="color: #003B4F;">return</span> output, hidden_state</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="the-decoder-model" class="level3">
+<h3 class="anchored" data-anchor-id="the-decoder-model">The Decoder Model</h3>
+<p>Here is an implementation of a decoder model that uses an attention mechanism, as provided in <a href="https://arxiv.org/pdf/1409.0473.pdf" class="uri">https://arxiv.org/pdf/1409.0473.pdf</a>.</p>
+<p>This is broken up into three functions.</p>
+<ul>
+<li><p><strong>Initialization</strong> (i.e., <code>__init__(...)</code>): Initializes the parameters of the model and store them in <code>self</code> variables.</p></li>
+<li><p><strong>Computation of attention</strong>: (i.e., <code>computeAttention(...)</code>): Computes the context vector, which is a weighted sum of the encoder output states. Let <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bh%7D_t"> be the decoder hidden state at time <img src="https://latex.codecogs.com/png.latex?t">, and <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bh%7D_s"> be the encoder state at time <img src="https://latex.codecogs.com/png.latex?s">. Computing the attention is done as follows.</p>
+<ul>
+<li>Computes real-valued scores for <img src="https://latex.codecogs.com/png.latex?h_t"> and each <img src="https://latex.codecogs.com/png.latex?h_s">. A higher score indicates stronger similarity between the decoder state and a specific encoder state. <img src="https://latex.codecogs.com/png.latex?%5Ctext%7Bscore%7D(%5Cmathbf%7Bh%7D_t,%20%5Cmathbf%7Bh%7D_s)%20=%20%5Cmathbf%7Bv%7D_a%5ET%20%5Ctanh(%5Cmathbf%7BW%7D_1%20%5Cmathbf%7Bh%7D_t%20+%20%5Cmathbf%7BW%7D_2%20%5Cmathbf%7Bh%7D_s)"></li>
+<li>Normalizes the attention scores to obtain a valid probability distribution. <img src="https://latex.codecogs.com/png.latex?%5Calpha_%7Bts%7D%20=%20%5Cfrac%7B%5Cexp%20%5Cleft(%20%5Ctext%7Bscore%7D(%5Cmathbf%7Bh%7D_t,%20%5Cmathbf%7Bh%7D_s)%20%5Cright)%7D%7B%5Csum_%7Bs'=1%7D%5ES%20%5Cexp%20%5Cleft(%20%5Ctext%7Bscore%7D(%5Cmathbf%7Bh%7D_t,%20%5Cmathbf%7Bh%7D_%7Bs'%7D)%20%5Cright)%7D"></li>
+<li>Computes a context vector <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bc%7D_t">, which is an attention weighted average of the encoder hidden states. <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bc%7D_t%20=%20%5Csum_%7Bs=1%7D%5ES%20%5Calpha_%7Bts%7D%20%5Cmathbf%7Bh%7D_s"></li>
+<li>Returns the context vector and attention weights.</li>
+</ul></li>
+<li><p><strong>Feed forward</strong> (i.e., <code>forward(...)</code>): Runs a single decoding step that results in a distribution over the vocabulary for the next token in the sequence.</p>
+<ul>
+<li>A context vector and attention weights are computed using the decoder hidden state and encoder outputs.</li>
+<li>Pass texts through the embedding layer.</li>
+<li>Concatenate the context vector and the embedding vectors.</li>
+<li>Pass results through the recurrent network.</li>
+<li>Pass the output through the linear layer.</li>
+</ul></li>
+</ul>
+<div class="cell" data-execution_count="14">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;">class</span> RnnDecoder(nn.Module):</span>
+<span id="cb19-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, trg_vocab, embedding_dim, hidden_units):</span>
+<span id="cb19-3">        <span class="bu" style="color: null;">super</span>(RnnDecoder, <span class="va" style="color: #111111;">self</span>).<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb19-4"></span>
+<span id="cb19-5">        <span class="va" style="color: #111111;">self</span>.trg_vocab <span class="op" style="color: #5E5E5E;">=</span> trg_vocab <span class="co" style="color: #5E5E5E;"># the target vocabulary</span></span>
+<span id="cb19-6">        vocab_size <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">len</span>(trg_vocab)</span>
+<span id="cb19-7"></span>
+<span id="cb19-8">        <span class="co" style="color: #5E5E5E;"># initialize embedding layer</span></span>
+<span id="cb19-9">        <span class="va" style="color: #111111;">self</span>.embedding <span class="op" style="color: #5E5E5E;">=</span> nn.Embedding(num_embeddings<span class="op" style="color: #5E5E5E;">=</span>vocab_size, embedding_dim<span class="op" style="color: #5E5E5E;">=</span>embedding_dim)</span>
+<span id="cb19-10">        <span class="co" style="color: #5E5E5E;"># initialize layers to compute attention score</span></span>
+<span id="cb19-11">        <span class="va" style="color: #111111;">self</span>.w1 <span class="op" style="color: #5E5E5E;">=</span> nn.Linear(hidden_units, hidden_units)</span>
+<span id="cb19-12">        <span class="va" style="color: #111111;">self</span>.w2 <span class="op" style="color: #5E5E5E;">=</span> nn.Linear(hidden_units, hidden_units)</span>
+<span id="cb19-13">        <span class="va" style="color: #111111;">self</span>.v <span class="op" style="color: #5E5E5E;">=</span> nn.Linear(hidden_units, <span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb19-14">        <span class="co" style="color: #5E5E5E;"># initialize a single directional GRU with 1 layer and batch_first=True</span></span>
+<span id="cb19-15">        <span class="co" style="color: #5E5E5E;"># input to the RNN will be the concatenation of the embedding vector and the context vector</span></span>
+<span id="cb19-16">        <span class="va" style="color: #111111;">self</span>.gru <span class="op" style="color: #5E5E5E;">=</span> nn.GRU(input_size<span class="op" style="color: #5E5E5E;">=</span>embedding_dim <span class="op" style="color: #5E5E5E;">+</span> hidden_units, hidden_size<span class="op" style="color: #5E5E5E;">=</span>hidden_units, num_layers<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>, batch_first<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>, bidirectional<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">False</span>)</span>
+<span id="cb19-17">        <span class="co" style="color: #5E5E5E;"># initialize fully connected layer</span></span>
+<span id="cb19-18">        <span class="va" style="color: #111111;">self</span>.out <span class="op" style="color: #5E5E5E;">=</span> nn.Linear(hidden_units, vocab_size)</span>
+<span id="cb19-19">    </span>
+<span id="cb19-20">    <span class="kw" style="color: #003B4F;">def</span> computeAttention(<span class="va" style="color: #111111;">self</span>, dec_hs, enc_output):</span>
+<span id="cb19-21">        context_vector, attention_weights <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb19-22"></span>
+<span id="cb19-23">        <span class="co" style="color: #5E5E5E;"># decoder hidden state (dec_hs) with size: [1, batch_size, hidden_units]</span></span>
+<span id="cb19-24">        <span class="co" style="color: #5E5E5E;"># encoder outputs (enc_output) with size: [max_len_src, batch_size, hidden_units]</span></span>
+<span id="cb19-25">        <span class="co" style="color: #5E5E5E;"># compute the attention scores for dec_hs &amp; enc_output with output size: [batch_size, max_len_src, 1]</span></span>
+<span id="cb19-26">        dec_hs <span class="op" style="color: #5E5E5E;">=</span> dec_hs.permute((<span class="dv" style="color: #AD0000;">1</span>,<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">2</span>))</span>
+<span id="cb19-27">        enc_output <span class="op" style="color: #5E5E5E;">=</span> enc_output.permute((<span class="dv" style="color: #AD0000;">1</span>,<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">2</span>))</span>
+<span id="cb19-28">        weights <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.w1(dec_hs)<span class="op" style="color: #5E5E5E;">*</span>dec_hs <span class="op" style="color: #5E5E5E;">+</span> <span class="va" style="color: #111111;">self</span>.w2(enc_output)<span class="op" style="color: #5E5E5E;">*</span>enc_output</span>
+<span id="cb19-29">        attn_score <span class="op" style="color: #5E5E5E;">=</span> torch.tanh(weights)</span>
+<span id="cb19-30">        attn_score <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.v(attn_score)</span>
+<span id="cb19-31">        <span class="co" style="color: #5E5E5E;"># compute attention_weights by taking a softmax over the scores to normalize the distribution with output size: [batch_size, max_len_src, 1]</span></span>
+<span id="cb19-32">        attention_weights <span class="op" style="color: #5E5E5E;">=</span> torch.softmax(attn_score, dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb19-33">        <span class="co" style="color: #5E5E5E;"># compute context_vector from attention_weights &amp; enc_output with output size: [batch_size, hidden_units]</span></span>
+<span id="cb19-34">        context_vector <span class="op" style="color: #5E5E5E;">=</span> torch.<span class="bu" style="color: null;">sum</span>(attention_weights <span class="op" style="color: #5E5E5E;">*</span> enc_output, dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb19-35"></span>
+<span id="cb19-36">        <span class="co" style="color: #5E5E5E;"># return context_vector &amp; attention_weights</span></span>
+<span id="cb19-37">        <span class="cf" style="color: #003B4F;">return</span> context_vector, attention_weights</span>
+<span id="cb19-38"></span>
+<span id="cb19-39">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x, dec_hs, enc_output):</span>
+<span id="cb19-40">        fc_out, attention_weights <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb19-41"></span>
+<span id="cb19-42">        <span class="co" style="color: #5E5E5E;"># compute the context vector &amp; attention weights</span></span>
+<span id="cb19-43">        context_vector, attention_weights <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.computeAttention(dec_hs, enc_output)</span>
+<span id="cb19-44">        <span class="co" style="color: #5E5E5E;"># obtain embedding vectors for x (size: [batch_size, 1]) with output size: [batch_size, 1, embedding_dim]</span></span>
+<span id="cb19-45">        x <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.embedding(x)</span>
+<span id="cb19-46">        <span class="co" style="color: #5E5E5E;"># concatenate the context vector &amp; the embedding vectors along the appropriate dimension</span></span>
+<span id="cb19-47">        output <span class="op" style="color: #5E5E5E;">=</span> torch.cat((context_vector.unsqueeze(<span class="dv" style="color: #AD0000;">1</span>), x), dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb19-48">        <span class="co" style="color: #5E5E5E;"># feed this result through the RNN (along with the current hidden state) to get output and new hidden state.</span></span>
+<span id="cb19-49">        <span class="co" style="color: #5E5E5E;"># with output sizes: [batch_size, 1, hidden_units] &amp; [1, batch_size, hidden_units]</span></span>
+<span id="cb19-50">        output, dec_hs <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.gru(output, dec_hs)</span>
+<span id="cb19-51">        <span class="co" style="color: #5E5E5E;"># feed the output of the RNN through linear layer to get (unnormalized) output distribution with output size: [batch_size, vocab_size]</span></span>
+<span id="cb19-52">        fc_out <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.out(output).squeeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb19-53"></span>
+<span id="cb19-54">        <span class="co" style="color: #5E5E5E;"># return this output, the new decoder hidden state, &amp; the attention weights</span></span>
+<span id="cb19-55">        <span class="cf" style="color: #003B4F;">return</span> fc_out, dec_hs, attention_weights</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="model-training" class="level3">
+<h3 class="anchored" data-anchor-id="model-training">Model Training</h3>
+<p>Here the encoder and decoder are trained using cross-entropy loss.</p>
+<div class="cell" data-execution_count="15">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;">def</span> lossFunction(real, pred):</span>
+<span id="cb20-2">    mask <span class="op" style="color: #5E5E5E;">=</span> real.ge(<span class="dv" style="color: #AD0000;">1</span>).<span class="bu" style="color: null;">float</span>() <span class="co" style="color: #5E5E5E;"># only consider non-zero inputs in the loss</span></span>
+<span id="cb20-3">    loss_ <span class="op" style="color: #5E5E5E;">=</span> F.cross_entropy(pred, real) <span class="op" style="color: #5E5E5E;">*</span> mask </span>
+<span id="cb20-4">    <span class="cf" style="color: #003B4F;">return</span> torch.mean(loss_)</span>
+<span id="cb20-5"></span>
+<span id="cb20-6"><span class="kw" style="color: #003B4F;">def</span> trainRnnModel(encoder, decoder, dataset, optimizer, trg_vocab, device, n_epochs):</span>
+<span id="cb20-7">    batch_size <span class="op" style="color: #5E5E5E;">=</span> dataset.batch_size</span>
+<span id="cb20-8">    <span class="cf" style="color: #003B4F;">for</span> epoch <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(n_epochs):</span>
+<span id="cb20-9">        start <span class="op" style="color: #5E5E5E;">=</span> time.time()</span>
+<span id="cb20-10">        n_batch <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb20-11">        total_loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb20-12">        </span>
+<span id="cb20-13">        encoder.train()</span>
+<span id="cb20-14">        decoder.train()</span>
+<span id="cb20-15">        </span>
+<span id="cb20-16">        <span class="cf" style="color: #003B4F;">for</span> src, trg <span class="kw" style="color: #003B4F;">in</span> tqdm(dataset):</span>
+<span id="cb20-17">            n_batch <span class="op" style="color: #5E5E5E;">+=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb20-18">            loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb20-19">            </span>
+<span id="cb20-20">            enc_output, enc_hidden <span class="op" style="color: #5E5E5E;">=</span> encoder(src.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device))</span>
+<span id="cb20-21">            dec_hidden <span class="op" style="color: #5E5E5E;">=</span> enc_hidden</span>
+<span id="cb20-22">            </span>
+<span id="cb20-23">            <span class="co" style="color: #5E5E5E;"># use teacher forcing - feeding the target as the next input (via dec_input)</span></span>
+<span id="cb20-24">            dec_input <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([[trg_vocab.word2idx[START]]] <span class="op" style="color: #5E5E5E;">*</span> batch_size)</span>
+<span id="cb20-25">        </span>
+<span id="cb20-26">            <span class="co" style="color: #5E5E5E;"># run code below for every timestep in the ys batch</span></span>
+<span id="cb20-27">            <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">1</span>, trg.size(<span class="dv" style="color: #AD0000;">1</span>)):</span>
+<span id="cb20-28">                predictions, dec_hidden, _ <span class="op" style="color: #5E5E5E;">=</span> decoder(dec_input.to(device), dec_hidden.to(device), enc_output.to(device))</span>
+<span id="cb20-29">                <span class="cf" style="color: #003B4F;">assert</span> <span class="bu" style="color: null;">len</span>(predictions.shape) <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">2</span> <span class="kw" style="color: #003B4F;">and</span> predictions.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">==</span> dec_input.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="kw" style="color: #003B4F;">and</span> predictions.shape[<span class="dv" style="color: #AD0000;">1</span>] <span class="op" style="color: #5E5E5E;">==</span> <span class="bu" style="color: null;">len</span>(trg_vocab.word2idx), <span class="st" style="color: #20794D;">"First output of decoder must have shape [batch_size, vocab_size], you returned shape "</span> <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">str</span>(predictions.shape)</span>
+<span id="cb20-30">                loss <span class="op" style="color: #5E5E5E;">+=</span> lossFunction(trg[:, t].to(device), predictions.to(device))</span>
+<span id="cb20-31">                dec_input <span class="op" style="color: #5E5E5E;">=</span> trg[:, t].unsqueeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb20-32">        </span>
+<span id="cb20-33">            batch_loss <span class="op" style="color: #5E5E5E;">=</span> (loss <span class="op" style="color: #5E5E5E;">/</span> <span class="bu" style="color: null;">int</span>(trg.size(<span class="dv" style="color: #AD0000;">1</span>)))</span>
+<span id="cb20-34">            total_loss <span class="op" style="color: #5E5E5E;">+=</span> batch_loss</span>
+<span id="cb20-35">            </span>
+<span id="cb20-36">            optimizer.zero_grad()</span>
+<span id="cb20-37">            </span>
+<span id="cb20-38">            batch_loss.backward()</span>
+<span id="cb20-39"></span>
+<span id="cb20-40">            <span class="co" style="color: #5E5E5E;">### update model parameters</span></span>
+<span id="cb20-41">            optimizer.step()</span>
+<span id="cb20-42"></span>
+<span id="cb20-43">        <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Epoch:</span><span class="sc" style="color: #5E5E5E;">{:2d}</span><span class="st" style="color: #20794D;">/</span><span class="sc" style="color: #5E5E5E;">{}</span><span class="ch" style="color: #20794D;">\t</span><span class="st" style="color: #20794D;"> Loss: </span><span class="sc" style="color: #5E5E5E;">{:.4f}</span><span class="st" style="color: #20794D;"> </span><span class="ch" style="color: #20794D;">\t</span><span class="st" style="color: #20794D;">(</span><span class="sc" style="color: #5E5E5E;">{:.2f}</span><span class="st" style="color: #20794D;">s)'</span>.<span class="bu" style="color: null;">format</span>(epoch <span class="op" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">1</span>, n_epochs, total_loss <span class="op" style="color: #5E5E5E;">/</span> n_batch, time.time() <span class="op" style="color: #5E5E5E;">-</span> start))</span>
+<span id="cb20-44"></span>
+<span id="cb20-45">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Model trained!'</span>)</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="16">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;"># adjustable hyperparameters</span></span>
+<span id="cb21-2">LEARNING_RATE <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.001</span></span>
+<span id="cb21-3">HIDDEN_UNITS <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">256</span></span>
+<span id="cb21-4">N_EPOCHS <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">10</span></span>
+<span id="cb21-5"></span>
+<span id="cb21-6">device <span class="op" style="color: #5E5E5E;">=</span> torch.device(<span class="st" style="color: #20794D;">'cuda'</span> <span class="cf" style="color: #003B4F;">if</span> torch.cuda.is_available() <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">'cpu'</span>)</span>
+<span id="cb21-7"></span>
+<span id="cb21-8">rnn_encoder <span class="op" style="color: #5E5E5E;">=</span> RnnEncoder(src_vocab, EMBEDDING_DIM, HIDDEN_UNITS).to(device)</span>
+<span id="cb21-9">rnn_decoder <span class="op" style="color: #5E5E5E;">=</span> RnnDecoder(trg_vocab, EMBEDDING_DIM, HIDDEN_UNITS).to(device)</span>
+<span id="cb21-10"></span>
+<span id="cb21-11">rnn_model_params <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">list</span>(rnn_encoder.parameters()) <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">list</span>(rnn_decoder.parameters())</span>
+<span id="cb21-12">optimizer <span class="op" style="color: #5E5E5E;">=</span> torch.optim.Adam(rnn_model_params, lr<span class="op" style="color: #5E5E5E;">=</span>LEARNING_RATE)</span>
+<span id="cb21-13"></span>
+<span id="cb21-14"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Encoder and Decoder models initialized!'</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Encoder and Decoder models initialized!</code></pre>
+<div class="cell" data-execution_count="17">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">trainRnnModel(rnn_encoder, rnn_decoder, train_dataset, optimizer, trg_vocab, device, N_EPOCHS)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Epoch: 1/10  Loss: 0.9182   (31.96s)
+Epoch: 2/10  Loss: 0.6817   (27.65s)
+Epoch: 3/10  Loss: 0.5594   (28.25s)
+Epoch: 4/10  Loss: 0.4620   (28.66s)
+Epoch: 5/10  Loss: 0.3800   (27.83s)
+Epoch: 6/10  Loss: 0.3104   (27.78s)
+Epoch: 7/10  Loss: 0.2511   (31.69s)
+Epoch: 8/10  Loss: 0.2022   (29.02s)
+Epoch: 9/10  Loss: 0.1632   (28.03s)
+Epoch:10/10  Loss: 0.1316   (28.46s)
+Model trained!</code></pre>
+</section>
+<section id="model-inference" class="level3">
+<h3 class="anchored" data-anchor-id="model-inference">Model Inference</h3>
+<p>Now that the model is trained, it can be used on test data. Here is a function that takes the trained model and a source sentence, and returns its translation to the target language. Instead of using teacher forcing, the input to the decoder at time <img src="https://latex.codecogs.com/png.latex?t_i"> will be the prediction of the decoder at time <img src="https://latex.codecogs.com/png.latex?t_%7Bi-1%7D"></p>
+<div class="cell" data-execution_count="18">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="kw" style="color: #003B4F;">def</span> decodeRnnModel(encoder, decoder, src, max_decode_len, device):</span>
+<span id="cb25-2">    <span class="co" style="color: #5E5E5E;"># encoder: the RnnEncoder object</span></span>
+<span id="cb25-3">    <span class="co" style="color: #5E5E5E;"># decoder: the RnnDecoder object</span></span>
+<span id="cb25-4">    <span class="co" style="color: #5E5E5E;"># src: the source sentences to translate with size: [max_src_length, batch_size]</span></span>
+<span id="cb25-5">    <span class="co" style="color: #5E5E5E;"># max_decode_len: the maximum desired length (int) of the target translated sentences</span></span>
+<span id="cb25-6">    <span class="co" style="color: #5E5E5E;"># device: the device the torch tensors are on</span></span>
+<span id="cb25-7"></span>
+<span id="cb25-8">    <span class="co" style="color: #5E5E5E;"># initialize variables</span></span>
+<span id="cb25-9">    trg_vocab <span class="op" style="color: #5E5E5E;">=</span> decoder.trg_vocab</span>
+<span id="cb25-10">    batch_size <span class="op" style="color: #5E5E5E;">=</span> src.size(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb25-11">    <span class="co" style="color: #5E5E5E;"># curr_output: to contain the predicted translated sentences with size: [batch_size, max_decode_len]</span></span>
+<span id="cb25-12">    curr_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((batch_size, max_decode_len)).to(device)</span>
+<span id="cb25-13">    <span class="co" style="color: #5E5E5E;"># curr_predictions: to contain the (unnormalized) probabilities of each token in the vocabulary at each time step</span></span>
+<span id="cb25-14">    <span class="co" style="color: #5E5E5E;"># with size: [batch_size, max_decode_len, trg_vocab_size]</span></span>
+<span id="cb25-15">    curr_predictions <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((batch_size, max_decode_len, <span class="bu" style="color: null;">len</span>(trg_vocab.idx2word))).to(device)</span>
+<span id="cb25-16"></span>
+<span id="cb25-17">    <span class="co" style="color: #5E5E5E;"># start the decoding with the start token for each example</span></span>
+<span id="cb25-18">    dec_input <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([[trg_vocab.word2idx[START]]] <span class="op" style="color: #5E5E5E;">*</span> batch_size).to(device)</span>
+<span id="cb25-19">    curr_output[:, <span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">=</span> dec_input.squeeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb25-20"></span>
+<span id="cb25-21">    <span class="co" style="color: #5E5E5E;"># implement decoding algorithm</span></span>
+<span id="cb25-22">    <span class="co" style="color: #5E5E5E;"># obtain encoder output and hidden state by encoding src sentences</span></span>
+<span id="cb25-23">    src_encoded, hidden_state <span class="op" style="color: #5E5E5E;">=</span> encoder(src)</span>
+<span id="cb25-24">    <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">1</span>, max_decode_len):</span>
+<span id="cb25-25">      <span class="co" style="color: #5E5E5E;"># obtain (unnormalized) prediction probabilities and hidden state by feeding dec_input</span></span>
+<span id="cb25-26">      <span class="co" style="color: #5E5E5E;"># (the best words from the previous time step), previous hidden state, and encoder output to decoder</span></span>
+<span id="cb25-27">      pred_prob, hidden_state, _ <span class="op" style="color: #5E5E5E;">=</span> decoder(dec_input, hidden_state, src_encoded)</span>
+<span id="cb25-28">      <span class="co" style="color: #5E5E5E;"># save (unnormalized) prediction probabilities in curr_predictions at index t</span></span>
+<span id="cb25-29">      curr_predictions[:, t, :] <span class="op" style="color: #5E5E5E;">=</span> pred_prob</span>
+<span id="cb25-30">      <span class="co" style="color: #5E5E5E;"># obtain the new dec_input by selecting the most likely (highest probability) token</span></span>
+<span id="cb25-31">      dec_input <span class="op" style="color: #5E5E5E;">=</span> torch.argmax(curr_predictions[:, t, :], axis<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>).unsqueeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb25-32">      <span class="co" style="color: #5E5E5E;"># save dec_input in curr_output at index t</span></span>
+<span id="cb25-33">      curr_output[:, t] <span class="op" style="color: #5E5E5E;">=</span> dec_input.squeeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb25-34"></span>
+<span id="cb25-35">    <span class="cf" style="color: #003B4F;">return</span> curr_output, curr_predictions</span></code></pre></div>
+</details>
+</div>
+<p>Here are some examples of sentences generated by the model compared with correct translations from the source language to target language.</p>
+<div class="cell" data-execution_count="19">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">rnn_encoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb26-2">rnn_decoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb26-3">idxes <span class="op" style="color: #5E5E5E;">=</span> random.choices(<span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(test_dataset.dataset)), k<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb26-4">src, trg <span class="op" style="color: #5E5E5E;">=</span>  train_dataset.dataset[idxes]</span>
+<span id="cb26-5">curr_output, _ <span class="op" style="color: #5E5E5E;">=</span> decodeRnnModel(rnn_encoder, rnn_decoder, src.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device), trg.size(<span class="dv" style="color: #AD0000;">1</span>), device)</span>
+<span id="cb26-6"><span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(src)):</span>
+<span id="cb26-7">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Source sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [src_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> src[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> src_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb26-8">                                       <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [src_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> src[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb26-9">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Target sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> trg[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb26-10">                                       <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> trg[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb26-11">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Predicted sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> curr_output[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb26-12">                                          <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> curr_output[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb26-13">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"----------------"</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Source sentence: &lt;START&gt; 我 在 等 他 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i m waiting for him . &lt;END&gt;
+Predicted sentence: &lt;START&gt; i m waiting for him . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 我 寧 願 工 作 也 不 願 閒 著 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i prefer working to doing nothing . &lt;END&gt;
+Predicted sentence: &lt;START&gt; i d rather stay than i have to lose weight . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 他 來 自 波 士 頓 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i m from boston . &lt;END&gt;
+Predicted sentence: &lt;START&gt; he came in boston . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 湯 姆 買 了 張 機 票 。 &lt;END&gt;
+Target sentence: &lt;START&gt; tom bought a plane ticket . &lt;END&gt;
+Predicted sentence: &lt;START&gt; tom bought a ticket . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 我 相 信 他 會 成 功 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i m sure that he ll succeed . &lt;END&gt;
+Predicted sentence: &lt;START&gt; i believe he ll succeed . &lt;END&gt;
+----------------</code></pre>
+</section>
+<section id="model-evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="model-evaluation">Model Evaluation</h3>
+<p>Here is a function to run the test set through the model and calculate BLEU scores.</p>
+<p>Here are some references about BLEU Score at:</p>
+<ol type="1">
+<li><a href="https://en.wikipedia.org/wiki/BLEU" class="uri">https://en.wikipedia.org/wiki/BLEU</a></li>
+<li><a href="https://www.aclweb.org/anthology/P02-1040.pdf" class="uri">https://www.aclweb.org/anthology/P02-1040.pdf</a></li>
+</ol>
+<div class="cell" data-execution_count="20">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><span class="co" style="color: #5E5E5E;"># gets reference and candidate for sentence BLEU computation</span></span>
+<span id="cb28-2"><span class="kw" style="color: #003B4F;">def</span> getReferenceCandidate(target, pred, trg_vocab):</span>
+<span id="cb28-3">    <span class="kw" style="color: #003B4F;">def</span> toToken(sentence):</span>
+<span id="cb28-4">        lis <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb28-5">        <span class="cf" style="color: #003B4F;">for</span> s <span class="kw" style="color: #003B4F;">in</span> sentence[<span class="dv" style="color: #AD0000;">1</span>:]:</span>
+<span id="cb28-6">            x <span class="op" style="color: #5E5E5E;">=</span> trg_vocab.idx2word[s]</span>
+<span id="cb28-7">            <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">==</span> END: <span class="cf" style="color: #003B4F;">break</span></span>
+<span id="cb28-8">            lis.append(x)</span>
+<span id="cb28-9">        <span class="cf" style="color: #003B4F;">return</span> lis</span>
+<span id="cb28-10">    reference <span class="op" style="color: #5E5E5E;">=</span> toToken(<span class="bu" style="color: null;">list</span>(target.numpy()))</span>
+<span id="cb28-11">    candidate <span class="op" style="color: #5E5E5E;">=</span> toToken(<span class="bu" style="color: null;">list</span>(pred.numpy()))</span>
+<span id="cb28-12">    <span class="cf" style="color: #003B4F;">return</span> reference, candidate</span>
+<span id="cb28-13"></span>
+<span id="cb28-14"><span class="co" style="color: #5E5E5E;"># computes BLEU scores</span></span>
+<span id="cb28-15"><span class="kw" style="color: #003B4F;">def</span> computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab):</span>
+<span id="cb28-16">    bleu_1 <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.0</span></span>
+<span id="cb28-17">    bleu_2 <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.0</span></span>
+<span id="cb28-18">    bleu_3 <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.0</span></span>
+<span id="cb28-19">    bleu_4 <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.0</span></span>
+<span id="cb28-20"></span>
+<span id="cb28-21">    smoother <span class="op" style="color: #5E5E5E;">=</span> SmoothingFunction()</span>
+<span id="cb28-22">    save_reference <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb28-23">    save_candidate <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb28-24">    <span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(target_tensor_val)):</span>
+<span id="cb28-25">        reference, candidate <span class="op" style="color: #5E5E5E;">=</span> getReferenceCandidate(target_output[i], final_output[i], trg_vocab)</span>
+<span id="cb28-26">    </span>
+<span id="cb28-27">        bleu_1 <span class="op" style="color: #5E5E5E;">+=</span> sentence_bleu(reference, candidate, weights<span class="op" style="color: #5E5E5E;">=</span>(<span class="dv" style="color: #AD0000;">1</span>,), smoothing_function<span class="op" style="color: #5E5E5E;">=</span>smoother.method1)</span>
+<span id="cb28-28">        bleu_2 <span class="op" style="color: #5E5E5E;">+=</span> sentence_bleu(reference, candidate, weights<span class="op" style="color: #5E5E5E;">=</span>(<span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">2</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">2</span>), smoothing_function<span class="op" style="color: #5E5E5E;">=</span>smoother.method1)</span>
+<span id="cb28-29">        bleu_3 <span class="op" style="color: #5E5E5E;">+=</span> sentence_bleu(reference, candidate, weights<span class="op" style="color: #5E5E5E;">=</span>(<span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">3</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">3</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">3</span>), smoothing_function<span class="op" style="color: #5E5E5E;">=</span>smoother.method1)</span>
+<span id="cb28-30">        bleu_4 <span class="op" style="color: #5E5E5E;">+=</span> sentence_bleu(reference, candidate, weights<span class="op" style="color: #5E5E5E;">=</span>(<span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">4</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">4</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">4</span>, <span class="dv" style="color: #AD0000;">1</span><span class="op" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">4</span>), smoothing_function<span class="op" style="color: #5E5E5E;">=</span>smoother.method1)</span>
+<span id="cb28-31"></span>
+<span id="cb28-32">        save_reference.append(reference)</span>
+<span id="cb28-33">        save_candidate.append(candidate)</span>
+<span id="cb28-34">    </span>
+<span id="cb28-35">    bleu_1 <span class="op" style="color: #5E5E5E;">=</span> bleu_1<span class="op" style="color: #5E5E5E;">/</span><span class="bu" style="color: null;">len</span>(target_tensor_val)</span>
+<span id="cb28-36">    bleu_2 <span class="op" style="color: #5E5E5E;">=</span> bleu_2<span class="op" style="color: #5E5E5E;">/</span><span class="bu" style="color: null;">len</span>(target_tensor_val)</span>
+<span id="cb28-37">    bleu_3 <span class="op" style="color: #5E5E5E;">=</span> bleu_3<span class="op" style="color: #5E5E5E;">/</span><span class="bu" style="color: null;">len</span>(target_tensor_val)</span>
+<span id="cb28-38">    bleu_4 <span class="op" style="color: #5E5E5E;">=</span> bleu_4<span class="op" style="color: #5E5E5E;">/</span><span class="bu" style="color: null;">len</span>(target_tensor_val)</span>
+<span id="cb28-39"></span>
+<span id="cb28-40">    scores <span class="op" style="color: #5E5E5E;">=</span> {<span class="st" style="color: #20794D;">"bleu_1"</span>: bleu_1, <span class="st" style="color: #20794D;">"bleu_2"</span>: bleu_2, <span class="st" style="color: #20794D;">"bleu_3"</span>: bleu_3, <span class="st" style="color: #20794D;">"bleu_4"</span>: bleu_4}</span>
+<span id="cb28-41">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'BLEU 1-gram: </span><span class="sc" style="color: #5E5E5E;">%f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span> (bleu_1))</span>
+<span id="cb28-42">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'BLEU 2-gram: </span><span class="sc" style="color: #5E5E5E;">%f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span> (bleu_2))</span>
+<span id="cb28-43">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'BLEU 3-gram: </span><span class="sc" style="color: #5E5E5E;">%f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span> (bleu_3))</span>
+<span id="cb28-44">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'BLEU 4-gram: </span><span class="sc" style="color: #5E5E5E;">%f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span> (bleu_4))</span>
+<span id="cb28-45"></span>
+<span id="cb28-46">    <span class="cf" style="color: #003B4F;">return</span> save_candidate, scores</span>
+<span id="cb28-47"></span>
+<span id="cb28-48"><span class="co" style="color: #5E5E5E;"># evaluates the RNN model</span></span>
+<span id="cb28-49"><span class="kw" style="color: #003B4F;">def</span> evaluateRnnModel(encoder, decoder, test_dataset, target_tensor_val, device):</span>
+<span id="cb28-50">    trg_vocab <span class="op" style="color: #5E5E5E;">=</span> decoder.trg_vocab</span>
+<span id="cb28-51">    batch_size <span class="op" style="color: #5E5E5E;">=</span> test_dataset.batch_size</span>
+<span id="cb28-52">    n_batch <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb28-53">    total_loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb28-54"></span>
+<span id="cb28-55">    encoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb28-56">    decoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb28-57">    </span>
+<span id="cb28-58">    final_output, target_output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb28-59"></span>
+<span id="cb28-60">    <span class="cf" style="color: #003B4F;">with</span> torch.no_grad():</span>
+<span id="cb28-61">        <span class="cf" style="color: #003B4F;">for</span> batch, (src, trg) <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(test_dataset):</span>
+<span id="cb28-62">            n_batch <span class="op" style="color: #5E5E5E;">+=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb28-63">            loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb28-64">            curr_output, curr_predictions <span class="op" style="color: #5E5E5E;">=</span> decodeRnnModel(encoder, decoder, src.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device), trg.size(<span class="dv" style="color: #AD0000;">1</span>), device)</span>
+<span id="cb28-65">            <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">1</span>, trg.size(<span class="dv" style="color: #AD0000;">1</span>)):</span>
+<span id="cb28-66">                loss <span class="op" style="color: #5E5E5E;">+=</span> lossFunction(trg[:, t].to(device), curr_predictions[:,t,:].to(device))</span>
+<span id="cb28-67"></span>
+<span id="cb28-68">            <span class="cf" style="color: #003B4F;">if</span> final_output <span class="kw" style="color: #003B4F;">is</span> <span class="va" style="color: #111111;">None</span>:</span>
+<span id="cb28-69">                final_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((<span class="bu" style="color: null;">len</span>(target_tensor_val), trg.size(<span class="dv" style="color: #AD0000;">1</span>)))</span>
+<span id="cb28-70">                target_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((<span class="bu" style="color: null;">len</span>(target_tensor_val), trg.size(<span class="dv" style="color: #AD0000;">1</span>)))</span>
+<span id="cb28-71">            final_output[batch<span class="op" style="color: #5E5E5E;">*</span>batch_size:(batch<span class="op" style="color: #5E5E5E;">+</span><span class="dv" style="color: #AD0000;">1</span>)<span class="op" style="color: #5E5E5E;">*</span>batch_size] <span class="op" style="color: #5E5E5E;">=</span> curr_output</span>
+<span id="cb28-72">            target_output[batch<span class="op" style="color: #5E5E5E;">*</span>batch_size:(batch<span class="op" style="color: #5E5E5E;">+</span><span class="dv" style="color: #AD0000;">1</span>)<span class="op" style="color: #5E5E5E;">*</span>batch_size] <span class="op" style="color: #5E5E5E;">=</span> trg</span>
+<span id="cb28-73">            batch_loss <span class="op" style="color: #5E5E5E;">=</span> (loss <span class="op" style="color: #5E5E5E;">/</span> <span class="bu" style="color: null;">int</span>(trg.size(<span class="dv" style="color: #AD0000;">1</span>)))</span>
+<span id="cb28-74">            total_loss <span class="op" style="color: #5E5E5E;">+=</span> batch_loss</span>
+<span id="cb28-75"></span>
+<span id="cb28-76">        <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Loss </span><span class="sc" style="color: #5E5E5E;">{:.4f}</span><span class="st" style="color: #20794D;">'</span>.<span class="bu" style="color: null;">format</span>(total_loss <span class="op" style="color: #5E5E5E;">/</span> n_batch))</span>
+<span id="cb28-77">    </span>
+<span id="cb28-78">    <span class="co" style="color: #5E5E5E;"># Compute BLEU scores</span></span>
+<span id="cb28-79">    <span class="cf" style="color: #003B4F;">return</span> computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab)</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="21">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">rnn_save_candidate, rnn_scores <span class="op" style="color: #5E5E5E;">=</span> evaluateRnnModel(rnn_encoder, rnn_decoder, test_dataset, trg_tensor_val, device)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Loss 1.1556
+BLEU 1-gram: 0.236252
+BLEU 2-gram: 0.062643
+BLEU 3-gram: 0.043685
+BLEU 4-gram: 0.039369</code></pre>
+</section>
+</section>
+<section id="the-transformer" class="level2">
+<h2 class="anchored" data-anchor-id="the-transformer">The Transformer</h2>
+<p>Here a transformer model for machine translation is implemented, and then trained and evaluated. Here are some references:</p>
+<ul>
+<li>Original transformer paper: <a href="https://arxiv.org/pdf/1706.03762.pdf" class="uri">https://arxiv.org/pdf/1706.03762.pdf</a></li>
+<li>A tutorial: <a href="http://jalammar.github.io/illustrated-transformer/" class="uri">http://jalammar.github.io/illustrated-transformer/</a></li>
+<li>Another tutorial: <a href="http://peterbloem.nl/blog/transformers" class="uri">http://peterbloem.nl/blog/transformers</a></li>
+</ul>
+<section id="positional-embeddings" class="level3">
+<h3 class="anchored" data-anchor-id="positional-embeddings">Positional Embeddings</h3>
+<p>Similar to the RNN, there are Encoder and Decoder models for Transformers. A key component of the encoder is the Positional Embedding. Word embeddings encode words in such a way that words with similar meaning have similar vectors. Because there are no recurrences in a Transformer, the transformer needs to know the relative position of words in a sentence. So, a positional embedding is added to the word embeddings. Now, two words with a similar embedding will both be close in meaning and occur near each other in the sentence.</p>
+<p>The positional embedding matrix will be of size <img src="https://latex.codecogs.com/png.latex?(%5Ctext%7Bmax%5C_len%7D,%20%5Ctext%7Bembed%5C_dim%7D)"> using the following formulas: <br></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bpe%7D%5B%5Ctext%7Bpos%7D,2i%5D%20=%20%5Csin%20%5CBig%20(%5Cfrac%7B%5Ctext%7Bpos%7D%7D%7B10000%5E%7B2i/%5Ctext%7Bembed%5C_dim%7D%7D%7D%5CBig%20)"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bpe%7D%5B%5Ctext%7Bpos%7D,2i+1%5D%20=%20%5Ccos%20%5CBig%20(%5Cfrac%7B%5Ctext%7Bpos%7D%7D%7B10000%5E%7B2i/%5Ctext%7Bembed%5C_dim%7D%7D%7D%5CBig%20)"></p>
+<div class="cell" data-execution_count="22">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><span class="kw" style="color: #003B4F;">def</span> createPositionalEmbedding(max_len, embed_dim):</span>
+<span id="cb31-2">    <span class="co" style="color: #5E5E5E;"># max_len: the maximum length supported for positional embeddings</span></span>
+<span id="cb31-3">    <span class="co" style="color: #5E5E5E;"># embed_dim: the size of the embeddings</span></span>
+<span id="cb31-4">    pe <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span></span>
+<span id="cb31-5"></span>
+<span id="cb31-6">    <span class="co" style="color: #5E5E5E;"># compute pe as in the formulae above with size: [max_len, 1, embed_dim]</span></span>
+<span id="cb31-7">    position <span class="op" style="color: #5E5E5E;">=</span> torch.arange(max_len).unsqueeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb31-8">    den <span class="op" style="color: #5E5E5E;">=</span> torch.exp(<span class="op" style="color: #5E5E5E;">-</span>torch.arange(<span class="dv" style="color: #AD0000;">0</span>, embed_dim, <span class="dv" style="color: #AD0000;">2</span>) <span class="op" style="color: #5E5E5E;">/</span> embed_dim <span class="op" style="color: #5E5E5E;">*</span> math.log(<span class="fl" style="color: #AD0000;">10000.0</span>))</span>
+<span id="cb31-9">    pe <span class="op" style="color: #5E5E5E;">=</span> torch.zeros(max_len, <span class="dv" style="color: #AD0000;">1</span>, embed_dim)</span>
+<span id="cb31-10">    pe[:, <span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">0</span>::<span class="dv" style="color: #AD0000;">2</span>] <span class="op" style="color: #5E5E5E;">=</span> torch.sin(position <span class="op" style="color: #5E5E5E;">*</span> den)</span>
+<span id="cb31-11">    pe[:, <span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">1</span>::<span class="dv" style="color: #AD0000;">2</span>] <span class="op" style="color: #5E5E5E;">=</span> torch.cos(position <span class="op" style="color: #5E5E5E;">*</span> den)</span>
+<span id="cb31-12">    </span>
+<span id="cb31-13">    <span class="cf" style="color: #003B4F;">return</span> pe</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="the-encoder-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="the-encoder-model-1">The Encoder Model</h3>
+<p>First a transformer encoder model is built. An encoded output is returned and will be used in the decoder.</p>
+<ul>
+<li><strong>Initialization</strong> (i.e., <code>__init__(...)</code>): Initializes the following layers and other features for the neural network.
+<ul>
+<li>A positional embedding layer using inputs: <code>max_len_src</code> and <code>embedding_dim</code>.</li>
+<li>An embedding layer to represent the words in the vocabulary <code>src_vocab_size</code> with <code>embedding_dim</code> as the embedding dimension.</li>
+<li>A dropout layer.</li>
+<li>A transformer encoder layer with inputs: <code>embedding_dim</code>, <code>num_heads</code>, and <code>dim_feedforward</code>.</li>
+<li>A transformer encoder with the transformer encoder layer and <code>num_layers</code> number of layers.</li>
+</ul></li>
+<li><strong>Feed Forward</strong> (i.e., <code>forward(...)</code>: Pass texts through layers and compute the output as described below.
+<ul>
+<li>Pass texts through embedding and add to positional embeddings.</li>
+<li>Apply dropout.</li>
+<li>Compute mask for source input.</li>
+<li>Call transformer encoder.</li>
+</ul></li>
+</ul>
+<div class="cell" data-execution_count="23">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><span class="kw" style="color: #003B4F;">class</span> TransformerEncoder(nn.Module):</span>
+<span id="cb32-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, src_vocab, embedding_dim, num_heads, num_layers, dim_feedforward, max_len_src, device):</span>
+<span id="cb32-3">        <span class="bu" style="color: null;">super</span>(TransformerEncoder, <span class="va" style="color: #111111;">self</span>).<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb32-4">        <span class="va" style="color: #111111;">self</span>.src_vocab <span class="op" style="color: #5E5E5E;">=</span> src_vocab <span class="co" style="color: #5E5E5E;"># the source vocabulary</span></span>
+<span id="cb32-5">        src_vocab_size <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">len</span>(src_vocab)</span>
+<span id="cb32-6">        <span class="va" style="color: #111111;">self</span>.embedding_dim <span class="op" style="color: #5E5E5E;">=</span> embedding_dim <span class="co" style="color: #5E5E5E;"># the dimension of the embedding and number of expected features for the input of the Transformer</span></span>
+<span id="cb32-7">        <span class="va" style="color: #111111;">self</span>.max_len_src <span class="op" style="color: #5E5E5E;">=</span> max_len_src <span class="co" style="color: #5E5E5E;"># maximum length of the source sentences</span></span>
+<span id="cb32-8">        <span class="va" style="color: #111111;">self</span>.device <span class="op" style="color: #5E5E5E;">=</span> device <span class="co" style="color: #5E5E5E;"># the working device</span></span>
+<span id="cb32-9"></span>
+<span id="cb32-10">        <span class="co" style="color: #5E5E5E;"># create positional embedding matrix</span></span>
+<span id="cb32-11">        <span class="va" style="color: #111111;">self</span>.position_embedding <span class="op" style="color: #5E5E5E;">=</span> createPositionalEmbedding(max_len_src, embedding_dim).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-12">        <span class="co" style="color: #5E5E5E;"># this informs the model that position_embedding is not a learnable parameter</span></span>
+<span id="cb32-13">        <span class="va" style="color: #111111;">self</span>.register_buffer(<span class="st" style="color: #20794D;">'positional_embedding'</span>, <span class="va" style="color: #111111;">self</span>.position_embedding)</span>
+<span id="cb32-14">        <span class="co" style="color: #5E5E5E;"># initialize embedding layer</span></span>
+<span id="cb32-15">        <span class="va" style="color: #111111;">self</span>.embedding <span class="op" style="color: #5E5E5E;">=</span> nn.Embedding(num_embeddings<span class="op" style="color: #5E5E5E;">=</span>src_vocab_size, embedding_dim<span class="op" style="color: #5E5E5E;">=</span>embedding_dim).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-16">        <span class="co" style="color: #5E5E5E;"># dropout layer</span></span>
+<span id="cb32-17">        <span class="va" style="color: #111111;">self</span>.dropout <span class="op" style="color: #5E5E5E;">=</span> nn.Dropout().to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-18">        <span class="co" style="color: #5E5E5E;"># initialize an nn.TransformerEncoder model (with embedding_dim, num_layers, num_heads, &amp; dim_feedforward)</span></span>
+<span id="cb32-19">        encoder_layer <span class="op" style="color: #5E5E5E;">=</span> nn.TransformerEncoderLayer(d_model<span class="op" style="color: #5E5E5E;">=</span>embedding_dim, nhead<span class="op" style="color: #5E5E5E;">=</span>num_heads, dim_feedforward<span class="op" style="color: #5E5E5E;">=</span>dim_feedforward)</span>
+<span id="cb32-20">        <span class="va" style="color: #111111;">self</span>.transformer_encoder <span class="op" style="color: #5E5E5E;">=</span> nn.TransformerEncoder(encoder_layer, num_layers<span class="op" style="color: #5E5E5E;">=</span>num_layers).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-21"></span>
+<span id="cb32-22">    <span class="kw" style="color: #003B4F;">def</span> makeSrcMask(<span class="va" style="color: #111111;">self</span>, src):</span>
+<span id="cb32-23">        <span class="cf" style="color: #003B4F;">assert</span> <span class="bu" style="color: null;">len</span>(src.shape) <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">2</span>, <span class="st" style="color: #20794D;">'src must have exactly 2 dimensions'</span> <span class="co" style="color: #5E5E5E;"># [max_len, batch_size]</span></span>
+<span id="cb32-24">        src_mask <span class="op" style="color: #5E5E5E;">=</span> src.transpose(<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">1</span>) <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">0</span> <span class="co" style="color: #5E5E5E;"># boolean matrix for padding indices</span></span>
+<span id="cb32-25">        <span class="cf" style="color: #003B4F;">return</span> src_mask.to(<span class="va" style="color: #111111;">self</span>.device) <span class="co" style="color: #5E5E5E;"># size: [batch_size, max_src_len]</span></span>
+<span id="cb32-26"></span>
+<span id="cb32-27">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb32-28">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span></span>
+<span id="cb32-29">        max_seq_len <span class="op" style="color: #5E5E5E;">=</span> x.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="co" style="color: #5E5E5E;"># x has size: [max_len, batch_size]</span></span>
+<span id="cb32-30"></span>
+<span id="cb32-31">        <span class="co" style="color: #5E5E5E;"># word embedding</span></span>
+<span id="cb32-32">        x_embed <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.embedding(x.to(<span class="va" style="color: #111111;">self</span>.device))</span>
+<span id="cb32-33">        <span class="co" style="color: #5E5E5E;"># position embedding</span></span>
+<span id="cb32-34">        pos_embed <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.position_embedding[<span class="dv" style="color: #AD0000;">0</span>:max_seq_len, :, :].to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-35">        <span class="co" style="color: #5E5E5E;"># add position embedding to word embedding</span></span>
+<span id="cb32-36">        output <span class="op" style="color: #5E5E5E;">=</span> x_embed <span class="op" style="color: #5E5E5E;">+</span> pos_embed</span>
+<span id="cb32-37">        <span class="co" style="color: #5E5E5E;"># apply dropout</span></span>
+<span id="cb32-38">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.dropout(output.to(<span class="va" style="color: #111111;">self</span>.device))</span>
+<span id="cb32-39">        <span class="co" style="color: #5E5E5E;"># compute mask (indicates which indices in x are padding, which are ignored for self-attention)</span></span>
+<span id="cb32-40">        src_mask <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.makeSrcMask(x).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-41">        <span class="co" style="color: #5E5E5E;"># call transformer encoder</span></span>
+<span id="cb32-42">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.transformer_encoder(src<span class="op" style="color: #5E5E5E;">=</span>output, src_key_padding_mask <span class="op" style="color: #5E5E5E;">=</span> src_mask).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb32-43"></span>
+<span id="cb32-44">        <span class="co" style="color: #5E5E5E;"># return output with size: [max_len, batch_size, embed_dim]</span></span>
+<span id="cb32-45">        <span class="cf" style="color: #003B4F;">return</span> output     </span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="the-decoder-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="the-decoder-model-1">The Decoder Model</h3>
+<p>Here is an implementation of a decoder model. Unlike the RNN decoder, the inter-attention with the encoder does not need to be computed explicitly. Instead, the <code>nn.TransformerDecoder</code> model handles this automatically.</p>
+<ul>
+<li><p><strong>Initialization</strong> (i.e., <code>__init__(...)</code>): Initializes the parameters of the model and store them in <code>self</code> variables.</p></li>
+<li><p><strong>Feed forward</strong> (i.e., <code>forward(...)</code>): Runs a single decoding step that results in a distribution over the vocabulary for the next token in the sequence.</p></li>
+</ul>
+<div class="cell" data-execution_count="24">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><span class="kw" style="color: #003B4F;">class</span> TransformerDecoder(nn.Module):</span>
+<span id="cb33-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, trg_vocab, embedding_dim, num_heads, num_layers, dim_feedforward, max_len_trg, device):</span>
+<span id="cb33-3">        <span class="bu" style="color: null;">super</span>(TransformerDecoder, <span class="va" style="color: #111111;">self</span>).<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb33-4">        <span class="va" style="color: #111111;">self</span>.trg_vocab <span class="op" style="color: #5E5E5E;">=</span> trg_vocab <span class="co" style="color: #5E5E5E;"># the target vocabulary</span></span>
+<span id="cb33-5">        trg_vocab_size <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">len</span>(trg_vocab)</span>
+<span id="cb33-6">        <span class="va" style="color: #111111;">self</span>.embedding_dim <span class="op" style="color: #5E5E5E;">=</span> embedding_dim <span class="co" style="color: #5E5E5E;"># the dimension of the embedding and the number of expected features for the input of the Transformer</span></span>
+<span id="cb33-7">        <span class="va" style="color: #111111;">self</span>.max_len_trg <span class="op" style="color: #5E5E5E;">=</span> max_len_trg <span class="co" style="color: #5E5E5E;"># maximum length of the target sentences</span></span>
+<span id="cb33-8">        <span class="va" style="color: #111111;">self</span>.device <span class="op" style="color: #5E5E5E;">=</span> device <span class="co" style="color: #5E5E5E;"># the working device</span></span>
+<span id="cb33-9"></span>
+<span id="cb33-10">        <span class="co" style="color: #5E5E5E;"># create positional embedding matrix</span></span>
+<span id="cb33-11">        <span class="va" style="color: #111111;">self</span>.position_embedding <span class="op" style="color: #5E5E5E;">=</span> createPositionalEmbedding(max_len_trg, embedding_dim).to(device)</span>
+<span id="cb33-12">        <span class="va" style="color: #111111;">self</span>.register_buffer(<span class="st" style="color: #20794D;">'positional_embedding'</span>, <span class="va" style="color: #111111;">self</span>.position_embedding) <span class="co" style="color: #5E5E5E;"># this informs the model that positional_embedding is not a learnable parameter</span></span>
+<span id="cb33-13">        <span class="co" style="color: #5E5E5E;"># initialize embedding layer</span></span>
+<span id="cb33-14">        <span class="va" style="color: #111111;">self</span>.embedding <span class="op" style="color: #5E5E5E;">=</span> nn.Embedding(num_embeddings<span class="op" style="color: #5E5E5E;">=</span>trg_vocab_size, embedding_dim<span class="op" style="color: #5E5E5E;">=</span>embedding_dim).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-15">        <span class="co" style="color: #5E5E5E;"># dropout layer</span></span>
+<span id="cb33-16">        <span class="va" style="color: #111111;">self</span>.dropout <span class="op" style="color: #5E5E5E;">=</span> nn.Dropout().to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-17">        <span class="co" style="color: #5E5E5E;"># initialize a nn.TransformerDecoder model (with embedding_dim, num_layers, num_heads, &amp; dim_feedforward)</span></span>
+<span id="cb33-18">        decoder_layer <span class="op" style="color: #5E5E5E;">=</span> nn.TransformerDecoderLayer(d_model<span class="op" style="color: #5E5E5E;">=</span>embedding_dim, nhead<span class="op" style="color: #5E5E5E;">=</span>num_heads, dim_feedforward<span class="op" style="color: #5E5E5E;">=</span>dim_feedforward).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-19">        <span class="va" style="color: #111111;">self</span>.transformer_decoder <span class="op" style="color: #5E5E5E;">=</span> nn.TransformerDecoder(decoder_layer, num_layers<span class="op" style="color: #5E5E5E;">=</span>num_layers).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-20">        <span class="co" style="color: #5E5E5E;"># final fully connected layer</span></span>
+<span id="cb33-21">        <span class="va" style="color: #111111;">self</span>.out <span class="op" style="color: #5E5E5E;">=</span> nn.Linear(embedding_dim, trg_vocab_size).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-22"></span>
+<span id="cb33-23">    <span class="kw" style="color: #003B4F;">def</span> generateSquareSubsequentMask(<span class="va" style="color: #111111;">self</span>, sz):</span>
+<span id="cb33-24">        <span class="co" style="color: #5E5E5E;"># generate square mask for the sequence</span></span>
+<span id="cb33-25">        <span class="co" style="color: #5E5E5E;"># masked positions are filled with float('-inf') and unmasked with float(0.0)</span></span>
+<span id="cb33-26">        mask <span class="op" style="color: #5E5E5E;">=</span> (torch.triu(torch.ones(sz, sz)) <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">1</span>).transpose(<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb33-27">        mask <span class="op" style="color: #5E5E5E;">=</span> mask.<span class="bu" style="color: null;">float</span>().masked_fill(mask <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">0</span>, <span class="bu" style="color: null;">float</span>(<span class="st" style="color: #20794D;">'-inf'</span>)).masked_fill(mask <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="bu" style="color: null;">float</span>(<span class="fl" style="color: #AD0000;">0.0</span>)).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-28">        <span class="cf" style="color: #003B4F;">return</span> mask</span>
+<span id="cb33-29"></span>
+<span id="cb33-30">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, dec_in, enc_out):</span>
+<span id="cb33-31">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span></span>
+<span id="cb33-32">        max_seq_len <span class="op" style="color: #5E5E5E;">=</span> dec_in.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="co" style="color: #5E5E5E;"># dec_in size: [sequence length, batch_size]</span></span>
+<span id="cb33-33"></span>
+<span id="cb33-34">        <span class="co" style="color: #5E5E5E;"># word embedding</span></span>
+<span id="cb33-35">        x_embed <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.embedding(dec_in.to(<span class="va" style="color: #111111;">self</span>.device))</span>
+<span id="cb33-36">        <span class="co" style="color: #5E5E5E;"># positional embedding</span></span>
+<span id="cb33-37">        pos_embed <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.position_embedding[<span class="dv" style="color: #AD0000;">0</span>:max_seq_len, :, :].to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-38">        output <span class="op" style="color: #5E5E5E;">=</span> x_embed <span class="op" style="color: #5E5E5E;">+</span> pos_embed</span>
+<span id="cb33-39">        <span class="co" style="color: #5E5E5E;"># generate square subsequent mask to prevent the decoder from attending to tokens not seen yet</span></span>
+<span id="cb33-40">        <span class="co" style="color: #5E5E5E;"># i.e., at time step i, the decoder only attends to tokens 1 to i-1</span></span>
+<span id="cb33-41">        trg_mask <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.generateSquareSubsequentMask(max_seq_len).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-42">        <span class="co" style="color: #5E5E5E;"># call decoder with tgt_mask=trg_mask (use enc_out with size: [max_len, batch_size, embed_dim])</span></span>
+<span id="cb33-43">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.transformer_decoder(tgt<span class="op" style="color: #5E5E5E;">=</span>output, memory<span class="op" style="color: #5E5E5E;">=</span>enc_out.to(<span class="va" style="color: #111111;">self</span>.device), tgt_mask<span class="op" style="color: #5E5E5E;">=</span>trg_mask).to(<span class="va" style="color: #111111;">self</span>.device)</span>
+<span id="cb33-44">        <span class="co" style="color: #5E5E5E;"># run output through fully-connected layer</span></span>
+<span id="cb33-45">        output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.out(output)</span>
+<span id="cb33-46"></span>
+<span id="cb33-47">        <span class="co" style="color: #5E5E5E;"># return output with size: [sequence length, batch_size, trg_vocab_size]</span></span>
+<span id="cb33-48">        <span class="cf" style="color: #003B4F;">return</span> output    </span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="model-training-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-training-1">Model Training</h3>
+<p>Like the RNN, the encoder and decoder are trained using cross-entropy loss.</p>
+<div class="cell" data-execution_count="25">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><span class="kw" style="color: #003B4F;">def</span> trainTransformerModel(encoder, decoder, dataset, optimizer, device, n_epochs):</span>
+<span id="cb34-2">    encoder.train()</span>
+<span id="cb34-3">    decoder.train()</span>
+<span id="cb34-4">    criterion <span class="op" style="color: #5E5E5E;">=</span> nn.CrossEntropyLoss(ignore_index<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb34-5">    <span class="cf" style="color: #003B4F;">for</span> epoch <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(n_epochs):</span>
+<span id="cb34-6">        start <span class="op" style="color: #5E5E5E;">=</span> time.time()</span>
+<span id="cb34-7">        losses <span class="op" style="color: #5E5E5E;">=</span> []</span>
+<span id="cb34-8"></span>
+<span id="cb34-9">        <span class="cf" style="color: #003B4F;">for</span> src, trg <span class="kw" style="color: #003B4F;">in</span> tqdm(train_dataset):</span>
+<span id="cb34-10">            </span>
+<span id="cb34-11">            src <span class="op" style="color: #5E5E5E;">=</span> src.to(device).transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>) <span class="co" style="color: #5E5E5E;"># [max_src_length, batch_size]</span></span>
+<span id="cb34-12">            trg <span class="op" style="color: #5E5E5E;">=</span> trg.to(device).transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>) <span class="co" style="color: #5E5E5E;"># [max_trg_length, batch_size]</span></span>
+<span id="cb34-13"></span>
+<span id="cb34-14">            enc_out <span class="op" style="color: #5E5E5E;">=</span> encoder(src)</span>
+<span id="cb34-15">            output <span class="op" style="color: #5E5E5E;">=</span> decoder(trg[:<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, :], enc_out)</span>
+<span id="cb34-16"></span>
+<span id="cb34-17">            output <span class="op" style="color: #5E5E5E;">=</span> output.reshape(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, output.shape[<span class="dv" style="color: #AD0000;">2</span>])</span>
+<span id="cb34-18">            trg <span class="op" style="color: #5E5E5E;">=</span> trg[<span class="dv" style="color: #AD0000;">1</span>:].reshape(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb34-19"></span>
+<span id="cb34-20">            optimizer.zero_grad()</span>
+<span id="cb34-21"></span>
+<span id="cb34-22">            loss <span class="op" style="color: #5E5E5E;">=</span> criterion(output, trg)</span>
+<span id="cb34-23">            losses.append(loss.item())</span>
+<span id="cb34-24"></span>
+<span id="cb34-25">            loss.backward()</span>
+<span id="cb34-26"></span>
+<span id="cb34-27">            <span class="co" style="color: #5E5E5E;"># clip to avoid exploding gradient issues</span></span>
+<span id="cb34-28">            torch.nn.utils.clip_grad_norm_(encoder.parameters(), max_norm<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb34-29">            torch.nn.utils.clip_grad_norm_(decoder.parameters(), max_norm<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb34-30"></span>
+<span id="cb34-31">            optimizer.step()</span>
+<span id="cb34-32"></span>
+<span id="cb34-33">        mean_loss <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">sum</span>(losses) <span class="op" style="color: #5E5E5E;">/</span> <span class="bu" style="color: null;">len</span>(losses)</span>
+<span id="cb34-34">        <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Epoch:</span><span class="sc" style="color: #5E5E5E;">{:2d}</span><span class="st" style="color: #20794D;">/</span><span class="sc" style="color: #5E5E5E;">{}</span><span class="ch" style="color: #20794D;">\t</span><span class="st" style="color: #20794D;"> Loss:</span><span class="sc" style="color: #5E5E5E;">{:.4f}</span><span class="st" style="color: #20794D;"> (</span><span class="sc" style="color: #5E5E5E;">{:.2f}</span><span class="st" style="color: #20794D;">s)'</span>.<span class="bu" style="color: null;">format</span>(epoch <span class="op" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">1</span>, n_epochs, mean_loss, time.time() <span class="op" style="color: #5E5E5E;">-</span> start))</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="26">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><span class="co" style="color: #5E5E5E;"># adjustable hyperparameters</span></span>
+<span id="cb35-2">LEARNING_RATE <span class="op" style="color: #5E5E5E;">=</span> <span class="fl" style="color: #AD0000;">0.001</span></span>
+<span id="cb35-3">DIM_FEEDFORWARD<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">512</span></span>
+<span id="cb35-4">N_EPOCHS<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">10</span></span>
+<span id="cb35-5">N_HEADS<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span></span>
+<span id="cb35-6">N_LAYERS<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span></span>
+<span id="cb35-7"></span>
+<span id="cb35-8">device <span class="op" style="color: #5E5E5E;">=</span> torch.device(<span class="st" style="color: #20794D;">'cuda'</span> <span class="cf" style="color: #003B4F;">if</span> torch.cuda.is_available() <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">'cpu'</span>)</span>
+<span id="cb35-9"></span>
+<span id="cb35-10">transformer_encoder <span class="op" style="color: #5E5E5E;">=</span> TransformerEncoder(src_vocab, EMBEDDING_DIM, N_HEADS, </span>
+<span id="cb35-11">                                         N_LAYERS,DIM_FEEDFORWARD,</span>
+<span id="cb35-12">                                         max_length_src, device).to(device)</span>
+<span id="cb35-13">transformer_decoder <span class="op" style="color: #5E5E5E;">=</span> TransformerDecoder(trg_vocab, EMBEDDING_DIM, N_HEADS, </span>
+<span id="cb35-14">                                         N_LAYERS,DIM_FEEDFORWARD,</span>
+<span id="cb35-15">                                         max_length_trg, device).to(device)</span>
+<span id="cb35-16"></span>
+<span id="cb35-17">transformer_model_params <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">list</span>(transformer_encoder.parameters()) <span class="op" style="color: #5E5E5E;">+</span> <span class="bu" style="color: null;">list</span>(transformer_decoder.parameters())</span>
+<span id="cb35-18">optimizer <span class="op" style="color: #5E5E5E;">=</span> torch.optim.Adam(transformer_model_params, lr<span class="op" style="color: #5E5E5E;">=</span>LEARNING_RATE)</span>
+<span id="cb35-19"></span>
+<span id="cb35-20"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Encoder and Decoder models initialized!'</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Encoder and Decoder models initialized!</code></pre>
+<div class="cell" data-execution_count="27">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1">trainTransformerModel(transformer_encoder, transformer_decoder, train_dataset, optimizer, device, N_EPOCHS)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Epoch: 1/10  Loss:4.1060 (8.66s)
+Epoch: 2/10  Loss:3.1300 (8.62s)
+Epoch: 3/10  Loss:2.6697 (8.75s)
+Epoch: 4/10  Loss:2.2971 (8.70s)
+Epoch: 5/10  Loss:1.9866 (8.65s)
+Epoch: 6/10  Loss:1.7386 (8.64s)
+Epoch: 7/10  Loss:1.5376 (8.88s)
+Epoch: 8/10  Loss:1.3696 (8.61s)
+Epoch: 9/10  Loss:1.2462 (8.63s)
+Epoch:10/10  Loss:1.1405 (8.61s)</code></pre>
+</section>
+<section id="model-inference-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-inference-1">Model Inference</h3>
+<p>Now that the model is trained, it can be used on test data. Here is a function that takes the trained model and a source sentence, and returns its translation to the target language. Like the RNN, the prediction of the decoder is used as the input to the decoder for the sequence of outputs. Since the transformer does not use recurrences, it does not pass a hidden state; instead, at time step <img src="https://latex.codecogs.com/png.latex?t_i"> it passes <img src="https://latex.codecogs.com/png.latex?w_i,%20w_2%20%5Ccdots%20w_%7Bi-1%7D">, which is the entire sequence predicted so far.</p>
+<div class="cell" data-execution_count="28">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><span class="kw" style="color: #003B4F;">def</span> decodeTransformerModel(encoder, decoder, src, max_decode_len, device):</span>
+<span id="cb39-2">    <span class="co" style="color: #5E5E5E;"># encoder: the RnnEncoder object</span></span>
+<span id="cb39-3">    <span class="co" style="color: #5E5E5E;"># decoder: the RnnDecoder object</span></span>
+<span id="cb39-4">    <span class="co" style="color: #5E5E5E;"># src: the source sentences to translate with size: [max_src_length, batch_size]</span></span>
+<span id="cb39-5">    <span class="co" style="color: #5E5E5E;"># max_decode_len: the maximum desired length (int) of the target translated sentences</span></span>
+<span id="cb39-6">    <span class="co" style="color: #5E5E5E;"># device: the device the torch tensors are on</span></span>
+<span id="cb39-7">    enc_output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span></span>
+<span id="cb39-8"></span>
+<span id="cb39-9">    <span class="co" style="color: #5E5E5E;"># initialize variables</span></span>
+<span id="cb39-10">    trg_vocab <span class="op" style="color: #5E5E5E;">=</span> decoder.trg_vocab</span>
+<span id="cb39-11">    batch_size <span class="op" style="color: #5E5E5E;">=</span> src.size(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb39-12">    <span class="co" style="color: #5E5E5E;"># curr_output: to contain the predicted translated sentences with size: [batch_size, max_decode_len]</span></span>
+<span id="cb39-13">    curr_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((batch_size, max_decode_len)).to(device)</span>
+<span id="cb39-14">    <span class="co" style="color: #5E5E5E;"># curr_predictions: to contain the (unnormalized) probabilities of each token in the vocabulary at each time step</span></span>
+<span id="cb39-15">    <span class="co" style="color: #5E5E5E;"># with size: [batch_size, max_decode_len, trg_vocab_size]</span></span>
+<span id="cb39-16">    curr_predictions <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((batch_size, max_decode_len, <span class="bu" style="color: null;">len</span>(trg_vocab.idx2word))).to(device)</span>
+<span id="cb39-17">    <span class="co" style="color: #5E5E5E;"># eos_detected: to detect sentences that reach the </span><span class="re">END</span><span class="co" style="color: #5E5E5E;"> token to insert PAD in later time steps with size: [batch_size]</span></span>
+<span id="cb39-18">    eos_detected <span class="op" style="color: #5E5E5E;">=</span> torch.zeros(batch_size).to(device)</span>
+<span id="cb39-19"></span>
+<span id="cb39-20">    <span class="co" style="color: #5E5E5E;"># start the decoding with the start token for each example</span></span>
+<span id="cb39-21">    dec_input <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([[trg_vocab.word2idx[START]]] <span class="op" style="color: #5E5E5E;">*</span> batch_size).transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device)</span>
+<span id="cb39-22">    curr_output[:, <span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">=</span> dec_input.squeeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb39-23"></span>
+<span id="cb39-24">    <span class="co" style="color: #5E5E5E;"># implement decoding algorithm</span></span>
+<span id="cb39-25">    <span class="co" style="color: #5E5E5E;"># obtain encoder output by encoding src sentences</span></span>
+<span id="cb39-26">    enc_output <span class="op" style="color: #5E5E5E;">=</span> encoder(src)</span>
+<span id="cb39-27">    <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">1</span>, max_decode_len):</span>
+<span id="cb39-28">      <span class="co" style="color: #5E5E5E;"># obtain the best words so far for previous time steps</span></span>
+<span id="cb39-29">      dec_input <span class="op" style="color: #5E5E5E;">=</span> curr_output[:, :t].transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).<span class="bu" style="color: null;">long</span>()</span>
+<span id="cb39-30">      <span class="co" style="color: #5E5E5E;"># obtain (unnormalized) prediction probabilities by feeding dec_input and enc_output to decoder</span></span>
+<span id="cb39-31">      pred_prob <span class="op" style="color: #5E5E5E;">=</span> decoder(dec_input, enc_output)</span>
+<span id="cb39-32">      <span class="co" style="color: #5E5E5E;"># save (unnormalized) prediction probabilities in curr_predictions at index t</span></span>
+<span id="cb39-33">      curr_predictions[:, t, :] <span class="op" style="color: #5E5E5E;">=</span> pred_prob[<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, :, :]</span>
+<span id="cb39-34">      <span class="co" style="color: #5E5E5E;"># calculate the most likely (highest probability) token and save in curr_output at timestep t</span></span>
+<span id="cb39-35">      max_prob <span class="op" style="color: #5E5E5E;">=</span> curr_predictions[:, t, :].argmax(dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">1</span>).unsqueeze(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb39-36">      curr_output[:, t] <span class="op" style="color: #5E5E5E;">=</span> max_prob.squeeze(<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb39-37">      <span class="co" style="color: #5E5E5E;"># overwrite predicted token with PAD if </span><span class="re">END</span><span class="co" style="color: #5E5E5E;"> already detected for a given sentence</span></span>
+<span id="cb39-38">      curr_output[eos_detected <span class="op" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">1</span>, t] <span class="op" style="color: #5E5E5E;">=</span> trg_vocab.word2idx[PAD]</span>
+<span id="cb39-39">      <span class="co" style="color: #5E5E5E;"># check if </span><span class="re">END</span><span class="co" style="color: #5E5E5E;"> is detected in current output and update eos_detected</span></span>
+<span id="cb39-40">      <span class="cf" style="color: #003B4F;">if</span> trg_vocab.word2idx[END] <span class="kw" style="color: #003B4F;">in</span> curr_output[:, t]:</span>
+<span id="cb39-41">        eos_detected[trg_vocab.word2idx[END] <span class="op" style="color: #5E5E5E;">==</span> curr_output[:, t]] <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb39-42"></span>
+<span id="cb39-43">    <span class="cf" style="color: #003B4F;">return</span> curr_output, curr_predictions, enc_output</span></code></pre></div>
+</details>
+</div>
+<p>Here are some examples of sentences generated by the model compared with correct translations from the source language to target language.</p>
+<div class="cell" data-execution_count="29">
+<details>
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1">transformer_encoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb40-2">transformer_decoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb40-3">idxes <span class="op" style="color: #5E5E5E;">=</span> random.choices(<span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(test_dataset.dataset)), k<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">5</span>)</span>
+<span id="cb40-4">src, trg <span class="op" style="color: #5E5E5E;">=</span>  train_dataset.dataset[idxes]</span>
+<span id="cb40-5">curr_output, _, _ <span class="op" style="color: #5E5E5E;">=</span> decodeTransformerModel(transformer_encoder, transformer_decoder, src.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device), trg.size(<span class="dv" style="color: #AD0000;">1</span>), device)</span>
+<span id="cb40-6"><span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(src)):</span>
+<span id="cb40-7">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Source sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [src_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> src[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> src_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb40-8">                                       <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [src_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> src[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb40-9">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Target sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> trg[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb40-10">                                       <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> trg[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb40-11">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Predicted sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> curr_output[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb40-12">                                          <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[j.item()] <span class="cf" style="color: #003B4F;">for</span> j <span class="kw" style="color: #003B4F;">in</span> curr_output[i]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))))</span>
+<span id="cb40-13">    <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"----------------"</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Source sentence: &lt;START&gt; 我 做 得 好 到 不 能 再 好 了 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i can t do any better . &lt;END&gt;
+Predicted sentence: &lt;START&gt; i can t do it anymore . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 我 和 汤 姆 说 了 ， 我 觉 得 这 个 主 意 很 好 。 &lt;END&gt;
+Target sentence: &lt;START&gt; i told tom that i thought that it was a good idea . &lt;END&gt;
+Predicted sentence: &lt;START&gt; i told tom i thought that it was a good idea . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 汤 姆 已 经 结 婚 了 。 &lt;END&gt;
+Target sentence: &lt;START&gt; tom s married . &lt;END&gt;
+Predicted sentence: &lt;START&gt; tom has already married . &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 請 你 鎖 門 好 嗎 ？ &lt;END&gt;
+Target sentence: &lt;START&gt; would you please lock the door ? &lt;END&gt;
+Predicted sentence: &lt;START&gt; would you please close the door ? &lt;END&gt;
+----------------
+Source sentence: &lt;START&gt; 請 告 訴 我 該 怎 麼 做 。 &lt;END&gt;
+Target sentence: &lt;START&gt; please tell me what to do . &lt;END&gt;
+Predicted sentence: &lt;START&gt; please tell me what to do . &lt;END&gt;
+----------------</code></pre>
+</section>
+<section id="model-evaluation-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-evaluation-1">Model Evaluation</h3>
+<p>Here is a function to run the test set through the model and calculate BLEU scores.</p>
+<div class="cell" data-execution_count="30">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><span class="kw" style="color: #003B4F;">def</span> evaluateModel(encoder, decoder, test_dataset, target_tensor_val, device):</span>
+<span id="cb42-2">    trg_vocab <span class="op" style="color: #5E5E5E;">=</span> decoder.trg_vocab</span>
+<span id="cb42-3">    batch_size <span class="op" style="color: #5E5E5E;">=</span> test_dataset.batch_size</span>
+<span id="cb42-4">    n_batch <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb42-5">    total_loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb42-6"></span>
+<span id="cb42-7">    encoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb42-8">    decoder.<span class="bu" style="color: null;">eval</span>()</span>
+<span id="cb42-9">    criterion <span class="op" style="color: #5E5E5E;">=</span> nn.CrossEntropyLoss(ignore_index<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb42-10"></span>
+<span id="cb42-11">    losses<span class="op" style="color: #5E5E5E;">=</span>[]</span>
+<span id="cb42-12">    final_output, target_output <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">None</span>, <span class="va" style="color: #111111;">None</span></span>
+<span id="cb42-13"></span>
+<span id="cb42-14">    <span class="cf" style="color: #003B4F;">with</span> torch.no_grad():</span>
+<span id="cb42-15">        <span class="cf" style="color: #003B4F;">for</span> batch, (src, trg) <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">enumerate</span>(test_dataset):</span>
+<span id="cb42-16">            n_batch <span class="op" style="color: #5E5E5E;">+=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb42-17">            loss <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">0</span></span>
+<span id="cb42-18">            </span>
+<span id="cb42-19">            src, trg <span class="op" style="color: #5E5E5E;">=</span> src.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device), trg.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device)</span>
+<span id="cb42-20">            curr_output, curr_predictions, enc_out <span class="op" style="color: #5E5E5E;">=</span> decodeTransformerModel(encoder, decoder, src, trg.size(<span class="dv" style="color: #AD0000;">0</span>), device)</span>
+<span id="cb42-21"></span>
+<span id="cb42-22">            <span class="cf" style="color: #003B4F;">for</span> t <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">1</span>, trg.size(<span class="dv" style="color: #AD0000;">0</span>)):</span>
+<span id="cb42-23">                output <span class="op" style="color: #5E5E5E;">=</span> decoder(trg[:<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, :], enc_out)</span>
+<span id="cb42-24">                output <span class="op" style="color: #5E5E5E;">=</span> output.reshape(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, output.shape[<span class="dv" style="color: #AD0000;">2</span>])</span>
+<span id="cb42-25">                loss_trg <span class="op" style="color: #5E5E5E;">=</span> trg[<span class="dv" style="color: #AD0000;">1</span>:].reshape(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb42-26">                loss <span class="op" style="color: #5E5E5E;">+=</span> criterion(output, loss_trg)</span>
+<span id="cb42-27"></span>
+<span id="cb42-28">            <span class="cf" style="color: #003B4F;">if</span> final_output <span class="kw" style="color: #003B4F;">is</span> <span class="va" style="color: #111111;">None</span>:</span>
+<span id="cb42-29">                final_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((<span class="bu" style="color: null;">len</span>(target_tensor_val), trg.size(<span class="dv" style="color: #AD0000;">0</span>)))</span>
+<span id="cb42-30">                target_output <span class="op" style="color: #5E5E5E;">=</span> torch.zeros((<span class="bu" style="color: null;">len</span>(target_tensor_val), trg.size(<span class="dv" style="color: #AD0000;">0</span>)))</span>
+<span id="cb42-31"></span>
+<span id="cb42-32">            final_output[batch<span class="op" style="color: #5E5E5E;">*</span>batch_size:(batch<span class="op" style="color: #5E5E5E;">+</span><span class="dv" style="color: #AD0000;">1</span>)<span class="op" style="color: #5E5E5E;">*</span>batch_size] <span class="op" style="color: #5E5E5E;">=</span> curr_output</span>
+<span id="cb42-33">            target_output[batch<span class="op" style="color: #5E5E5E;">*</span>batch_size:(batch<span class="op" style="color: #5E5E5E;">+</span><span class="dv" style="color: #AD0000;">1</span>)<span class="op" style="color: #5E5E5E;">*</span>batch_size] <span class="op" style="color: #5E5E5E;">=</span> trg.transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb42-34">            losses.append(loss.item() <span class="op" style="color: #5E5E5E;">/</span> (trg.size(<span class="dv" style="color: #AD0000;">0</span>)<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>))</span>
+<span id="cb42-35"></span>
+<span id="cb42-36">        mean_loss <span class="op" style="color: #5E5E5E;">=</span> <span class="bu" style="color: null;">sum</span>(losses) <span class="op" style="color: #5E5E5E;">/</span> <span class="bu" style="color: null;">len</span>(losses)</span>
+<span id="cb42-37">        <span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Loss </span><span class="sc" style="color: #5E5E5E;">{:.4f}</span><span class="st" style="color: #20794D;">'</span>.<span class="bu" style="color: null;">format</span>(mean_loss))</span>
+<span id="cb42-38">    </span>
+<span id="cb42-39">    <span class="co" style="color: #5E5E5E;"># compute Bleu scores</span></span>
+<span id="cb42-40">    <span class="cf" style="color: #003B4F;">return</span> computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab)</span></code></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="31">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1">transformer_save_candidate, transformer_scores <span class="op" style="color: #5E5E5E;">=</span> evaluateModel(transformer_encoder, transformer_decoder, test_dataset, trg_tensor_val, device)</span></code></pre></div>
+</details>
+</div>
+<pre><code>Loss 2.4514
+BLEU 1-gram: 0.230886
+BLEU 2-gram: 0.060984
+BLEU 3-gram: 0.042378
+BLEU 4-gram: 0.038043</code></pre>
+</section>
+</section>
+<section id="translating-new-sentences" class="level2">
+<h2 class="anchored" data-anchor-id="translating-new-sentences">Translating New Sentences</h2>
+<p>Here are some helper functions to pre-process new sentences that are unseen in the train and test data.</p>
+<div class="cell" data-execution_count="32">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><span class="co" style="color: #5E5E5E;"># preprocessing an input sentence to identification numbers, maximum lengths, apply padding</span></span>
+<span id="cb45-2"><span class="kw" style="color: #003B4F;">def</span> preprocessSentenceToTensor(src_sentence, src_vocab, trg_vocab, src_lang, trg_lang, max_len<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">100</span>):</span>
+<span id="cb45-3">  <span class="co" style="color: #5E5E5E;"># vectorize the input sentence</span></span>
+<span id="cb45-4">  sent_tensor <span class="op" style="color: #5E5E5E;">=</span> [src_vocab.word2idx[s <span class="cf" style="color: #003B4F;">if</span> s <span class="kw" style="color: #003B4F;">in</span> src_vocab.vocab <span class="cf" style="color: #003B4F;">else</span> UNK] <span class="cf" style="color: #003B4F;">for</span> s <span class="kw" style="color: #003B4F;">in</span> src_sentence.split(<span class="st" style="color: #20794D;">' '</span>)]</span>
+<span id="cb45-5"></span>
+<span id="cb45-6">  <span class="co" style="color: #5E5E5E;"># the max_len for padding</span></span>
+<span id="cb45-7">  <span class="bu" style="color: null;">print</span>(<span class="ss" style="color: #20794D;">f'max_len: </span><span class="sc" style="color: #5E5E5E;">{</span>max_len<span class="sc" style="color: #5E5E5E;">}</span><span class="ss" style="color: #20794D;">'</span>)</span>
+<span id="cb45-8"></span>
+<span id="cb45-9">  <span class="co" style="color: #5E5E5E;"># pad the sentence in the dataset with the max_length</span></span>
+<span id="cb45-10">  sent_tensor <span class="op" style="color: #5E5E5E;">=</span> padSequences(sent_tensor, max_len)</span>
+<span id="cb45-11"></span>
+<span id="cb45-12">  <span class="cf" style="color: #003B4F;">return</span> sent_tensor, max_len</span>
+<span id="cb45-13"></span>
+<span id="cb45-14"><span class="kw" style="color: #003B4F;">class</span> SentenceData(Dataset):</span>
+<span id="cb45-15">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, X):</span>
+<span id="cb45-16">        <span class="va" style="color: #111111;">self</span>.length <span class="op" style="color: #5E5E5E;">=</span> torch.LongTensor([np.<span class="bu" style="color: null;">sum</span>(<span class="dv" style="color: #AD0000;">1</span> <span class="op" style="color: #5E5E5E;">-</span> np.equal(x, <span class="dv" style="color: #AD0000;">0</span>)) <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> X])</span>
+<span id="cb45-17">        <span class="va" style="color: #111111;">self</span>.data <span class="op" style="color: #5E5E5E;">=</span> torch.LongTensor(X)</span>
+<span id="cb45-18">    </span>
+<span id="cb45-19">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__getitem__</span>(<span class="va" style="color: #111111;">self</span>, index):</span>
+<span id="cb45-20">        x <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.data[index]</span>
+<span id="cb45-21">        <span class="cf" style="color: #003B4F;">return</span> x</span>
+<span id="cb45-22"></span>
+<span id="cb45-23">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__len__</span>(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb45-24">        <span class="cf" style="color: #003B4F;">return</span> <span class="bu" style="color: null;">len</span>(<span class="va" style="color: #111111;">self</span>.data)</span></code></pre></div>
+</details>
+</div>
+<p>Here is an example of translating a new sentence that does not exist in the train or test data.</p>
+<ul>
+<li>Chinese Mandarin (Source): <code>汤姆喜欢和他的朋友们踢足球。</code></li>
+<li>English (Target): <code>Tom likes to play soccer with his friends.</code></li>
+</ul>
+<div class="cell" data-execution_count="33">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><span class="co" style="color: #5E5E5E;"># sentences that include mention of "Tom", and "soccer" or "friends"</span></span>
+<span id="cb46-2">dat.iloc[<span class="bu" style="color: null;">list</span>((dat.eng.<span class="bu" style="color: null;">str</span>.contains(<span class="st" style="color: #20794D;">'soccer'</span>) <span class="op" style="color: #5E5E5E;">|</span> dat.eng.<span class="bu" style="color: null;">str</span>.contains(<span class="st" style="color: #20794D;">'friends'</span>)) <span class="op" style="color: #5E5E5E;">&amp;</span> dat.eng.<span class="bu" style="color: null;">str</span>.contains(<span class="st" style="color: #20794D;">'Tom'</span>)), :].sample(<span class="dv" style="color: #AD0000;">10</span>)</span></code></pre></div>
+</details>
+</div>
+<pre><code>                                                     eng                cmn
+11449                Tom doesn't have very many friends.         汤姆的朋友不是很多。
+4360            I envy the friendship Tom and Mary have.  我羨慕Tom和Mary之間的友誼。
+12923          You're taller than most of Tom's friends.       你比汤姆的多数朋友都高。
+14765                      Tom had numerous girlfriends.          Tom有很多女友。
+20113                        My friends all call me Tom.         我的朋友都叫我湯姆。
+20230  Tom and his friends played basketball all afte...    汤姆和朋友们打了整个下午篮球。
+22514                   Tom has no friends to play with.      湯姆沒有朋友可以一起玩耍。
+10373  Tom doesn't have any friends who are willing t...      汤姆没有愿意帮助他的朋友。
+24047                           Tom doesn't like soccer.           汤姆不喜欢足球。
+5104                          Tom tried to make friends.           汤姆试着交朋友。</code></pre>
+<div class="cell" data-execution_count="34">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><span class="co" style="color: #5E5E5E;"># preprocess source and target sentences</span></span>
+<span id="cb48-2">src_sentence <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"汤姆喜欢和他的朋友们踢足球。"</span></span>
+<span id="cb48-3">src_sentence <span class="op" style="color: #5E5E5E;">=</span> preprocessSentence(src_sentence, script<span class="op" style="color: #5E5E5E;">=</span>src_script, <span class="bu" style="color: null;">dir</span><span class="op" style="color: #5E5E5E;">=</span>src_dir)</span>
+<span id="cb48-4"></span>
+<span id="cb48-5">trg_sentence <span class="op" style="color: #5E5E5E;">=</span> <span class="st" style="color: #20794D;">"Tom likes to play soccer with his friends."</span></span>
+<span id="cb48-6">trg_sentence <span class="op" style="color: #5E5E5E;">=</span> preprocessSentence(trg_sentence, script<span class="op" style="color: #5E5E5E;">=</span>trg_script, <span class="bu" style="color: null;">dir</span><span class="op" style="color: #5E5E5E;">=</span>trg_dir)</span>
+<span id="cb48-7"></span>
+<span id="cb48-8"><span class="co" style="color: #5E5E5E;"># preprocess sentences to tensors</span></span>
+<span id="cb48-9">src_tensor, max_length_src <span class="op" style="color: #5E5E5E;">=</span> preprocessSentenceToTensor(src_sentence, src_vocab, trg_vocab, src_lang, trg_lang, max_length_src)</span>
+<span id="cb48-10">sentence_tensor <span class="op" style="color: #5E5E5E;">=</span> SentenceData(src_tensor).data.unsqueeze(<span class="dv" style="color: #AD0000;">0</span>).transpose(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>).to(device)</span>
+<span id="cb48-11"></span>
+<span id="cb48-12"><span class="co" style="color: #5E5E5E;"># predict translated sentences from RNN and TF models</span></span>
+<span id="cb48-13">curr_rnn_out, _ <span class="op" style="color: #5E5E5E;">=</span> decodeRnnModel(rnn_encoder, rnn_decoder, sentence_tensor, max_length_src, device)</span>
+<span id="cb48-14">curr_tf_out, _, _ <span class="op" style="color: #5E5E5E;">=</span> decodeTransformerModel(transformer_encoder, transformer_decoder, sentence_tensor, max_length_trg, device)</span>
+<span id="cb48-15"></span>
+<span id="cb48-16">rnn_translate <span class="op" style="color: #5E5E5E;">=</span> [x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[<span class="bu" style="color: null;">int</span>(k.item())] <span class="cf" style="color: #003B4F;">for</span> k <span class="kw" style="color: #003B4F;">in</span> curr_rnn_out[<span class="dv" style="color: #AD0000;">0</span>]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb48-17">                <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[<span class="bu" style="color: null;">int</span>(k.item())] <span class="cf" style="color: #003B4F;">for</span> k <span class="kw" style="color: #003B4F;">in</span> curr_rnn_out[<span class="dv" style="color: #AD0000;">0</span>]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))</span>
+<span id="cb48-18">tf_translate <span class="op" style="color: #5E5E5E;">=</span> [x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[<span class="bu" style="color: null;">int</span>(k.item())] <span class="cf" style="color: #003B4F;">for</span> k <span class="kw" style="color: #003B4F;">in</span> curr_tf_out[<span class="dv" style="color: #AD0000;">0</span>]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD] <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> \</span>
+<span id="cb48-19">                <span class="cf" style="color: #003B4F;">else</span> <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>([x <span class="cf" style="color: #003B4F;">for</span> x <span class="kw" style="color: #003B4F;">in</span> [trg_vocab.idx2word[<span class="bu" style="color: null;">int</span>(k.item())] <span class="cf" style="color: #003B4F;">for</span> k <span class="kw" style="color: #003B4F;">in</span> curr_tf_out[<span class="dv" style="color: #AD0000;">0</span>]] <span class="cf" style="color: #003B4F;">if</span> x <span class="op" style="color: #5E5E5E;">!=</span> PAD]))</span></code></pre></div>
+</details>
+</div>
+<pre><code>max_len: 46</code></pre>
+<div class="cell" data-execution_count="35">
+<details open="">
+<summary>Reveal the code</summary>
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Source sentence:"</span>, src_sentence <span class="cf" style="color: #003B4F;">if</span> src_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">' '</span>.join( <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>(src_sentence.split(<span class="st" style="color: #20794D;">' '</span>))) ))</span>
+<span id="cb50-2"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"Target sentence:"</span>, trg_sentence <span class="cf" style="color: #003B4F;">if</span> trg_dir <span class="op" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">'l2r'</span> <span class="cf" style="color: #003B4F;">else</span> <span class="st" style="color: #20794D;">' '</span>.join( <span class="bu" style="color: null;">list</span>(<span class="bu" style="color: null;">reversed</span>(trg_sentence.split(<span class="st" style="color: #20794D;">' '</span>))) ))</span>
+<span id="cb50-3"><span class="bu" style="color: null;">print</span>()</span>
+<span id="cb50-4"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"[RNN] Predicted sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join(rnn_translate))</span>
+<span id="cb50-5"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">"[TF] Predicted sentence:"</span>, <span class="st" style="color: #20794D;">' '</span>.join(tf_translate))</span></code></pre></div>
+</details>
+</div>
+<pre><code>Source sentence: &lt;START&gt; 汤 姆 喜 欢 和 他 的 朋 友 们 踢 足 球 。 &lt;END&gt;
+Target sentence: &lt;START&gt; tom likes to play soccer with his friends . &lt;END&gt;
+
+[RNN] Predicted sentence: &lt;START&gt; tom likes to study friends with his friends . &lt;END&gt;
+[TF] Predicted sentence: &lt;START&gt; tom and his friends like soccer . &lt;END&gt;</code></pre>
+
+
+</section>
+
+ ]]></description>
+  <category>Machine Learning</category>
+  <category>Neural Networks</category>
+  <category>NLP</category>
+  <category>Python</category>
+  <guid>https://wjonasreger.github.io/projects/neural_machine_translation/index.html</guid>
+  <pubDate>Sun, 06 Nov 2022 05:00:00 GMT</pubDate>
+</item>
+<item>
   <title>Text Classification with Neural Networks</title>
   <dc:creator>Jonas Reger</dc:creator>
   <link>https://wjonasreger.github.io/projects/text_classification_neural_networks/index.html</link>

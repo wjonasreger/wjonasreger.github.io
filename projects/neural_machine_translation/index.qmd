@@ -1,0 +1,1355 @@
+---
+title: "Neural Machine Translation"
+description: "Some neural network models for predicting sentence translation to a target language"
+author: "Jonas Reger"
+date: "11/6/2022"
+categories: [Machine Learning, Neural Networks, NLP, Python]
+draft: false
+freeze: true
+page-layout: full
+jupyter: python3
+execute: 
+  eval: false
+format:
+  html:
+    code-fold: show
+    code-summary: "Reveal the code"
+    code-overflow: wrap
+    code-tools:
+      source: https://github.com/wjonasreger/neural_machine_translation
+    code-block-bg: true
+    code-block-border-left: "#56799c"
+    code-copy: hover
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+In this notebook, machine translation is implemented using two deep
+learning approaches: a Recurrent Neural Network (RNN) and Transformer.
+Specifically, Sequence to Sequence models for Chinese Mandarin to English translation are trained using [anki data](http://www.manythings.org/anki/). Here are a few publications relating to
+Sequence to Sequence learning and machine translation.
+
+1.  <https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf>
+2.  <https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html>
+3.  <https://arxiv.org/pdf/1409.0473.pdf>
+
+Here is a Google Colab notebook that features an [interactive neural
+translator](https://colab.research.google.com/drive/1FNUle-E1SuLS3ciRT6pLgjspLibaTejj?usp=sharing) with neural machine translation models. This supports two-way
+translations between English and several languages.
+
+## Load Packages
+
+```{python}
+#| echo: false
+!pip install hgtk
+```
+
+```{python}
+#| code-fold: true
+import math, random
+import os, re, time
+import numpy as np
+import pandas as pd
+from tqdm.notebook import tqdm
+import unicodedata
+import hgtk
+
+import torch
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+
+import nltk
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction, corpus_bleu
+
+rnn_encoder, rnn_decoder, transformer_encoder, transformer_decoder = None, None, None, None
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', DEVICE)
+```
+
+    Using device: cuda
+
+## Preprocess Data
+
+### Helper Functions
+
+Here are some helper functions for the dataloader.
+
+```{python}
+#| code-fold: true
+START = '<START>'
+END = '<END>'
+UNK = '<UNK>'
+PAD = '<PAD>'
+
+# converts the unicode file to ascii
+def unicodeToASCII(s):
+  return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+# clean latin script
+def cleanLatin(w):
+  w = unicodeToASCII(w.lower().strip())
+  w = re.sub(r'([?.!,¿])', r' \1 ', w)
+  w = re.sub(r'[" "]+', ' ', w)
+  w = re.sub(r'[^a-zA-Z?.!,¿]+', ' ', w)
+  return w
+
+# clean hangul script
+def cleanHangul(w):
+  w = re.sub(r'([?.!,])', r' \1 ', w)
+  w = re.sub(r'[" "]+', ' ', w)
+  w = ' '.join( [t if (hgtk.checker.is_hangul(t) | (t in '?.!,')) else '' for t in w.split(' ')] )
+  w = unicodeToASCII(w.lower().strip())
+  return w
+
+# clean mandarin script
+def cleanMandarin(w):
+  w = re.sub(r'([?.!,。？！，])', r' \1 ', w)
+  w = ' '.join([c for c in w])
+  w = re.sub(r'[" "]+', ' ', w)
+  w = ' '.join( [t if t not in '1234567890`~@#$%^&*()_-+={}[];\':"/<>\\|' else '' for t in w.split(' ')] )
+  w = unicodeToASCII(w.lower().strip())
+  return w
+
+# clean semitic scripts
+def cleanSemitic(w):
+  w = re.sub(r'([?.!,؟])', r' \1 ', w)
+  w = re.sub(r'[" "]+', ' ', w)
+  w = [t if t not in '1234567890`~@#$%^&*()_-+={}[];\':"/<>\\|' else '' for t in w.split(' ')]
+  w = ' '.join( w )
+  w = unicodeToASCII(w.lower().strip())
+  w = w.split(' ')
+  w = [w[-1]] + w[:-1] if w[-1] in '.!' else w
+  w = ' '.join( w )
+  return w
+
+# clean other scripts
+def cleanGeneral(w):
+  w = re.sub(r'([?.!,])', r' \1 ', w)
+  w = re.sub(r'[" "]+', ' ', w)
+  w = ' '.join( [t if t not in '1234567890`~@#$%^&*()_-+={}[];\':"/<>\\|' else '' for t in w.split(' ')] )
+  w = unicodeToASCII(w.lower().strip())
+  return w
+
+# preprocess sentences to lower-case and add START and END tokens
+def preprocessSentence(w, script='latin', dir='l2r'):
+  assert script in ['latin', 'hangul', 'mandarin', 'semitic', 'general'], \
+  "need to select script type [latin, hangul, mandarin, semitic, general]"
+  if script=='latin':
+    w = cleanLatin(w)
+  elif script=='hangul':
+    w = cleanHangul(w)
+  elif script=='mandarin':
+    w = cleanMandarin(w)
+  elif script=='semitic':
+    w = cleanSemitic(w)
+  elif script=='general':
+    w = cleanGeneral(w)
+
+  # remove excess white space
+  w = w.rstrip().strip()
+
+  # add start and end tags
+  w = ' '.join([START, w, END]) if dir == 'l2r' else ' '.join([START] + list(reversed(w.split(' '))) + [END])
+
+  return w
+
+# add padding to sequences
+def padSequences(x, max_len):
+    padded = np.zeros((max_len), dtype=np.int64)
+    if len(x) > max_len:
+        padded[:] = x[:max_len]
+    else:
+        padded[:len(x)] = x
+
+    return padded
+
+# preprocessing all sentences in data to identification numbers, maximum lengths, apply padding
+def preprocessDataToTensor(data, src_vocab, trg_vocab, src_lang, trg_lang):
+    # vectorize the input and target languages
+    src_tensor = [[src_vocab.word2idx[s if s in src_vocab.vocab else UNK] for s in sl.split(' ')] for sl in data[src_lang].values.tolist()]
+    trg_tensor = [[trg_vocab.word2idx[s if s in trg_vocab.vocab else UNK] for s in tl.split(' ')] for tl in data[trg_lang].values.tolist()]
+
+    # calculate the max_length of input and output tensor for padding
+    max_length_src, max_length_trg = max(len(t) for t in src_tensor), max(len(t) for t in trg_tensor)
+    print('max_length_src: {}, max_length_trg: {}'.format(max_length_src, max_length_trg))
+
+    # pad all the sentences in the dataset with the max_length
+    src_tensor = [padSequences(x, max_length_src) for x in src_tensor]
+    trg_tensor = [padSequences(x, max_length_trg) for x in trg_tensor]
+
+    return src_tensor, trg_tensor, max_length_src, max_length_trg
+
+# train-test data splits from tensors
+def trainTestSplit(src_tensor, trg_tensor):
+    total_num_examples = len(src_tensor) - int(0.2*len(src_tensor))
+    src_tensor_train, src_tensor_test = src_tensor[:int(0.75*total_num_examples)], src_tensor[int(0.75*total_num_examples):total_num_examples]
+    trg_tensor_train, trg_tensor_test = trg_tensor[:int(0.75*total_num_examples)], trg_tensor[int(0.75*total_num_examples):total_num_examples]
+
+    return src_tensor_train, src_tensor_test, trg_tensor_train, trg_tensor_test
+```
+
+### Download and Visualize the Data
+
+Here the translation data is downloaded on which a model will be learned
+to translate Chinese Mandarin to English.
+
+```{python}
+lang_path = 'cmn-eng' # src-trg
+src_script, trg_script = 'mandarin', 'latin'
+src_dir, trg_dir = 'l2r', 'l2r'
+
+os.system(f"wget http://www.manythings.org/anki/{lang_path}.zip")
+os.system(f"unzip -o {lang_path}.zip")
+src_lang, trg_lang = lang_path.split('-')[0], lang_path.split('-')[1]
+print(src_lang, trg_lang)
+```
+
+    cmn eng
+
+Now the data is visualized.
+
+```{python}
+lines = open(f'{src_lang}.txt', encoding='UTF-8').read().strip().split('\n')
+print(f'Number of translations available: {len(lines)}')
+total_num_examples = 50000 
+original_word_pairs = [[w for w in l.split('\t')][:2] for l in lines[:total_num_examples]]
+random.shuffle(original_word_pairs)
+
+dat = pd.DataFrame(original_word_pairs, columns=[trg_lang, src_lang])
+dat # visualize the data
+```
+
+    Number of translations available: 29371
+
+                                                       eng              cmn
+    0                                      She looked sad.         她看上去很伤心。
+    1                               You are a good person.          你是一個好人。
+    2                                    Is that a coyote?          那是丛林狼吗？
+    3                          This is a low-budget movie.      這是一部低成本的電影。
+    4                             He doesn't look his age.       他的长相与年龄不符。
+    ...                                                ...              ...
+    29366               She left the hospital an hour ago.      她一小时前离开了医院。
+    29367  One million people lost their lives in the war.  100万人在战争中失去了生命。
+    29368                  I have to take a test tomorrow.       明天我必須參加考試。
+    29369                  Please turn off the television.          请关闭电视机。
+    29370                 I am not sure when he will come.      我不确定他什么时候来。
+
+    [29371 rows x 2 columns]
+
+Next the data is preprocessed.
+
+```{python}
+data = dat.copy()
+data[trg_lang] = dat[trg_lang].apply(lambda w: preprocessSentence(w, script=trg_script, dir=trg_dir))
+data[src_lang] = dat[src_lang].apply(lambda w: preprocessSentence(w, script=src_script, dir=src_dir))
+data # visualizing the data
+```
+
+                                                         eng  \
+    0                         <START> she looked sad . <END>   
+    1                  <START> you are a good person . <END>   
+    2                       <START> is that a coyote ? <END>   
+    3             <START> this is a low budget movie . <END>   
+    4                <START> he doesn t look his age . <END>   
+    ...                                                  ...   
+    29366  <START> she left the hospital an hour ago . <END>   
+    29367  <START> one million people lost their lives in...   
+    29368     <START> i have to take a test tomorrow . <END>   
+    29369     <START> please turn off the television . <END>   
+    29370    <START> i am not sure when he will come . <END>   
+
+                                             cmn  
+    0              <START> 她 看 上 去 很 伤 心 。 <END>  
+    1                <START> 你 是 一 個 好 人 。 <END>  
+    2                <START> 那 是 丛 林 狼 吗 ？ <END>  
+    3        <START> 這 是 一 部 低 成 本 的 電 影 。 <END>  
+    4          <START> 他 的 长 相 与 年 龄 不 符 。 <END>  
+    ...                                      ...  
+    29366    <START> 她 一 小 时 前 离 开 了 医 院 。 <END>  
+    29367  <START> 万 人 在 战 争 中 失 去 了 生 命 。 <END>  
+    29368      <START> 明 天 我 必 須 參 加 考 試 。 <END>  
+    29369            <START> 请 关 闭 电 视 机 。 <END>  
+    29370    <START> 我 不 确 定 他 什 么 时 候 来 。 <END>  
+
+    [29371 rows x 2 columns]
+
+### Vocabulary & Dataloader Classes
+
+First a class for managing the vocabulary is created. There is a
+separate class for the vocabulary because there are two different
+vocabularies $-$ one for English and one for Chinese Mandarin.
+
+Then the dataloader is prepared and returns the source sentence and
+target sentence.
+
+```{python}
+class VocabLang():
+    def __init__(self, vocab):
+        self.word2idx = {PAD: 0, UNK: 1}
+        self.idx2word = {0: PAD, 1: UNK}
+        self.vocab = vocab
+        
+        for index, word in enumerate(vocab):
+            self.word2idx[word] = index + 2 # +2 because of PAD and UNK token
+            self.idx2word[index + 2] = word
+    
+    def __len__(self):
+        return len(self.word2idx)
+
+class DataSet(Dataset):
+    def __init__(self, X, y):
+        self.length = torch.LongTensor([np.sum(1 - np.equal(x, 0)) for x in X])
+        self.data = torch.LongTensor(X)
+        self.target = torch.LongTensor(y)
+    
+    def __getitem__(self, index):
+        x = self.data[index]
+        y = self.target[index]
+        return x, y
+
+    def __len__(self):
+        return len(self.data)
+```
+
+```{python}
+# adjustable hyperparameters
+BATCH_SIZE = 64
+EMBEDDING_DIM = 256
+```
+
+### Build Vocabulary
+
+```{python}
+def buildVocab(data):
+    sentences = [sen.split() for sen in data]
+    vocab = {}
+    for sen in sentences:
+        for word in sen:
+            if word not in vocab:
+                vocab[word] = 1
+    return list(vocab.keys())
+```
+
+```{python}
+src_vocab_list = buildVocab(data[src_lang])
+trg_vocab_list = buildVocab(data[trg_lang])
+```
+
+### Instantiate Datasets
+
+The train and test datasets are now instantiated.
+
+```{python}
+src_vocab = VocabLang(src_vocab_list)
+trg_vocab = VocabLang(trg_vocab_list)
+
+src_tensor, trg_tensor, max_length_src, max_length_trg = preprocessDataToTensor(data, src_vocab, trg_vocab, src_lang, trg_lang)
+src_tensor_train, src_tensor_val, trg_tensor_train, trg_tensor_val = trainTestSplit(src_tensor, trg_tensor)
+
+# create train and val datasets
+train_dataset = DataSet(src_tensor_train, trg_tensor_train)
+train_dataset = DataLoader(train_dataset, batch_size=BATCH_SIZE, drop_last=True, shuffle=True)
+
+test_dataset = DataSet(src_tensor_val, trg_tensor_val)
+test_dataset = DataLoader(test_dataset, batch_size=BATCH_SIZE, drop_last=True, shuffle=False)
+```
+
+    max_length_src: 46, max_length_trg: 38
+
+```{python}
+idxes = random.choices(range(len(train_dataset.dataset)), k=5)
+src, trg =  train_dataset.dataset[idxes]
+print('Source:', src)
+print('Source Dimensions: ', src.size())
+print('Target:', trg)
+print('Target Dimensions: ', trg.size())
+```
+
+    Source: tensor([[   2,   40,   87,   50,  363,   12,  896,   14,  155,  637,  103,  104,
+               11,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+            [   2,   55,   56,  392,  155, 1206, 1207,   10,   11,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+            [   2,   12,  100,   64,  246,  835, 1047,   22,   23,   11,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+            [   2,   40,  138,  154,  325,   60,   47,  344, 1269,   10,   11,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+            [   2,   40,  116,  233,  326,  676,  513,  789,   66,   10,   11,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0]])
+    Source Dimensions:  torch.Size([5, 46])
+    Target: tensor([[   2,  159,   30,  152,   33,    8,   10,   46,   16,    7,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0],
+            [   2,   42,  459,  587,   90, 1186,    6,    7,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0],
+            [   2,    9,    8, 1087,  244,   16,    7,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0],
+            [   2,   30,   39,  400,   33,  504,    6,   11,  262,    6,    7,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0],
+            [   2,   62,  106,   33,  106,  151, 5291,    6,    7,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+                0,    0]])
+    Target Dimensions:  torch.Size([5, 38])
+
+## The Recurrent Neural Network (RNN)
+
+Here a recurrent model for machine translation is implemented, and then
+trained and evaluated.
+
+Here are some links related to the task:
+
+1.  Attention paper: <https://arxiv.org/pdf/1409.0473.pdf>
+2.  Explanation of LSTM's & GRU's:
+    <https://towardsdatascience.com/illustrated-guide-to-lstms-and-gru-s-a-step-by-step-explanation-44e9eb85bf21>
+3.  Attention explanation:
+    <https://towardsdatascience.com/attention-in-neural-networks-e66920838742>
+4.  Another attention explanation:
+    <https://towardsdatascience.com/attention-and-its-different-forms-7fc3674d14dc>
+
+### The Encoder Model
+
+First a recurrent encoder model is built. A sequence of outputs of the
+GRU as well as the final hidden state are returned. These will be used
+in the decoder.
+
+-   **Initialization** (i.e., `__init__(...)`): Initializes the
+    following layers and other features for the neural network.
+    -   An embedding layer to represent the words in the vocabulary
+        `src_vocab` with `embedding_dim` as the embedding dimension.
+    -   A recurrent network (i.e., GRU) with one layer and hidden size
+        of `hidden_units`, `batch_first=True` and `bidirectional=False`.
+-   **Feed Forward** (i.e., `forward(...)`: Pass texts through the
+    embedding layer, then the recurrent network.
+
+```{python}
+class RnnEncoder(nn.Module):
+    def __init__(self, src_vocab, embedding_dim, hidden_units):
+        super(RnnEncoder, self).__init__()
+
+        self.src_vocab = src_vocab
+        vocab_size = len(src_vocab)
+
+        # initialize embedding layer
+        self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim)
+        # initialize a single directional GRU with 1 layer and batch_first=False
+        self.gru = nn.GRU(input_size=embedding_dim, hidden_size=hidden_units, num_layers=1, batch_first=False, bidirectional=False)
+        
+    def forward(self, x):
+        output, hidden_state = None, None
+
+        # embed source texts with dim [max_len, batch_size]
+        x = self.embedding(x)
+        # pass embedded text through the recurrent net
+        # output: [max_len, batch_size, hidden_units]
+        # hidden_state: [1, batch_size, hidden_units] 
+        output, hidden_state = self.gru(x, hidden_state)
+        
+        return output, hidden_state
+```
+
+### The Decoder Model
+
+Here is an implementation of a decoder model that uses an attention
+mechanism, as provided in <https://arxiv.org/pdf/1409.0473.pdf>.
+
+This is broken up into three functions.
+
+-   **Initialization** (i.e., `__init__(...)`): Initializes the
+    parameters of the model and store them in `self` variables.
+
+-   **Computation of attention**: (i.e., `computeAttention(...)`):
+    Computes the context vector, which is a weighted sum of the encoder
+    output states. Let $\mathbf{h}_t$ be the decoder hidden state at
+    time $t$, and $\mathbf{h}_s$ be the encoder state at time $s$.
+    Computing the attention is done as follows.
+
+    -   Computes real-valued scores for $h_t$ and each $h_s$. A higher
+        score indicates stronger similarity between the decoder state
+        and a specific encoder state.
+        $$\text{score}(\mathbf{h}_t, \mathbf{h}_s) = \mathbf{v}_a^T \tanh(\mathbf{W}_1 \mathbf{h}_t + \mathbf{W}_2 \mathbf{h}_s)$$
+    -   Normalizes the attention scores to obtain a valid probability
+        distribution.
+        $$\alpha_{ts} = \frac{\exp \left( \text{score}(\mathbf{h}_t, \mathbf{h}_s) \right)}{\sum_{s'=1}^S \exp \left( \text{score}(\mathbf{h}_t, \mathbf{h}_{s'}) \right)}$$
+    -   Computes a context vector $\mathbf{c}_t$, which is an attention
+        weighted average of the encoder hidden states.
+        $$\mathbf{c}_t = \sum_{s=1}^S \alpha_{ts} \mathbf{h}_s$$
+    -   Returns the context vector and attention weights.
+
+-   **Feed forward** (i.e., `forward(...)`): Runs a single decoding step
+    that results in a distribution over the vocabulary for the next
+    token in the sequence.
+
+    -   A context vector and attention weights are computed using the
+        decoder hidden state and encoder outputs.
+    -   Pass texts through the embedding layer.
+    -   Concatenate the context vector and the embedding vectors.
+    -   Pass results through the recurrent network.
+    -   Pass the output through the linear layer.
+
+```{python}
+class RnnDecoder(nn.Module):
+    def __init__(self, trg_vocab, embedding_dim, hidden_units):
+        super(RnnDecoder, self).__init__()
+
+        self.trg_vocab = trg_vocab # the target vocabulary
+        vocab_size = len(trg_vocab)
+
+        # initialize embedding layer
+        self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim)
+        # initialize layers to compute attention score
+        self.w1 = nn.Linear(hidden_units, hidden_units)
+        self.w2 = nn.Linear(hidden_units, hidden_units)
+        self.v = nn.Linear(hidden_units, 1)
+        # initialize a single directional GRU with 1 layer and batch_first=True
+        # input to the RNN will be the concatenation of the embedding vector and the context vector
+        self.gru = nn.GRU(input_size=embedding_dim + hidden_units, hidden_size=hidden_units, num_layers=1, batch_first=True, bidirectional=False)
+        # initialize fully connected layer
+        self.out = nn.Linear(hidden_units, vocab_size)
+    
+    def computeAttention(self, dec_hs, enc_output):
+        context_vector, attention_weights = None, None
+
+        # decoder hidden state (dec_hs) with size: [1, batch_size, hidden_units]
+        # encoder outputs (enc_output) with size: [max_len_src, batch_size, hidden_units]
+        # compute the attention scores for dec_hs & enc_output with output size: [batch_size, max_len_src, 1]
+        dec_hs = dec_hs.permute((1,0,2))
+        enc_output = enc_output.permute((1,0,2))
+        weights = self.w1(dec_hs)*dec_hs + self.w2(enc_output)*enc_output
+        attn_score = torch.tanh(weights)
+        attn_score = self.v(attn_score)
+        # compute attention_weights by taking a softmax over the scores to normalize the distribution with output size: [batch_size, max_len_src, 1]
+        attention_weights = torch.softmax(attn_score, dim=1)
+        # compute context_vector from attention_weights & enc_output with output size: [batch_size, hidden_units]
+        context_vector = torch.sum(attention_weights * enc_output, dim=1)
+
+        # return context_vector & attention_weights
+        return context_vector, attention_weights
+
+    def forward(self, x, dec_hs, enc_output):
+        fc_out, attention_weights = None, None
+
+        # compute the context vector & attention weights
+        context_vector, attention_weights = self.computeAttention(dec_hs, enc_output)
+        # obtain embedding vectors for x (size: [batch_size, 1]) with output size: [batch_size, 1, embedding_dim]
+        x = self.embedding(x)
+        # concatenate the context vector & the embedding vectors along the appropriate dimension
+        output = torch.cat((context_vector.unsqueeze(1), x), dim=2)
+        # feed this result through the RNN (along with the current hidden state) to get output and new hidden state.
+        # with output sizes: [batch_size, 1, hidden_units] & [1, batch_size, hidden_units]
+        output, dec_hs = self.gru(output, dec_hs)
+        # feed the output of the RNN through linear layer to get (unnormalized) output distribution with output size: [batch_size, vocab_size]
+        fc_out = self.out(output).squeeze(1)
+
+        # return this output, the new decoder hidden state, & the attention weights
+        return fc_out, dec_hs, attention_weights
+```
+
+### Model Training
+
+Here the encoder and decoder are trained using cross-entropy loss.
+
+```{python}
+def lossFunction(real, pred):
+    mask = real.ge(1).float() # only consider non-zero inputs in the loss
+    loss_ = F.cross_entropy(pred, real) * mask 
+    return torch.mean(loss_)
+
+def trainRnnModel(encoder, decoder, dataset, optimizer, trg_vocab, device, n_epochs):
+    batch_size = dataset.batch_size
+    for epoch in range(n_epochs):
+        start = time.time()
+        n_batch = 0
+        total_loss = 0
+        
+        encoder.train()
+        decoder.train()
+        
+        for src, trg in tqdm(dataset):
+            n_batch += 1
+            loss = 0
+            
+            enc_output, enc_hidden = encoder(src.transpose(0,1).to(device))
+            dec_hidden = enc_hidden
+            
+            # use teacher forcing - feeding the target as the next input (via dec_input)
+            dec_input = torch.tensor([[trg_vocab.word2idx[START]]] * batch_size)
+        
+            # run code below for every timestep in the ys batch
+            for t in range(1, trg.size(1)):
+                predictions, dec_hidden, _ = decoder(dec_input.to(device), dec_hidden.to(device), enc_output.to(device))
+                assert len(predictions.shape) == 2 and predictions.shape[0] == dec_input.shape[0] and predictions.shape[1] == len(trg_vocab.word2idx), "First output of decoder must have shape [batch_size, vocab_size], you returned shape " + str(predictions.shape)
+                loss += lossFunction(trg[:, t].to(device), predictions.to(device))
+                dec_input = trg[:, t].unsqueeze(1)
+        
+            batch_loss = (loss / int(trg.size(1)))
+            total_loss += batch_loss
+            
+            optimizer.zero_grad()
+            
+            batch_loss.backward()
+
+            ### update model parameters
+            optimizer.step()
+
+        print('Epoch:{:2d}/{}\t Loss: {:.4f} \t({:.2f}s)'.format(epoch + 1, n_epochs, total_loss / n_batch, time.time() - start))
+
+    print('Model trained!')
+```
+
+```{python}
+# adjustable hyperparameters
+LEARNING_RATE = 0.001
+HIDDEN_UNITS = 256
+N_EPOCHS = 10
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+rnn_encoder = RnnEncoder(src_vocab, EMBEDDING_DIM, HIDDEN_UNITS).to(device)
+rnn_decoder = RnnDecoder(trg_vocab, EMBEDDING_DIM, HIDDEN_UNITS).to(device)
+
+rnn_model_params = list(rnn_encoder.parameters()) + list(rnn_decoder.parameters())
+optimizer = torch.optim.Adam(rnn_model_params, lr=LEARNING_RATE)
+
+print('Encoder and Decoder models initialized!')
+```
+
+    Encoder and Decoder models initialized!
+
+```{python}
+trainRnnModel(rnn_encoder, rnn_decoder, train_dataset, optimizer, trg_vocab, device, N_EPOCHS)
+```
+
+    Epoch: 1/10	 Loss: 0.9182 	(31.96s)
+    Epoch: 2/10	 Loss: 0.6817 	(27.65s)
+    Epoch: 3/10	 Loss: 0.5594 	(28.25s)
+    Epoch: 4/10	 Loss: 0.4620 	(28.66s)
+    Epoch: 5/10	 Loss: 0.3800 	(27.83s)
+    Epoch: 6/10	 Loss: 0.3104 	(27.78s)
+    Epoch: 7/10	 Loss: 0.2511 	(31.69s)
+    Epoch: 8/10	 Loss: 0.2022 	(29.02s)
+    Epoch: 9/10	 Loss: 0.1632 	(28.03s)
+    Epoch:10/10	 Loss: 0.1316 	(28.46s)
+    Model trained!
+
+### Model Inference
+
+Now that the model is trained, it can be used on test data. Here is a
+function that takes the trained model and a source sentence, and returns
+its translation to the target language. Instead of using teacher
+forcing, the input to the decoder at time $t_i$ will be the prediction
+of the decoder at time $t_{i-1}$
+
+```{python}
+def decodeRnnModel(encoder, decoder, src, max_decode_len, device):
+    # encoder: the RnnEncoder object
+    # decoder: the RnnDecoder object
+    # src: the source sentences to translate with size: [max_src_length, batch_size]
+    # max_decode_len: the maximum desired length (int) of the target translated sentences
+    # device: the device the torch tensors are on
+
+    # initialize variables
+    trg_vocab = decoder.trg_vocab
+    batch_size = src.size(1)
+    # curr_output: to contain the predicted translated sentences with size: [batch_size, max_decode_len]
+    curr_output = torch.zeros((batch_size, max_decode_len)).to(device)
+    # curr_predictions: to contain the (unnormalized) probabilities of each token in the vocabulary at each time step
+    # with size: [batch_size, max_decode_len, trg_vocab_size]
+    curr_predictions = torch.zeros((batch_size, max_decode_len, len(trg_vocab.idx2word))).to(device)
+
+    # start the decoding with the start token for each example
+    dec_input = torch.tensor([[trg_vocab.word2idx[START]]] * batch_size).to(device)
+    curr_output[:, 0] = dec_input.squeeze(1)
+
+    # implement decoding algorithm
+    # obtain encoder output and hidden state by encoding src sentences
+    src_encoded, hidden_state = encoder(src)
+    for t in range(1, max_decode_len):
+      # obtain (unnormalized) prediction probabilities and hidden state by feeding dec_input
+      # (the best words from the previous time step), previous hidden state, and encoder output to decoder
+      pred_prob, hidden_state, _ = decoder(dec_input, hidden_state, src_encoded)
+      # save (unnormalized) prediction probabilities in curr_predictions at index t
+      curr_predictions[:, t, :] = pred_prob
+      # obtain the new dec_input by selecting the most likely (highest probability) token
+      dec_input = torch.argmax(curr_predictions[:, t, :], axis=1).unsqueeze(1)
+      # save dec_input in curr_output at index t
+      curr_output[:, t] = dec_input.squeeze(1)
+
+    return curr_output, curr_predictions
+```
+
+Here are some examples of sentences generated by the model compared with
+correct translations from the source language to target language.
+
+```{python}
+#| code-fold: true
+rnn_encoder.eval()
+rnn_decoder.eval()
+idxes = random.choices(range(len(test_dataset.dataset)), k=5)
+src, trg =  train_dataset.dataset[idxes]
+curr_output, _ = decodeRnnModel(rnn_encoder, rnn_decoder, src.transpose(0,1).to(device), trg.size(1), device)
+for i in range(len(src)):
+    print("Source sentence:", ' '.join([x for x in [src_vocab.idx2word[j.item()] for j in src[i]] if x != PAD] if src_dir == 'l2r' \
+                                       else list(reversed([x for x in [src_vocab.idx2word[j.item()] for j in src[i]] if x != PAD]))))
+    print("Target sentence:", ' '.join([x for x in [trg_vocab.idx2word[j.item()] for j in trg[i]] if x != PAD] if trg_dir == 'l2r' \
+                                       else list(reversed([x for x in [trg_vocab.idx2word[j.item()] for j in trg[i]] if x != PAD]))))
+    print("Predicted sentence:", ' '.join([x for x in [trg_vocab.idx2word[j.item()] for j in curr_output[i]] if x != PAD] if trg_dir == 'l2r' \
+                                          else list(reversed([x for x in [trg_vocab.idx2word[j.item()] for j in curr_output[i]] if x != PAD]))))
+    print("----------------")
+```
+
+    Source sentence: <START> 我 在 等 他 。 <END>
+    Target sentence: <START> i m waiting for him . <END>
+    Predicted sentence: <START> i m waiting for him . <END>
+    ----------------
+    Source sentence: <START> 我 寧 願 工 作 也 不 願 閒 著 。 <END>
+    Target sentence: <START> i prefer working to doing nothing . <END>
+    Predicted sentence: <START> i d rather stay than i have to lose weight . <END>
+    ----------------
+    Source sentence: <START> 他 來 自 波 士 頓 。 <END>
+    Target sentence: <START> i m from boston . <END>
+    Predicted sentence: <START> he came in boston . <END>
+    ----------------
+    Source sentence: <START> 湯 姆 買 了 張 機 票 。 <END>
+    Target sentence: <START> tom bought a plane ticket . <END>
+    Predicted sentence: <START> tom bought a ticket . <END>
+    ----------------
+    Source sentence: <START> 我 相 信 他 會 成 功 。 <END>
+    Target sentence: <START> i m sure that he ll succeed . <END>
+    Predicted sentence: <START> i believe he ll succeed . <END>
+    ----------------
+
+### Model Evaluation
+
+Here is a function to run the test set through the model and calculate
+BLEU scores.
+
+Here are some references about BLEU Score at:
+
+1.  <https://en.wikipedia.org/wiki/BLEU>
+2.  <https://www.aclweb.org/anthology/P02-1040.pdf>
+
+```{python}
+# gets reference and candidate for sentence BLEU computation
+def getReferenceCandidate(target, pred, trg_vocab):
+    def toToken(sentence):
+        lis = []
+        for s in sentence[1:]:
+            x = trg_vocab.idx2word[s]
+            if x == END: break
+            lis.append(x)
+        return lis
+    reference = toToken(list(target.numpy()))
+    candidate = toToken(list(pred.numpy()))
+    return reference, candidate
+
+# computes BLEU scores
+def computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab):
+    bleu_1 = 0.0
+    bleu_2 = 0.0
+    bleu_3 = 0.0
+    bleu_4 = 0.0
+
+    smoother = SmoothingFunction()
+    save_reference = []
+    save_candidate = []
+    for i in range(len(target_tensor_val)):
+        reference, candidate = getReferenceCandidate(target_output[i], final_output[i], trg_vocab)
+    
+        bleu_1 += sentence_bleu(reference, candidate, weights=(1,), smoothing_function=smoother.method1)
+        bleu_2 += sentence_bleu(reference, candidate, weights=(1/2, 1/2), smoothing_function=smoother.method1)
+        bleu_3 += sentence_bleu(reference, candidate, weights=(1/3, 1/3, 1/3), smoothing_function=smoother.method1)
+        bleu_4 += sentence_bleu(reference, candidate, weights=(1/4, 1/4, 1/4, 1/4), smoothing_function=smoother.method1)
+
+        save_reference.append(reference)
+        save_candidate.append(candidate)
+    
+    bleu_1 = bleu_1/len(target_tensor_val)
+    bleu_2 = bleu_2/len(target_tensor_val)
+    bleu_3 = bleu_3/len(target_tensor_val)
+    bleu_4 = bleu_4/len(target_tensor_val)
+
+    scores = {"bleu_1": bleu_1, "bleu_2": bleu_2, "bleu_3": bleu_3, "bleu_4": bleu_4}
+    print('BLEU 1-gram: %f' % (bleu_1))
+    print('BLEU 2-gram: %f' % (bleu_2))
+    print('BLEU 3-gram: %f' % (bleu_3))
+    print('BLEU 4-gram: %f' % (bleu_4))
+
+    return save_candidate, scores
+
+# evaluates the RNN model
+def evaluateRnnModel(encoder, decoder, test_dataset, target_tensor_val, device):
+    trg_vocab = decoder.trg_vocab
+    batch_size = test_dataset.batch_size
+    n_batch = 0
+    total_loss = 0
+
+    encoder.eval()
+    decoder.eval()
+    
+    final_output, target_output = None, None
+
+    with torch.no_grad():
+        for batch, (src, trg) in enumerate(test_dataset):
+            n_batch += 1
+            loss = 0
+            curr_output, curr_predictions = decodeRnnModel(encoder, decoder, src.transpose(0,1).to(device), trg.size(1), device)
+            for t in range(1, trg.size(1)):
+                loss += lossFunction(trg[:, t].to(device), curr_predictions[:,t,:].to(device))
+
+            if final_output is None:
+                final_output = torch.zeros((len(target_tensor_val), trg.size(1)))
+                target_output = torch.zeros((len(target_tensor_val), trg.size(1)))
+            final_output[batch*batch_size:(batch+1)*batch_size] = curr_output
+            target_output[batch*batch_size:(batch+1)*batch_size] = trg
+            batch_loss = (loss / int(trg.size(1)))
+            total_loss += batch_loss
+
+        print('Loss {:.4f}'.format(total_loss / n_batch))
+    
+    # Compute BLEU scores
+    return computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab)
+```
+
+```{python}
+rnn_save_candidate, rnn_scores = evaluateRnnModel(rnn_encoder, rnn_decoder, test_dataset, trg_tensor_val, device)
+```
+
+    Loss 1.1556
+    BLEU 1-gram: 0.236252
+    BLEU 2-gram: 0.062643
+    BLEU 3-gram: 0.043685
+    BLEU 4-gram: 0.039369
+
+## The Transformer
+
+Here a transformer model for machine translation is implemented, and
+then trained and evaluated. Here are some references:
+
+-   Original transformer paper: <https://arxiv.org/pdf/1706.03762.pdf>
+-   A tutorial: <http://jalammar.github.io/illustrated-transformer/>
+-   Another tutorial: <http://peterbloem.nl/blog/transformers>
+
+### Positional Embeddings
+
+Similar to the RNN, there are Encoder and Decoder models for
+Transformers. A key component of the encoder is the Positional
+Embedding. Word embeddings encode words in such a way that words with
+similar meaning have similar vectors. Because there are no recurrences
+in a Transformer, the transformer needs to know the relative position of
+words in a sentence. So, a positional embedding is added to the word
+embeddings. Now, two words with a similar embedding will both be close
+in meaning and occur near each other in the sentence.
+
+The positional embedding matrix will be of size
+$(\text{max\_len}, \text{embed\_dim})$ using the following formulas:
+<br>
+
+$\mathbf{pe}[\text{pos},2i] = \sin \Big (\frac{\text{pos}}{10000^{2i/\text{embed\_dim}}}\Big )$
+
+$\mathbf{pe}[\text{pos},2i+1] = \cos \Big (\frac{\text{pos}}{10000^{2i/\text{embed\_dim}}}\Big )$
+
+```{python}
+def createPositionalEmbedding(max_len, embed_dim):
+    # max_len: the maximum length supported for positional embeddings
+    # embed_dim: the size of the embeddings
+    pe = None
+
+    # compute pe as in the formulae above with size: [max_len, 1, embed_dim]
+    position = torch.arange(max_len).unsqueeze(1)
+    den = torch.exp(-torch.arange(0, embed_dim, 2) / embed_dim * math.log(10000.0))
+    pe = torch.zeros(max_len, 1, embed_dim)
+    pe[:, 0, 0::2] = torch.sin(position * den)
+    pe[:, 0, 1::2] = torch.cos(position * den)
+    
+    return pe
+```
+
+### The Encoder Model
+
+First a transformer encoder model is built. An encoded output is
+returned and will be used in the decoder.
+
+-   **Initialization** (i.e., `__init__(...)`): Initializes the
+    following layers and other features for the neural network.
+    -   A positional embedding layer using inputs: `max_len_src` and
+        `embedding_dim`.
+    -   An embedding layer to represent the words in the vocabulary
+        `src_vocab_size` with `embedding_dim` as the embedding
+        dimension.
+    -   A dropout layer.
+    -   A transformer encoder layer with inputs: `embedding_dim`,
+        `num_heads`, and `dim_feedforward`.
+    -   A transformer encoder with the transformer encoder layer and
+        `num_layers` number of layers.
+-   **Feed Forward** (i.e., `forward(...)`: Pass texts through layers
+    and compute the output as described below.
+    -   Pass texts through embedding and add to positional embeddings.
+    -   Apply dropout.
+    -   Compute mask for source input.
+    -   Call transformer encoder.
+
+```{python}
+class TransformerEncoder(nn.Module):
+    def __init__(self, src_vocab, embedding_dim, num_heads, num_layers, dim_feedforward, max_len_src, device):
+        super(TransformerEncoder, self).__init__()
+        self.src_vocab = src_vocab # the source vocabulary
+        src_vocab_size = len(src_vocab)
+        self.embedding_dim = embedding_dim # the dimension of the embedding and number of expected features for the input of the Transformer
+        self.max_len_src = max_len_src # maximum length of the source sentences
+        self.device = device # the working device
+
+        # create positional embedding matrix
+        self.position_embedding = createPositionalEmbedding(max_len_src, embedding_dim).to(self.device)
+        # this informs the model that position_embedding is not a learnable parameter
+        self.register_buffer('positional_embedding', self.position_embedding)
+        # initialize embedding layer
+        self.embedding = nn.Embedding(num_embeddings=src_vocab_size, embedding_dim=embedding_dim).to(self.device)
+        # dropout layer
+        self.dropout = nn.Dropout().to(self.device)
+        # initialize an nn.TransformerEncoder model (with embedding_dim, num_layers, num_heads, & dim_feedforward)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=embedding_dim, nhead=num_heads, dim_feedforward=dim_feedforward)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers).to(self.device)
+
+    def makeSrcMask(self, src):
+        assert len(src.shape) == 2, 'src must have exactly 2 dimensions' # [max_len, batch_size]
+        src_mask = src.transpose(0, 1) == 0 # boolean matrix for padding indices
+        return src_mask.to(self.device) # size: [batch_size, max_src_len]
+
+    def forward(self, x):
+        output = None
+        max_seq_len = x.shape[0] # x has size: [max_len, batch_size]
+
+        # word embedding
+        x_embed = self.embedding(x.to(self.device))
+        # position embedding
+        pos_embed = self.position_embedding[0:max_seq_len, :, :].to(self.device)
+        # add position embedding to word embedding
+        output = x_embed + pos_embed
+        # apply dropout
+        output = self.dropout(output.to(self.device))
+        # compute mask (indicates which indices in x are padding, which are ignored for self-attention)
+        src_mask = self.makeSrcMask(x).to(self.device)
+        # call transformer encoder
+        output = self.transformer_encoder(src=output, src_key_padding_mask = src_mask).to(self.device)
+
+        # return output with size: [max_len, batch_size, embed_dim]
+        return output     
+```
+
+### The Decoder Model
+
+Here is an implementation of a decoder model. Unlike the RNN decoder,
+the inter-attention with the encoder does not need to be computed
+explicitly. Instead, the `nn.TransformerDecoder` model handles this
+automatically.
+
+-   **Initialization** (i.e., `__init__(...)`): Initializes the
+    parameters of the model and store them in `self` variables.
+
+-   **Feed forward** (i.e., `forward(...)`): Runs a single decoding step
+    that results in a distribution over the vocabulary for the next
+    token in the sequence.
+
+```{python}
+class TransformerDecoder(nn.Module):
+    def __init__(self, trg_vocab, embedding_dim, num_heads, num_layers, dim_feedforward, max_len_trg, device):
+        super(TransformerDecoder, self).__init__()
+        self.trg_vocab = trg_vocab # the target vocabulary
+        trg_vocab_size = len(trg_vocab)
+        self.embedding_dim = embedding_dim # the dimension of the embedding and the number of expected features for the input of the Transformer
+        self.max_len_trg = max_len_trg # maximum length of the target sentences
+        self.device = device # the working device
+
+        # create positional embedding matrix
+        self.position_embedding = createPositionalEmbedding(max_len_trg, embedding_dim).to(device)
+        self.register_buffer('positional_embedding', self.position_embedding) # this informs the model that positional_embedding is not a learnable parameter
+        # initialize embedding layer
+        self.embedding = nn.Embedding(num_embeddings=trg_vocab_size, embedding_dim=embedding_dim).to(self.device)
+        # dropout layer
+        self.dropout = nn.Dropout().to(self.device)
+        # initialize a nn.TransformerDecoder model (with embedding_dim, num_layers, num_heads, & dim_feedforward)
+        decoder_layer = nn.TransformerDecoderLayer(d_model=embedding_dim, nhead=num_heads, dim_feedforward=dim_feedforward).to(self.device)
+        self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers).to(self.device)
+        # final fully connected layer
+        self.out = nn.Linear(embedding_dim, trg_vocab_size).to(self.device)
+
+    def generateSquareSubsequentMask(self, sz):
+        # generate square mask for the sequence
+        # masked positions are filled with float('-inf') and unmasked with float(0.0)
+        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device)
+        return mask
+
+    def forward(self, dec_in, enc_out):
+        output = None
+        max_seq_len = dec_in.shape[0] # dec_in size: [sequence length, batch_size]
+
+        # word embedding
+        x_embed = self.embedding(dec_in.to(self.device))
+        # positional embedding
+        pos_embed = self.position_embedding[0:max_seq_len, :, :].to(self.device)
+        output = x_embed + pos_embed
+        # generate square subsequent mask to prevent the decoder from attending to tokens not seen yet
+        # i.e., at time step i, the decoder only attends to tokens 1 to i-1
+        trg_mask = self.generateSquareSubsequentMask(max_seq_len).to(self.device)
+        # call decoder with tgt_mask=trg_mask (use enc_out with size: [max_len, batch_size, embed_dim])
+        output = self.transformer_decoder(tgt=output, memory=enc_out.to(self.device), tgt_mask=trg_mask).to(self.device)
+        # run output through fully-connected layer
+        output = self.out(output)
+
+        # return output with size: [sequence length, batch_size, trg_vocab_size]
+        return output    
+```
+
+### Model Training
+
+Like the RNN, the encoder and decoder are trained using cross-entropy
+loss.
+
+```{python}
+def trainTransformerModel(encoder, decoder, dataset, optimizer, device, n_epochs):
+    encoder.train()
+    decoder.train()
+    criterion = nn.CrossEntropyLoss(ignore_index=0)
+    for epoch in range(n_epochs):
+        start = time.time()
+        losses = []
+
+        for src, trg in tqdm(train_dataset):
+            
+            src = src.to(device).transpose(0,1) # [max_src_length, batch_size]
+            trg = trg.to(device).transpose(0,1) # [max_trg_length, batch_size]
+
+            enc_out = encoder(src)
+            output = decoder(trg[:-1, :], enc_out)
+
+            output = output.reshape(-1, output.shape[2])
+            trg = trg[1:].reshape(-1)
+
+            optimizer.zero_grad()
+
+            loss = criterion(output, trg)
+            losses.append(loss.item())
+
+            loss.backward()
+
+            # clip to avoid exploding gradient issues
+            torch.nn.utils.clip_grad_norm_(encoder.parameters(), max_norm=1)
+            torch.nn.utils.clip_grad_norm_(decoder.parameters(), max_norm=1)
+
+            optimizer.step()
+
+        mean_loss = sum(losses) / len(losses)
+        print('Epoch:{:2d}/{}\t Loss:{:.4f} ({:.2f}s)'.format(epoch + 1, n_epochs, mean_loss, time.time() - start))
+```
+
+```{python}
+# adjustable hyperparameters
+LEARNING_RATE = 0.001
+DIM_FEEDFORWARD=512
+N_EPOCHS=10
+N_HEADS=2
+N_LAYERS=2
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+transformer_encoder = TransformerEncoder(src_vocab, EMBEDDING_DIM, N_HEADS, 
+                                         N_LAYERS,DIM_FEEDFORWARD,
+                                         max_length_src, device).to(device)
+transformer_decoder = TransformerDecoder(trg_vocab, EMBEDDING_DIM, N_HEADS, 
+                                         N_LAYERS,DIM_FEEDFORWARD,
+                                         max_length_trg, device).to(device)
+
+transformer_model_params = list(transformer_encoder.parameters()) + list(transformer_decoder.parameters())
+optimizer = torch.optim.Adam(transformer_model_params, lr=LEARNING_RATE)
+
+print('Encoder and Decoder models initialized!')
+```
+
+    Encoder and Decoder models initialized!
+
+```{python}
+trainTransformerModel(transformer_encoder, transformer_decoder, train_dataset, optimizer, device, N_EPOCHS)
+```
+
+    Epoch: 1/10	 Loss:4.1060 (8.66s)
+    Epoch: 2/10	 Loss:3.1300 (8.62s)
+    Epoch: 3/10	 Loss:2.6697 (8.75s)
+    Epoch: 4/10	 Loss:2.2971 (8.70s)
+    Epoch: 5/10	 Loss:1.9866 (8.65s)
+    Epoch: 6/10	 Loss:1.7386 (8.64s)
+    Epoch: 7/10	 Loss:1.5376 (8.88s)
+    Epoch: 8/10	 Loss:1.3696 (8.61s)
+    Epoch: 9/10	 Loss:1.2462 (8.63s)
+    Epoch:10/10	 Loss:1.1405 (8.61s)
+
+### Model Inference
+
+Now that the model is trained, it can be used on test data. Here is a
+function that takes the trained model and a source sentence, and returns
+its translation to the target language. Like the RNN, the prediction of
+the decoder is used as the input to the decoder for the sequence of
+outputs. Since the transformer does not use recurrences, it does not
+pass a hidden state; instead, at time step $t_i$ it passes
+$w_i, w_2 \cdots w_{i-1}$, which is the entire sequence predicted so
+far.
+
+```{python}
+def decodeTransformerModel(encoder, decoder, src, max_decode_len, device):
+    # encoder: the RnnEncoder object
+    # decoder: the RnnDecoder object
+    # src: the source sentences to translate with size: [max_src_length, batch_size]
+    # max_decode_len: the maximum desired length (int) of the target translated sentences
+    # device: the device the torch tensors are on
+    enc_output = None
+
+    # initialize variables
+    trg_vocab = decoder.trg_vocab
+    batch_size = src.size(1)
+    # curr_output: to contain the predicted translated sentences with size: [batch_size, max_decode_len]
+    curr_output = torch.zeros((batch_size, max_decode_len)).to(device)
+    # curr_predictions: to contain the (unnormalized) probabilities of each token in the vocabulary at each time step
+    # with size: [batch_size, max_decode_len, trg_vocab_size]
+    curr_predictions = torch.zeros((batch_size, max_decode_len, len(trg_vocab.idx2word))).to(device)
+    # eos_detected: to detect sentences that reach the END token to insert PAD in later time steps with size: [batch_size]
+    eos_detected = torch.zeros(batch_size).to(device)
+
+    # start the decoding with the start token for each example
+    dec_input = torch.tensor([[trg_vocab.word2idx[START]]] * batch_size).transpose(0,1).to(device)
+    curr_output[:, 0] = dec_input.squeeze(1)
+
+    # implement decoding algorithm
+    # obtain encoder output by encoding src sentences
+    enc_output = encoder(src)
+    for t in range(1, max_decode_len):
+      # obtain the best words so far for previous time steps
+      dec_input = curr_output[:, :t].transpose(0,1).long()
+      # obtain (unnormalized) prediction probabilities by feeding dec_input and enc_output to decoder
+      pred_prob = decoder(dec_input, enc_output)
+      # save (unnormalized) prediction probabilities in curr_predictions at index t
+      curr_predictions[:, t, :] = pred_prob[-1, :, :]
+      # calculate the most likely (highest probability) token and save in curr_output at timestep t
+      max_prob = curr_predictions[:, t, :].argmax(dim=1).unsqueeze(-1)
+      curr_output[:, t] = max_prob.squeeze(1)
+      # overwrite predicted token with PAD if END already detected for a given sentence
+      curr_output[eos_detected == 1, t] = trg_vocab.word2idx[PAD]
+      # check if END is detected in current output and update eos_detected
+      if trg_vocab.word2idx[END] in curr_output[:, t]:
+        eos_detected[trg_vocab.word2idx[END] == curr_output[:, t]] = 1
+
+    return curr_output, curr_predictions, enc_output
+```
+
+Here are some examples of sentences generated by the model compared with
+correct translations from the source language to target language.
+
+```{python}
+#| code-fold: true
+transformer_encoder.eval()
+transformer_decoder.eval()
+idxes = random.choices(range(len(test_dataset.dataset)), k=5)
+src, trg =  train_dataset.dataset[idxes]
+curr_output, _, _ = decodeTransformerModel(transformer_encoder, transformer_decoder, src.transpose(0,1).to(device), trg.size(1), device)
+for i in range(len(src)):
+    print("Source sentence:", ' '.join([x for x in [src_vocab.idx2word[j.item()] for j in src[i]] if x != PAD] if src_dir == 'l2r' \
+                                       else list(reversed([x for x in [src_vocab.idx2word[j.item()] for j in src[i]] if x != PAD]))))
+    print("Target sentence:", ' '.join([x for x in [trg_vocab.idx2word[j.item()] for j in trg[i]] if x != PAD] if trg_dir == 'l2r' \
+                                       else list(reversed([x for x in [trg_vocab.idx2word[j.item()] for j in trg[i]] if x != PAD]))))
+    print("Predicted sentence:", ' '.join([x for x in [trg_vocab.idx2word[j.item()] for j in curr_output[i]] if x != PAD] if trg_dir == 'l2r' \
+                                          else list(reversed([x for x in [trg_vocab.idx2word[j.item()] for j in curr_output[i]] if x != PAD]))))
+    print("----------------")
+```
+
+    Source sentence: <START> 我 做 得 好 到 不 能 再 好 了 。 <END>
+    Target sentence: <START> i can t do any better . <END>
+    Predicted sentence: <START> i can t do it anymore . <END>
+    ----------------
+    Source sentence: <START> 我 和 汤 姆 说 了 ， 我 觉 得 这 个 主 意 很 好 。 <END>
+    Target sentence: <START> i told tom that i thought that it was a good idea . <END>
+    Predicted sentence: <START> i told tom i thought that it was a good idea . <END>
+    ----------------
+    Source sentence: <START> 汤 姆 已 经 结 婚 了 。 <END>
+    Target sentence: <START> tom s married . <END>
+    Predicted sentence: <START> tom has already married . <END>
+    ----------------
+    Source sentence: <START> 請 你 鎖 門 好 嗎 ？ <END>
+    Target sentence: <START> would you please lock the door ? <END>
+    Predicted sentence: <START> would you please close the door ? <END>
+    ----------------
+    Source sentence: <START> 請 告 訴 我 該 怎 麼 做 。 <END>
+    Target sentence: <START> please tell me what to do . <END>
+    Predicted sentence: <START> please tell me what to do . <END>
+    ----------------
+
+### Model Evaluation
+
+Here is a function to run the test set through the model and calculate
+BLEU scores.
+
+```{python}
+def evaluateModel(encoder, decoder, test_dataset, target_tensor_val, device):
+    trg_vocab = decoder.trg_vocab
+    batch_size = test_dataset.batch_size
+    n_batch = 0
+    total_loss = 0
+
+    encoder.eval()
+    decoder.eval()
+    criterion = nn.CrossEntropyLoss(ignore_index=0)
+
+    losses=[]
+    final_output, target_output = None, None
+
+    with torch.no_grad():
+        for batch, (src, trg) in enumerate(test_dataset):
+            n_batch += 1
+            loss = 0
+            
+            src, trg = src.transpose(0,1).to(device), trg.transpose(0,1).to(device)
+            curr_output, curr_predictions, enc_out = decodeTransformerModel(encoder, decoder, src, trg.size(0), device)
+
+            for t in range(1, trg.size(0)):
+                output = decoder(trg[:-1, :], enc_out)
+                output = output.reshape(-1, output.shape[2])
+                loss_trg = trg[1:].reshape(-1)
+                loss += criterion(output, loss_trg)
+
+            if final_output is None:
+                final_output = torch.zeros((len(target_tensor_val), trg.size(0)))
+                target_output = torch.zeros((len(target_tensor_val), trg.size(0)))
+
+            final_output[batch*batch_size:(batch+1)*batch_size] = curr_output
+            target_output[batch*batch_size:(batch+1)*batch_size] = trg.transpose(0,1)
+            losses.append(loss.item() / (trg.size(0)-1))
+
+        mean_loss = sum(losses) / len(losses)
+        print('Loss {:.4f}'.format(mean_loss))
+    
+    # compute Bleu scores
+    return computeBleuScores(target_tensor_val, target_output, final_output, trg_vocab)
+```
+
+```{python}
+transformer_save_candidate, transformer_scores = evaluateModel(transformer_encoder, transformer_decoder, test_dataset, trg_tensor_val, device)
+```
+
+    Loss 2.4514
+    BLEU 1-gram: 0.230886
+    BLEU 2-gram: 0.060984
+    BLEU 3-gram: 0.042378
+    BLEU 4-gram: 0.038043
+
+## Translating New Sentences
+
+Here are some helper functions to pre-process new sentences that are
+unseen in the train and test data.
+
+```{python}
+# preprocessing an input sentence to identification numbers, maximum lengths, apply padding
+def preprocessSentenceToTensor(src_sentence, src_vocab, trg_vocab, src_lang, trg_lang, max_len=100):
+  # vectorize the input sentence
+  sent_tensor = [src_vocab.word2idx[s if s in src_vocab.vocab else UNK] for s in src_sentence.split(' ')]
+
+  # the max_len for padding
+  print(f'max_len: {max_len}')
+
+  # pad the sentence in the dataset with the max_length
+  sent_tensor = padSequences(sent_tensor, max_len)
+
+  return sent_tensor, max_len
+
+class SentenceData(Dataset):
+    def __init__(self, X):
+        self.length = torch.LongTensor([np.sum(1 - np.equal(x, 0)) for x in X])
+        self.data = torch.LongTensor(X)
+    
+    def __getitem__(self, index):
+        x = self.data[index]
+        return x
+
+    def __len__(self):
+        return len(self.data)
+```
+
+Here is an example of translating a new sentence that does not exist in
+the train or test data.
+
+-   Chinese Mandarin (Source): `汤姆喜欢和他的朋友们踢足球。`
+-   English (Target): `Tom likes to play soccer with his friends.`
+
+```{python}
+# sentences that include mention of "Tom", and "soccer" or "friends"
+dat.iloc[list((dat.eng.str.contains('soccer') | dat.eng.str.contains('friends')) & dat.eng.str.contains('Tom')), :].sample(10)
+```
+
+                                                         eng                cmn
+    11449                Tom doesn't have very many friends.         汤姆的朋友不是很多。
+    4360            I envy the friendship Tom and Mary have.  我羨慕Tom和Mary之間的友誼。
+    12923          You're taller than most of Tom's friends.       你比汤姆的多数朋友都高。
+    14765                      Tom had numerous girlfriends.          Tom有很多女友。
+    20113                        My friends all call me Tom.         我的朋友都叫我湯姆。
+    20230  Tom and his friends played basketball all afte...    汤姆和朋友们打了整个下午篮球。
+    22514                   Tom has no friends to play with.      湯姆沒有朋友可以一起玩耍。
+    10373  Tom doesn't have any friends who are willing t...      汤姆没有愿意帮助他的朋友。
+    24047                           Tom doesn't like soccer.           汤姆不喜欢足球。
+    5104                          Tom tried to make friends.           汤姆试着交朋友。
+
+```{python}
+# preprocess source and target sentences
+src_sentence = "汤姆喜欢和他的朋友们踢足球。"
+src_sentence = preprocessSentence(src_sentence, script=src_script, dir=src_dir)
+
+trg_sentence = "Tom likes to play soccer with his friends."
+trg_sentence = preprocessSentence(trg_sentence, script=trg_script, dir=trg_dir)
+
+# preprocess sentences to tensors
+src_tensor, max_length_src = preprocessSentenceToTensor(src_sentence, src_vocab, trg_vocab, src_lang, trg_lang, max_length_src)
+sentence_tensor = SentenceData(src_tensor).data.unsqueeze(0).transpose(0,1).to(device)
+
+# predict translated sentences from RNN and TF models
+curr_rnn_out, _ = decodeRnnModel(rnn_encoder, rnn_decoder, sentence_tensor, max_length_src, device)
+curr_tf_out, _, _ = decodeTransformerModel(transformer_encoder, transformer_decoder, sentence_tensor, max_length_trg, device)
+
+rnn_translate = [x for x in [trg_vocab.idx2word[int(k.item())] for k in curr_rnn_out[0]] if x != PAD] if trg_dir == 'l2r' \
+                else list(reversed([x for x in [trg_vocab.idx2word[int(k.item())] for k in curr_rnn_out[0]] if x != PAD]))
+tf_translate = [x for x in [trg_vocab.idx2word[int(k.item())] for k in curr_tf_out[0]] if x != PAD] if trg_dir == 'l2r' \
+                else list(reversed([x for x in [trg_vocab.idx2word[int(k.item())] for k in curr_tf_out[0]] if x != PAD]))
+```
+
+    max_len: 46
+
+```{python}
+print("Source sentence:", src_sentence if src_dir == 'l2r' else ' '.join( list(reversed(src_sentence.split(' '))) ))
+print("Target sentence:", trg_sentence if trg_dir == 'l2r' else ' '.join( list(reversed(trg_sentence.split(' '))) ))
+print()
+print("[RNN] Predicted sentence:", ' '.join(rnn_translate))
+print("[TF] Predicted sentence:", ' '.join(tf_translate))
+```
+
+    Source sentence: <START> 汤 姆 喜 欢 和 他 的 朋 友 们 踢 足 球 。 <END>
+    Target sentence: <START> tom likes to play soccer with his friends . <END>
+    
+    [RNN] Predicted sentence: <START> tom likes to study friends with his friends . <END>
+    [TF] Predicted sentence: <START> tom and his friends like soccer . <END>
