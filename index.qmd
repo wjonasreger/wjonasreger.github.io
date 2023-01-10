@@ -50,23 +50,23 @@ I am a self-taught programmer of 10+ years with great interests in applying my c
 
 **Instructor**
 
--   STAT 100 Statistics \[Spring 2022\]
--   DPI Discovering Data Science \[Summer 2021\]
+-   `STAT 100` Statistics \[[`sp22`](https://stat100website.web.illinois.edu/archive/S22/pages/staff.html)\]
+-   DPI Discovering Data Science \[[`su21`](https://wjonasreger.github.io/DigitalScholars_DataScience/pages/about.html)\]
 
 **Teaching Assistant**
 
--   STAT 100 Statistics \[Fall 2021\]
--   STAT 107 Data Science Discovery \[Fall 2021\]
--   STAT 385 \[Fall 2022\]
+-   `STAT 107` Data Science Discovery \[[`fa21`](https://discovery.cs.illinois.edu/stat107-fa21/staff/)\]
+-   `STAT 385` Statistics Programming Methods \[[`fa22`](https://stat385.org/)\]
+-   `STAT 430` Data Science Ethics \[`sp23`\]
 
 **Course Assistant**
 
--   STAT 100 Statistics \[Spring 2021\] \[Fall 2020\] \[Summer 2020\] \[Spring 2020\] \[Fall 2019\] \[Spring 2019\]
--   STAT 400 Statistics & Probability I \[Spring 2020\] \[Spring 2019\]
--   STAT 410 Statistics & Probability II \[Spring 2020\]
--   STAT 420 Methods of Applied Statistics \[Fall 2019\] \[Summer 2019\]
--   STAT 432 Basics of Statistical Learning \[Fall 2020\]
--   Blackwell Summer Scholars Program \[Summer 2021\]
+-   `STAT 100` Statistics \[[`fa21`](https://stat100website.web.illinois.edu/archive/F21/pages/staff.html) [`sp21`](https://stat100website.web.illinois.edu/archive/S21/pages/staff.html) [`fa20`](https://stat100website.web.illinois.edu/archive/F20/pages/staff.html) `su20` [`sp20`](https://stat100website.web.illinois.edu/archive/S20/pages/staff.html) `fa19` `sp19`\]
+-   `STAT 400` Statistics & Probability I \[`sp20` `sp19`\]
+-   `STAT 410` Statistics & Probability II \[`sp20`\]
+-   `STAT 420` Methods of Applied Statistics \[`fa19` `su19`\]
+-   `STAT 432` Basics of Statistical Learning \[[`fa20`](https://fall-2020.stat432.org/)\]
+-   Blackwell Summer Scholars Program \[[`su21`](https://stat.illinois.edu/alumni/david-blackwell/blackwell-summer-scholars-program)\]
 
 ## Education
 
