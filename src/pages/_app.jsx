@@ -1,7 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { MDXProvider } from '@mdx-js/react'
 import Layout from '../components/Layout';
-import '../styles/globals.css';
+// import '../styles/globals.css';
+
+import '../styles/tailwind.css'
+import 'focus-visible'
 
 const components = {}
 

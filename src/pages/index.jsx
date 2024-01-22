@@ -1,95 +1,70 @@
-import Image from "next/image"
-import styles from "../styles/index.module.css"
+import Image from 'next/image'
+import Link from 'next/link'
+import clsx from 'clsx'
 
-export default function Home() {
+import { Button } from '../components/Button'
+import { Card } from '../components/Card'
+import { Container } from '../components/Container'
+import { GitHubIcon } from '../components/SocialIcons'
+
+
+import SiteConfigs from '../data/meta'
+import { NextSeo } from 'next-seo';
+
+
+function SocialLink({ icon: Icon, ...props }) {
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/page.jsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <Link className = "group -m-1 p-1" {...props}>
+      <Icon className = "h-6 w-6 fill-zinc-500 transition group-hover:fill-zinc-600 dark:fill-zinc-400 dark:group-hover:fill-zinc-300" />
+    </Link>
+  )
+}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
+export default function Home({ articles }) {
+  return (
+    <>
+    <NextSeo
+      title = {SiteConfigs.title}
+      description = {SiteConfigs.description}
+      canonical = {SiteConfigs.siteUrl}
+      openGraph = {{
+        url: SiteConfigs.siteUrl,
+        images: [
+          {
+            url: `./public/images/pfp-avatar.jpeg`,
+            width: 1200,
+            height: 600,
+            alt: 'Og Image Alt',
+            type: 'image/jpeg',
+          }
+        ],
+        siteName: SiteConfigs.siteName,
+      }}
+    />
+      <Container className = "mt-9">
+        <div className = "max-w-2xl text-lg">
+          <h1 className = "text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+            data science educator, language enthusiast, <br></br>context puzzler.
+          </h1>
+          <p className = "mt-6 prose dark:prose-invert">
+            👋 hello, i&apos;m jonas! i create language solutions with data and ai at puzzle labs. i&apos;m passionate about natural language processing, data visualization, and teaching others about data science.
           </p>
-        </a>
-      </div>
-    </main>
-  );
+          <p className = "mt-6 prose dark:prose-invert">
+            i&apos;ve worked in data science teaching roles at the university of illinois for equality, diversity, and inclusion. i&apos;ve also developed insights for linguistics in social media for r&d at sandia national labs.
+          </p>
+          <p className = "mt-6 prose dark:prose-invert">
+            feel free to have a looksie at my work here or on my github. i&apos;m always open to new opportunities, so feel free to reach out! also, if you&apos;re wondering why all lower caps, check out this <Link href = {`/articles/why-lower-case`}>post</Link> to get the scoop.
+          </p>
+          <div className = "mt-6 flex gap-6">
+
+            <SocialLink
+              href = {SiteConfigs.author.github}
+              aria-label = "follow on github"
+              icon = {GitHubIcon}
+            />
+          </div>
+        </div>
+      </Container>
+    </>
+  )
 }

@@ -1,4 +1,4 @@
-const siteData = {
+const SiteConfigs = {
     title: "w. jonas reger",
     description: "w. jonas reger is a data science educator, data & nlp engineer, and context puzzler.",
     copyright: "w. jonas reger",
@@ -13,7 +13,7 @@ const siteData = {
     name: "wjonasreger.github.io",
 }
 
-export default siteData;
+export default SiteConfigs;
 
 const OpenGraphConfigs = {
     openGraph: {
