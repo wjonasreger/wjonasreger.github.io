@@ -48,7 +48,7 @@ jobs:
             echo "unable to determine package manager"
             exit 1
           fi
-      - name: Setup Node
+      - name: setup node
         uses: actions/setup-node@v3
         with:
           node-version: "lts/*"
@@ -70,9 +70,10 @@ jobs:
       - name: build with next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
       - name: upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v2
         with:
           path: ./out
+          name: github-pages
 
   # deployment job
   deploy:
