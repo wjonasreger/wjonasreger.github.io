@@ -9,6 +9,7 @@ import '../styles/tailwind.css'
 import 'focus-visible'
 
 import  Pre  from '../components/Pre'
+import { Footer } from '@/components/Footer';
 
 const components = {
     pre: Pre,
@@ -38,6 +39,7 @@ export default function App({ Component, pageProps, router }) {
                     <main>
                         <Component previousPathname={prevPath} {...pageProps} />
                     </main>
+                    <Footer />
                 </div>
         </MDXProvider>
      </>
