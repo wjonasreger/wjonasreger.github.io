@@ -160,7 +160,7 @@ export default function Home({ articles }) {
         url: SiteConfigs.siteUrl,
         images: [
           {
-            url: `../images/pfp-avatar.jpeg`,
+            url: `../images/jonas.jpeg`,
             width: 600,
             height: 600,
             alt: 'Og Image Alt',
