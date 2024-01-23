@@ -24,6 +24,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["next-env.d.js", "**/*.js", "**/*.jsx", ".next/types/**/*.js", "next.config.mjs"],
+  "include": ["next-env.d.js", "**/*.js", "**/*.jsx", ".next/types/**/*.js", "next.config.js"],
   "exclude": ["node_modules"]
 }
