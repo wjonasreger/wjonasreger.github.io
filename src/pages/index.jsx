@@ -11,12 +11,45 @@ import { GitHubIcon } from '../components/SocialIcons'
 import SiteConfigs from '../data/meta'
 import { NextSeo } from 'next-seo';
 
+import image1 from '../images/photos/ferns.jpg'
+import image2 from '../images/photos/floral.jpg'
+import image3 from '../images/photos/forest.jpg'
+import image4 from '../images/photos/plants.jpg'
+import image5 from '../images/photos/wood.jpg'
+
 
 function SocialLink({ icon: Icon, ...props }) {
   return (
     <Link className = "group -m-1 p-1" {...props}>
       <Icon className = "h-6 w-6 fill-zinc-500 transition group-hover:fill-zinc-600 dark:fill-zinc-400 dark:group-hover:fill-zinc-300" />
     </Link>
+  )
+}
+
+function Photos() {
+  let rotations = ['rotate-2', '-rotate-2', 'rotate-2', 'rotate-2', '-rotate-2']
+
+  return (
+    <div className = "mt-16 sm:mt-20">
+      <div className = "-my-4 flex justify-center gap-5 overflow-hidden py-4 sm:gap-8">
+        {[image1, image2, image3, image4, image5].map((image, imageIndex)  => (
+          <div
+            key = {image.src}
+            className = {clsx(
+              'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-72 sm:rounded-2xl',
+              rotations[imageIndex % rotations.length]
+            )}
+          >
+            <Image
+              src = {image}
+              alt = ""
+              sizes = "(min-width: 640px) 18rem, 11rem"
+              className = "absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -69,6 +102,7 @@ export default function Home({ articles }) {
           </div>
         </div>
       </Container>
+      <Photos />
     </>
   )
 }
