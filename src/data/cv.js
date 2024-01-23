@@ -9,7 +9,7 @@ const cv = {
             "time": {"start": "12/2020", "end": "current"},
             "image": "",
             "link": "https://en.wikipedia.org/wiki/Natural_language_processing",
-            "noun": null,
+            "noun": "noun",
             "cta": "learn more"
         },
         {
@@ -21,7 +21,7 @@ const cv = {
             "time": {"start": "01/2014", "end": "current"},
             "image": "",
             "link": "https://www.python.org/",
-            "noun": null,
+            "noun": "noun",
             "cta": "learn more"
         },
         {
@@ -33,7 +33,7 @@ const cv = {
             "time": {"start": "", "end": ""},
             "image": "",
             "link": "https://medium.com/@enrichmycareer/communication-is-the-most-important-soft-skill-d5d41c4fd49e",
-            "noun": null,
+            "noun": "noun",
             "cta": "learn more"
         },
 
@@ -42,38 +42,50 @@ const cv = {
         {
             "classification": "work",
             "show": true,
-            "group": "lorem ipsum, inc.",
-            "title": "senior engineer",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "01/2023", "end": "current"},
-            "image": "",
-            "link": "",
-            "noun": "chicago, illinois",
-            "cta": "learn more"
+            "group": "puzzle labs, inc.",
+            "title": "head of engineering",
+            "subtitle": "",
+            "time": {"start": "11/2023", "end": "12/2023"},
+            "image": "../images/photos/ferns.jpg",
+            "link": "https://puzzlelabs.ai",
+            "noun": "champaign, illinois",
+            "cta": "go to puzzle"
         },
         {
             "classification": "work",
             "show": true,
-            "group": "lorem ipsum, inc.",
-            "title": "junior engineer",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "06/2021", "end": "01/2023"},
-            "image": "",
-            "link": "",
-            "noun": "chicago, illinois",
-            "cta": "learn more"
+            "group": "puzzle labs, inc.",
+            "title": "data engineer",
+            "subtitle": "",
+            "time": {"start": "05/2023", "end": "11/2023"},
+            "image": "../images/photos/ferns.jpg",
+            "link": "https://puzzlelabs.ai",
+            "noun": "champaign, illinois",
+            "cta": "go to puzzle"
         },
         {
             "classification": "work",
             "show": true,
-            "group": "cupcake ipsum laboratories",
-            "title": "r&d scientist",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "10/2022", "end": "10/2023"},
-            "image": "",
-            "link": "",
-            "noun": "atlanta, georgia",
-            "cta": "learn more"
+            "group": "sandia national laboratories",
+            "title": "r&d graduate intern",
+            "subtitle": "",
+            "time": {"start": "05/2022", "end": "08/2022"},
+            "image": "../images/photos/floral.jpg",
+            "link": "https://www.sandia.gov/",
+            "noun": "albuquerque, new mexico (remote)",
+            "cta": "go to sandia"
+        },
+        {
+            "classification": "work",
+            "show": true,
+            "group": "university of illinois",
+            "title": "data science educator",
+            "subtitle": "",
+            "time": {"start": "01/2019", "end": "05/2023"},
+            "image": "../images/photos/forest.jpg",
+            "link": "https://illinois.edu/",
+            "noun": "champaign, illinois",
+            "cta": "go to illinois"
         },
 
 
@@ -116,42 +128,41 @@ const cv = {
         },
 
 
-
         {
             "classification": "education",
             "show": true,
             "group": "university of illinois urbana-champaign",
-            "title": "ph.d. lorem ipsum",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
+            "title": "m.s. statistics",
+            "subtitle": "",
+            "time": {"start": null, "end": "05/2023"},
+            "image": "../images/photos/plants.jpg",
+            "link": "https://stat.illinois.edu/",
             "noun": "champaign, illinois",
-            "cta": "learn more"
+            "cta": "statistics @ illinois"
         },
         {
             "classification": "education",
             "show": true,
             "group": "university of illinois urbana-champaign",
-            "title": "m.s. lorem ipsum",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
+            "title": "b.s. statistics",
+            "subtitle": "mathematics minor. highest distinction in statistics.",
+            "time": {"start": null, "end": "05/2021"},
+            "image": "../images/photos/plants.jpg",
+            "link": "https://stat.illinois.edu/",
             "noun": "champaign, illinois",
-            "cta": "learn more"
+            "cta": "statistics @ illinois"
         },
         {
             "classification": "education",
             "show": true,
-            "group": "university of illinois urbana-champaign",
-            "title": "b.s. lorem ipsum",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
+            "group": "parkland college",
+            "title": "a.s. computer science",
+            "subtitle": "",
+            "time": {"start": null, "end": "05/2018"},
+            "image": "../images/photos/wood.jpg",
+            "link": "https://www.parkland.edu/Main/Academics/Departments/Business-Computer-Science-Technologies/Areas-of-Study/Computer-Science-Programs",
             "noun": "champaign, illinois",
-            "cta": "learn more"
+            "cta": "cs @ parkland"
         },
 
 

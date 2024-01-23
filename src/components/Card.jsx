@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import clsx from 'clsx'
 
 function ChevronRightIcon(props) {
@@ -17,12 +18,31 @@ function ChevronRightIcon(props) {
 export function Card({ as: Component = 'div', className, children }) {
   return (
     <Component
-      className={clsx(className, 'group relative flex flex-col items-start')}
+      className={clsx(className, 'group relative flex flex-row items-start')}
     >
       {children}
     </Component>
   )
 }
+
+Card.Image = function CardImage({ src, alt }) {
+  const magnitudes = [2, 3, 6];
+
+  const getRandomRotation = () => {
+    const direction = Math.random() < 0.5 ? '-' : '';
+    const magnitude = magnitudes[Math.floor(Math.random() * magnitudes.length)];
+    return `${direction}rotate-${magnitude}`;
+  };
+
+  return (
+    <Image
+      src = {src}
+      alt = {alt}
+      sizes = "(min-width: 640px) 18rem, 11rem"
+      className = {clsx("rounded-xl inset-0 h-32 w-32 object-cover", getRandomRotation())}
+    />
+  );
+};
 
 Card.Link = function CardLink({ children, ...props }) {
   return (
@@ -44,25 +64,9 @@ Card.Title = function CardTitle({ as: Component = 'h2', href, children }) {
   )
 }
 
-Card.Noun = function CardNoun({ children }) {
-  return (
-    <p className="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-      {children}
-    </p>
-  )
-}
-
-Card.Time = function CardTime({ children }) {
-  return (
-    <p className="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-      {children}
-    </p>
-  )
-}
-
 Card.Description = function CardDescription({ children }) {
   return (
-    <p className="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+    <p className="relative z-10 mt-0 text-sm text-zinc-600 dark:text-zinc-400">
       {children}
     </p>
   )
@@ -80,7 +84,7 @@ Card.Cta = function CardCta({ children }) {
   return (
     <div
       aria-hidden="true"
-      className="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500"
+      className="relative z-10 mt-1 flex items-center text-sm font-medium text-teal-500"
     >
       {children}
       <ChevronRightIcon className="ml-1 h-4 w-4 stroke-current" />
