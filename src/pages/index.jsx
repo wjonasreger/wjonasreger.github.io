@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Container } from '../components/Container'
-import { GitHubIcon } from '../components/SocialIcons'
+import { GitHubIcon, LinkedInIcon, InstagramIcon } from '../components/SocialIcons'
 
 
 import SiteConfigs from '../data/meta'
@@ -17,6 +17,16 @@ import image3 from '../images/photos/forest.jpg'
 import image4 from '../images/photos/plants.jpg'
 import image5 from '../images/photos/wood.jpg'
 
+function MailIcon(props) {
+  return (
+    <svg viewBox = "0 0 24 24" aria-hidden = "true" {...props}>
+      <path
+        fillRule = "evenodd"
+        d="M6 5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H6Zm.245 2.187a.75.75 0 0 0-.99 1.126l6.25 5.5a.75.75 0 0 0 .99 0l6.25-5.5a.75.75 0 0 0-.99-1.126L12 12.251 6.245 7.187Z"
+      />
+    </svg>
+  )
+}
 
 function SocialLink({ icon: Icon, ...props }) {
   return (
@@ -97,6 +107,21 @@ export default function Home({ articles }) {
               href = {SiteConfigs.author.github}
               aria-label = "follow on github"
               icon = {GitHubIcon}
+            />
+            <SocialLink
+              href = {SiteConfigs.author.linkedin}
+              aria-label = "follow on linkedin"
+              icon = {LinkedInIcon}
+            />
+            <SocialLink
+              href = {SiteConfigs.author.instagram}
+              aria-label = "follow on instagram"
+              icon = {InstagramIcon}
+            />
+            <SocialLink
+              href = {`mailto:${SiteConfigs.author.email}`}
+              aria-label = "email me"
+              icon = {MailIcon}
             />
 
           </div>
