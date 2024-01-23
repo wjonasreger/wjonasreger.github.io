@@ -3,6 +3,8 @@ import { MDXProvider } from '@mdx-js/react'
 import Layout from '../components/Layout';
 // import '../styles/globals.css';
 
+import { Header } from '../components/Header'
+
 import '../styles/tailwind.css'
 import 'focus-visible'
 
