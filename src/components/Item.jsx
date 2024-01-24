@@ -29,14 +29,8 @@ export function reconstructDateFormat(dateString) {
   
 // Function to calculate the number of months difference between two dates
 function calculateTimeDifference(startDate, endDate) {
-    const startParts = startDate.split('/');
-    const endParts = endDate.split('/');
-
-    const startYear = startParts[1];
-    const endYear = endParts[1];
-
-    const startMonth = startParts[0];
-    const endMonth = endParts[0];
+    const [startMonth, startYear] = startDate.split('/');
+    const [endMonth, endYear] = endDate.split('/');
 
     const yearDifference = endYear - startYear;
     const monthDifference = endMonth - startMonth;

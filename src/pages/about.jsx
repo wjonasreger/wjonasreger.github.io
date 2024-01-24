@@ -1,9 +1,15 @@
 import { NextSeo } from 'next-seo';
 import SiteConfigs from '../data/meta'
 import { SimpleLayout } from '../components/SimpleLayout'
-import { RenderItemsSection, reconstructDateFormat } from "../components/Item"
+import { RenderItemsSection } from "../components/Item"
 
 import cv from '../data/cv'
+
+// Helper function to parse date into milliseconds
+const parseDate = (dateString) => {
+    const [month, year] = dateString.split('/');
+    return parseInt(year) * 12 + parseInt(month) - 1;
+  };
 
 // Create a function to group items by their group name
 const groupItemsByClassification = (classification) =>
@@ -11,14 +17,14 @@ cv.items
     .filter(item => item.classification === classification)
     .sort((a, b) => {
         // Parse the end dates in mm/yyyy format and compare them
-        const dateA = new Date(reconstructDateFormat(a.time.start));
-        const dateB = new Date(reconstructDateFormat(b.time.start));
+        const dateA = parseDate(a.time.start);
+        const dateB = parseDate(b.time.start);
         return dateB - dateA;
     })
     .sort((a, b) => {
         // Parse the end dates in mm/yyyy format and compare them
-        const dateA = new Date(reconstructDateFormat(a.time.end));
-        const dateB = new Date(reconstructDateFormat(b.time.end));
+        const dateA = parseDate(a.time.end);
+        const dateB = parseDate(b.time.end);
         return dateB - dateA;
     })
     .reduce((acc, item) => {
