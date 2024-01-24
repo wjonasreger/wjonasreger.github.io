@@ -221,7 +221,128 @@ const cv = {
             "noun": "department of statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
-
+        
+        // project experience
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "stat 100 virtual course assistant",
+            "subtitle": "",
+            "time": {"start": null, "end": "12/2021"},
+            "image": "",
+            "link": "",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "emotional sentiment of poems as generative art",
+            "subtitle": "abstract generative art animation representing a poem's sentiment through color-coding, using plutchik's wheel of emotions, and concludes with a mosaic of a red herring tinted with a color reflecting the sentiment score of the poem.",
+            "time": {"start": null, "end": "11/2021"},
+            "image": "",
+            "link": "https://m.youtube.com/watch?v=qm6Xkvml1yU",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "korean text corpus from k-drama films",
+            "subtitle": "",
+            "time": {"start": null, "end": "08/2022"},
+            "image": "",
+            "link": "",
+            "noun": "w. jonas reger, abhi thanvi",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "morphological transduction with finite state transducers",
+            "subtitle": "a simple finite state transducer design for morphological parsing of spanish verb conjugations.",
+            "time": {"start": null, "end": "09/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/morphological_finite_state_transducer",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "traditional n-gram language models",
+            "subtitle": "traditional unigram and bigram language models with and without smoothing",
+            "time": {"start": null, "end": "09/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/traditional_ngram_language_models",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "text classification with neural networks",
+            "subtitle": "neural network models for predicting sentiments of movie reviews.",
+            "time": {"start": null, "end": "10/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/text_classification_neural_networks",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "neural machine translation",
+            "subtitle": "sequence to sequence neural network models for predicting sentence translations between english and mandarin",
+            "time": {"start": null, "end": "11/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/neural_machine_translation",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "text classification for interpretation",
+            "subtitle": "regularized logistic models for predicting sentiments of movie reviews using interpretive words.",
+            "time": {"start": null, "end": "11/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/text_classification_interpretation",
+            "noun": "w. jonas reger, hope hunter",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "neural grammar dependency parser",
+            "subtitle": "a neural network for parsing grammar dependencies of english sentences.",
+            "time": {"start": null, "end": "12/2022"},
+            "image": "",
+            "link": "https://github.com/wjonasreger/neural_grammar_dependency_parser",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
+        {
+            "classification": "project",
+            "show": true,
+            "group": "natural language processing",
+            "title": "ai essay writer",
+            "subtitle": "",
+            "time": {"start": null, "end": "12/2023"},
+            "image": "",
+            "link": "",
+            "noun": "w. jonas reger",
+            "cta": "learn more"
+        },
 
 
 
@@ -259,58 +380,6 @@ const cv = {
             "image": "",
             "link": "https://medium.com/@enrichmycareer/communication-is-the-most-important-soft-skill-d5d41c4fd49e",
             "noun": "noun",
-            "cta": "learn more"
-        },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        {
-            "classification": "project",
-            "show": true,
-            "group": ["example"],
-            "title": "project 1",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
-            "noun": "w. jonas reger",
-            "cta": "learn more"
-        },
-        {
-            "classification": "project",
-            "show": true,
-            "group": ["example"],
-            "title": "project 2",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
-            "noun": "w. jonas reger",
-            "cta": "learn more"
-        },
-        {
-            "classification": "project",
-            "show": true,
-            "group": ["example"],
-            "title": "project 3",
-            "subtitle": "lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "time": {"start": "", "end": ""},
-            "image": "",
-            "link": "",
-            "noun": "w. jonas reger",
             "cta": "learn more"
         },
 

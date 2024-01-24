@@ -62,9 +62,11 @@ export function Item({ image, group, title, href, noun, time, cta, children }) {
                 <Card.Description>
                 <div dangerouslySetInnerHTML={{ __html: children }} />
                 </Card.Description>
-                <Card.Cta>
-                    {cta}
-                </Card.Cta>
+                {href && href !== "" && (
+                    <Card.Cta>
+                        {cta}
+                    </Card.Cta>
+                )}
             </div>
         </Card>
     );

@@ -13,7 +13,7 @@ const parseDate = (dateString) => {
 
 // Create a function to group items by their group name
 const groupItemsByClassification = (classification) => {
-  const customOrder = ['instructor', 'teaching assistant', 'course assistant'];
+  const customOrder = ['natural language processing'];
 
   const groupedItems = cv.items
       .filter(item => item.classification === classification)
@@ -48,12 +48,12 @@ const groupItemsByClassification = (classification) => {
 
 
 export default function Stack() {
-  const heading = "i've facilitated student learning in statistics and data science for over 12,000 students at illinois" 
-  const subheading = "\"if you have knowledge, let others light their candles in it.\" — margaret fuller"
-  const pageName = "teaching"
+  const heading = "ideas are inexpensive. exploration, discovery, and implementation make things launch." 
+  const subheading = "there are many ideas in my workshop for data science, natural language processing, and machine learning. here are the ones that have been launched into orbit."
+  const pageName = "projects"
 
   // Grouping items
-  const teachingItemsByGroup = groupItemsByClassification('teaching');
+  const projectItemsByGroup = groupItemsByClassification('project');
 
   return (
     <>
@@ -77,7 +77,7 @@ export default function Stack() {
       />
       <SimpleLayout title = {heading} intro = {subheading}>
         <div className = "space-y-8">
-            <RenderItemsSection items={teachingItemsByGroup}/>
+            <RenderItemsSection items={projectItemsByGroup}/>
         </div>
       </SimpleLayout>
     </>
