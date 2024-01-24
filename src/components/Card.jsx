@@ -26,20 +26,21 @@ export function Card({ as: Component = 'div', className, children }) {
 }
 
 Card.Image = function CardImage({ src, alt }) {
-  const magnitudes = [2, 3, 6];
+  const magnitudes = [2, 3, 4];
 
   const getRandomRotation = () => {
     const direction = Math.random() < 0.5 ? '-' : '';
     const magnitude = magnitudes[Math.floor(Math.random() * magnitudes.length)];
-    return `${direction}rotate-${magnitude}`;
+    return `${direction}${magnitude}deg`;
   };
 
   return (
     <Image
       src = {src}
       alt = {alt}
+      style = {{ transform: 'rotate(' + getRandomRotation() + ')' }}
       sizes = "(min-width: 640px) 18rem, 11rem"
-      className = {clsx("rounded-xl inset-0 h-32 w-32 object-cover", getRandomRotation())}
+      className = {clsx("rounded-xl inset-0 h-32 w-32 object-cover")}
     />
   );
 };

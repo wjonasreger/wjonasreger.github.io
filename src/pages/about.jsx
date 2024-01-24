@@ -32,11 +32,11 @@ function Item({ image, group, title, href, noun, time, cta, children }) {
   
     return (
       <Card as="li">
-        <div className="w-1/4 pr-6">
+        <div className="w-1/4 md:w-2/5 pr-6">
           {/* Use the determined image path */}
-          <Card.Image src={imagePath} alt={altText} width={200} />
+          <Card.Image src={imagePath} alt={altText} />
         </div>
-        <div className="w-3/4 flex flex-col">
+        <div className="w-3/4 md:w-3/5 flex flex-col">
           <Card.Title as="h3" href={href}>
             {title}
           </Card.Title>

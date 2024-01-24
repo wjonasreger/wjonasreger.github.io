@@ -73,12 +73,12 @@ function SocialLink({ icon: Icon, ...props }) {
 }
 
 function Photos() {
-  const magnitudes = [2, 3, 6];
+  const magnitudes = [2, 3, 4, 5, 6];
 
   const getRandomRotation = () => {
     const direction = Math.random() < 0.5 ? '-' : '';
     const magnitude = magnitudes[Math.floor(Math.random() * magnitudes.length)];
-    return `${direction}rotate-${magnitude}`;
+    return `${direction}${magnitude}deg`;
   };
 
   const rotations = Array.from({ length: 5 }, () => getRandomRotation());
@@ -89,10 +89,9 @@ function Photos() {
         {[image1, image2, image3, image4, image5].map((image, imageIndex) => (
           <div
             key={image.src}
-            style={{ transform: 'rotate(45deg)' }}
+            style={{ transform: 'rotate(' + rotations[imageIndex % rotations.length] + ')' }}
             className={clsx(
-              'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-72 sm:rounded-2xl transform',
-              rotations[imageIndex % rotations.length]
+              'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-72 sm:rounded-2xl'
             )}
           >
             <Image
