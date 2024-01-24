@@ -1,7 +1,7 @@
 import { NextSeo } from 'next-seo';
 import SiteConfigs from '../data/meta'
 import { SimpleLayout } from '../components/SimpleLayout'
-import { RenderItemsSection } from "../components/Item"
+import { RenderItemsSection, reconstructDateFormat } from "../components/Item"
 
 import cv from '../data/cv'
 
@@ -9,6 +9,18 @@ import cv from '../data/cv'
 const groupItemsByClassification = (classification) =>
 cv.items
     .filter(item => item.classification === classification)
+    .sort((a, b) => {
+        // Parse the end dates in mm/yyyy format and compare them
+        const dateA = new Date(reconstructDateFormat(a.time.start));
+        const dateB = new Date(reconstructDateFormat(b.time.start));
+        return dateB - dateA;
+    })
+    .sort((a, b) => {
+        // Parse the end dates in mm/yyyy format and compare them
+        const dateA = new Date(reconstructDateFormat(a.time.end));
+        const dateB = new Date(reconstructDateFormat(b.time.end));
+        return dateB - dateA;
+    })
     .reduce((acc, item) => {
     if (!acc[item.group]) {
         acc[item.group] = [];
@@ -18,7 +30,7 @@ cv.items
     }, {});
 
 export default function Stack() {
-  const heading = "hello! i'm jonas reger. i'm searching for opportunities to continue research and development in nlp."
+  const heading = "hello! i'm jonas reger. i'm searching for opportunities to continue research and development in nlp." 
   const subheading = "thanks for dropping in. i've been working in data science for 5+ years in education and linguistics. read on below to learn more about me and my work."
   const pageName = "about"
 
