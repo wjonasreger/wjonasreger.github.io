@@ -11,11 +11,11 @@ import { GitHubIcon, LinkedInIcon, InstagramIcon } from '../components/SocialIco
 import SiteConfigs from '../data/meta'
 import { NextSeo } from 'next-seo';
 
-import image1 from '../images/photos/ferns.jpg'
-import image2 from '../images/photos/floral.jpg'
-import image3 from '../images/photos/forest.jpg'
-import image4 from '../images/photos/plants.jpg'
-import image5 from '../images/photos/wood.jpg'
+import image1 from '../images/photos/red_panda_desk.png'
+import image2 from '../images/photos/red_panda_coding.png'
+import image3 from '../images/photos/red_panda_coffee.png'
+import image4 from '../images/photos/red_panda_robot.png'
+import image5 from '../images/photos/red_panda_station.png'
 
 function MailIcon(props) {
   return (
@@ -91,7 +91,7 @@ function Photos() {
             key={image.src}
             style={{ transform: 'rotate(' + rotations[imageIndex % rotations.length] + ')' }}
             className={clsx(
-              'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-72 sm:rounded-2xl'
+              'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-64 sm:rounded-2xl'
             )}
           >
             <Image

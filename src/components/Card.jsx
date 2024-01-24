@@ -40,7 +40,7 @@ Card.Image = function CardImage({ src, alt }) {
       alt = {alt}
       style = {{ transform: 'rotate(' + getRandomRotation() + ')' }}
       sizes = "(min-width: 640px) 18rem, 11rem"
-      className = {clsx("rounded-xl inset-0 h-32 w-32 object-cover")}
+      className = {clsx("rounded-xl inset-0 h-28 w-28 object-cover")}
     />
   );
 };

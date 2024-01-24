@@ -46,7 +46,7 @@ const cv = {
             "title": "head of engineering",
             "subtitle": "",
             "time": {"start": "11/2023", "end": "12/2023"},
-            "image": "../images/photos/ferns.jpg",
+            "image": "puzzle",
             "link": "https://puzzlelabs.ai",
             "noun": "champaign, illinois",
             "cta": "go to puzzle"
@@ -58,7 +58,7 @@ const cv = {
             "title": "data engineer",
             "subtitle": "",
             "time": {"start": "05/2023", "end": "11/2023"},
-            "image": "../images/photos/ferns.jpg",
+            "image": "puzzle",
             "link": "https://puzzlelabs.ai",
             "noun": "champaign, illinois",
             "cta": "go to puzzle"
@@ -70,7 +70,7 @@ const cv = {
             "title": "r&d graduate intern",
             "subtitle": "",
             "time": {"start": "05/2022", "end": "08/2022"},
-            "image": "../images/photos/floral.jpg",
+            "image": "sandia",
             "link": "https://www.sandia.gov/",
             "noun": "albuquerque, new mexico (remote)",
             "cta": "go to sandia"
@@ -82,7 +82,7 @@ const cv = {
             "title": "data science educator",
             "subtitle": "",
             "time": {"start": "01/2019", "end": "05/2023"},
-            "image": "../images/photos/forest.jpg",
+            "image": "uiuc",
             "link": "https://illinois.edu/",
             "noun": "champaign, illinois",
             "cta": "go to illinois"
@@ -135,7 +135,7 @@ const cv = {
             "title": "m.s. statistics",
             "subtitle": "",
             "time": {"start": null, "end": "05/2023"},
-            "image": "../images/photos/plants.jpg",
+            "image": "uiuc",
             "link": "https://stat.illinois.edu/",
             "noun": "champaign, illinois",
             "cta": "statistics @ illinois"
@@ -147,7 +147,7 @@ const cv = {
             "title": "b.s. statistics",
             "subtitle": "mathematics minor. highest distinction in statistics.",
             "time": {"start": null, "end": "05/2021"},
-            "image": "../images/photos/plants.jpg",
+            "image": "uiuc",
             "link": "https://stat.illinois.edu/",
             "noun": "champaign, illinois",
             "cta": "statistics @ illinois"
@@ -159,7 +159,7 @@ const cv = {
             "title": "a.s. computer science",
             "subtitle": "",
             "time": {"start": null, "end": "05/2018"},
-            "image": "../images/photos/wood.jpg",
+            "image": "parkland",
             "link": "https://www.parkland.edu/Main/Academics/Departments/Business-Computer-Science-Technologies/Areas-of-Study/Computer-Science-Programs",
             "noun": "champaign, illinois",
             "cta": "cs @ parkland"
