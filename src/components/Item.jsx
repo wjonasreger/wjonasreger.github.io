@@ -16,7 +16,7 @@ export function reconstructDateFormat(dateString) {
     if (dateString === null) {
         return null;
     }
-    
+
     const parts = dateString.split('/');
     const month = parts[0];
     const year = parts[1];
@@ -29,8 +29,17 @@ export function reconstructDateFormat(dateString) {
   
 // Function to calculate the number of months difference between two dates
 function calculateTimeDifference(startDate, endDate) {
-    const yearDifference = endDate.getFullYear() - startDate.getFullYear();
-    const monthDifference = endDate.getMonth() - startDate.getMonth();
+    const startParts = startDate.split('/');
+    const endParts = endDate.split('/');
+
+    const startYear = startParts[1];
+    const endYear = endParts[1];
+
+    const startMonth = startParts[0];
+    const endMonth = endParts[0];
+
+    const yearDifference = endYear - startYear;
+    const monthDifference = endMonth - startMonth;
     const numberMonths = yearDifference * 12 + monthDifference;
 
     const years = Math.floor(numberMonths / 12);
@@ -51,9 +60,7 @@ export function Item({ image, group, title, href, noun, time, cta, children }) {
     const altText = `${group} - ${title} - ${noun}`;
 
     // Calculate the number of months difference
-    const startDate = time.start !== null ? new Date(reconstructDateFormat(time.start)) : null;
-    const endDate = new Date(reconstructDateFormat(time.end));
-    const numMonths = startDate !== null ? calculateTimeDifference(startDate, endDate) : null;
+    const numMonths = time.start !== null ? calculateTimeDifference(time.start, time.end) : null;
 
 
     return (
