@@ -11,21 +11,6 @@ export function ItemsSection({ children, ...props }) {
       </Section>
     )
   }
-
-export function reconstructDateFormat(dateString) {
-    if (dateString === null) {
-        return null;
-    }
-
-    const parts = dateString.split('/');
-    const month = parts[0];
-    const year = parts[1];
-    
-    // Assuming the day is always the 1st
-    const reconstructedDate = `${month}-01-${year}`;
-
-    return reconstructedDate;
-}
   
 // Function to calculate the number of months difference between two dates
 function calculateTimeDifference(startDate, endDate) {
@@ -34,7 +19,7 @@ function calculateTimeDifference(startDate, endDate) {
 
     const yearDifference = endYear - startYear;
     const monthDifference = endMonth - startMonth;
-    const numberMonths = yearDifference * 12 + monthDifference;
+    const numberMonths = yearDifference * 12 + monthDifference + 1;
 
     const years = Math.floor(numberMonths / 12);
     const months = numberMonths % 12;
@@ -74,7 +59,9 @@ export function Item({ image, group, title, href, noun, time, cta, children }) {
                     {time.end}
                     {numMonths !== null ? ` • ${numMonths}` : ''}
                 </Card.Description>
-                <Card.Description>{children}</Card.Description>
+                <Card.Description>
+                <div dangerouslySetInnerHTML={{ __html: children }} />
+                </Card.Description>
                 <Card.Cta>
                     {cta}
                 </Card.Cta>
