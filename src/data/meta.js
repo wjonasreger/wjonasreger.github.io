@@ -1,6 +1,6 @@
 const SiteConfigs = {
     title: "w. jonas reger",
-    description: "w. jonas reger is a data science educator, data & nlp engineer, and context puzzler.",
+    description: "data science | nlp | aiml | python | r",
     copyright: "w. jonas reger",
     author: {
         name: "w. jonas reger",
