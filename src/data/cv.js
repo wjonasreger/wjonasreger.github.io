@@ -266,7 +266,7 @@ const cv = {
             "title": "morphological transduction with finite state transducers",
             "subtitle": "a simple finite state transducer design for morphological parsing of spanish verb conjugations.",
             "time": {"start": null, "end": "09/2022"},
-            "image": "",
+            "image": "spanish-board",
             "link": "https://github.com/wjonasreger/morphological_finite_state_transducer",
             "noun": "w. jonas reger",
             "cta": "learn more"
@@ -278,7 +278,7 @@ const cv = {
             "title": "traditional n-gram language models",
             "subtitle": "traditional unigram and bigram language models with and without smoothing",
             "time": {"start": null, "end": "09/2022"},
-            "image": "",
+            "image": "letter-magnets",
             "link": "https://github.com/wjonasreger/traditional_ngram_language_models",
             "noun": "w. jonas reger",
             "cta": "learn more"
@@ -290,7 +290,7 @@ const cv = {
             "title": "text classification with neural networks",
             "subtitle": "neural network models for predicting sentiments of movie reviews.",
             "time": {"start": null, "end": "10/2022"},
-            "image": "",
+            "image": "network-blue-purple",
             "link": "https://github.com/wjonasreger/text_classification_neural_networks",
             "noun": "w. jonas reger",
             "cta": "learn more"
@@ -302,7 +302,7 @@ const cv = {
             "title": "neural machine translation",
             "subtitle": "sequence to sequence neural network models for predicting sentence translations between english and mandarin",
             "time": {"start": null, "end": "11/2022"},
-            "image": "",
+            "image": "multilingual-speech-bubble",
             "link": "https://github.com/wjonasreger/neural_machine_translation",
             "noun": "w. jonas reger",
             "cta": "learn more"
@@ -314,7 +314,7 @@ const cv = {
             "title": "text classification for interpretation",
             "subtitle": "regularized logistic models for predicting sentiments of movie reviews using interpretive words.",
             "time": {"start": null, "end": "11/2022"},
-            "image": "",
+            "image": "sentiment-word-cloud",
             "link": "https://github.com/wjonasreger/text_classification_interpretation",
             "noun": "w. jonas reger, hope hunter",
             "cta": "learn more"
@@ -326,7 +326,7 @@ const cv = {
             "title": "neural grammar dependency parser",
             "subtitle": "a neural network for parsing grammar dependencies of english sentences.",
             "time": {"start": null, "end": "12/2022"},
-            "image": "",
+            "image": "grammar-board",
             "link": "https://github.com/wjonasreger/neural_grammar_dependency_parser",
             "noun": "w. jonas reger",
             "cta": "learn more"

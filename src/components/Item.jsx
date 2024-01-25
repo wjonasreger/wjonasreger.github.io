@@ -31,7 +31,7 @@ function calculateTimeDifference(startDate, endDate) {
     return result || '0 months';
 }
 
-export function Item({ image, group, title, href, noun, time, cta, children }) {
+export function Item({ image, group, title, href, noun, time, cta, show,children }) {
     // Check if the provided image path is valid or use the default image
     const selectedImage = Images.hasOwnProperty(image) ? Images[image] : Images.default;
 
@@ -43,6 +43,7 @@ export function Item({ image, group, title, href, noun, time, cta, children }) {
 
 
     return (
+        show ? (
         <Card as="li">
             <div className="w-1/4 pr-6">
                 <Card.Image src={selectedImage} alt={altText} />
@@ -69,6 +70,7 @@ export function Item({ image, group, title, href, noun, time, cta, children }) {
                 )}
             </div>
         </Card>
+        ) : null
     );
 }
 
@@ -89,6 +91,7 @@ export const RenderItemsSection = ({ items }) => (
             noun={item.noun}
             time={item.time}
             cta={item.cta}
+            show={item.show}
             >
             {item.subtitle}
             </Item>
