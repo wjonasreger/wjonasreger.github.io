@@ -242,7 +242,7 @@ const cv = {
             "title": "emotional sentiment of poems as generative art",
             "subtitle": "abstract generative art animation representing a poem's sentiment through color-coding, using plutchik's wheel of emotions, and concludes with a mosaic of a red herring tinted with a color reflecting the sentiment score of the poem.",
             "time": {"start": null, "end": "11/2021"},
-            "image": "",
+            "image": "red-herring-faceless",
             "link": "https://m.youtube.com/watch?v=qm6Xkvml1yU",
             "noun": "w. jonas reger",
             "cta": "learn more"

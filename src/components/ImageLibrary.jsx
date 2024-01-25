@@ -14,6 +14,7 @@ import multilingualSpeechBubble from '../images/photos/project-images/multilingu
 import networkBluePurple from '../images/photos/project-images/network-blue-purple.jpg'
 import sentimentWordCloud from '../images/photos/project-images/sentiment-word-cloud.jpg'
 import spanishBoard from '../images/photos/project-images/spanish-board.jpg'
+import redHerringFaceless from '../images/photos/project-images/red-herring-faceless.png'
 
 export const Images = {
     // default
@@ -31,5 +32,6 @@ export const Images = {
     "multilingual-speech-bubble": multilingualSpeechBubble,
     "network-blue-purple": networkBluePurple,
     "sentiment-word-cloud": sentimentWordCloud,
-    "spanish-board": spanishBoard
+    "spanish-board": spanishBoard,
+    "red-herring-faceless": redHerringFaceless
 }
