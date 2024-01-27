@@ -352,10 +352,10 @@ const cv = {
             "title": "vs code",
             "subtitle": "i use vscode for all of my coding. i used to hate it, but now i can't live without it. i use it for python, r, markdown, latex, html, css, and javascript. i also built this website with it.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "vscode-badge",
+            "link": "https://code.visualstudio.com/",
             "noun": "developer application",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -364,10 +364,10 @@ const cv = {
             "title": "github",
             "subtitle": "i use github for all of my version control. i also use github pages for hosting my websites. i even store all of my old class notes and homeworks on github.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "github-badge",
+            "link": "https://github.com/",
             "noun": "developer platform",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -376,10 +376,10 @@ const cv = {
             "title": "rstudio",
             "subtitle": "i use rstudio for all of my r coding whenever i'm feeling statisticalgic. it is the best tool for r coding.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "rstudio-badge",
+            "link": "https://posit.co/download/rstudio-desktop/",
             "noun": "developer application",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -388,10 +388,10 @@ const cv = {
             "title": "copilot",
             "subtitle": "i use copilot for all of my coding. it's like magic autocomplete that completes your ideas. it's not perfect, but with some tlc, it can be a great tool.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "copilot-badge",
+            "link": "https://github.com/features/copilot",
             "noun": "large language model tool",
-            "cta": "learn more"
+            "cta": "get it now"
         },
         {
             "classification": "stack",
@@ -400,10 +400,10 @@ const cv = {
             "title": "chatgpt",
             "subtitle": "i use chatgpt to augment my thought processes. it's not a trusted friend, but it's a great stochastic parrot. it's ideal for chatting and brainstorming up some tubularities.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "chatgpt-badge",
+            "link": "https://chat.openai.com/",
             "noun": "large language model tool",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -412,10 +412,10 @@ const cv = {
             "title": "affinity",
             "subtitle": "i use affinity for all of my design work. it's like photoshop, but it's not photoshop. it's also not free, but it's not expensive either. it's also a one time purchase, not a subscription that drains your wallet.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "affinity-badge",
+            "link": "https://affinity.serif.com/en-us/",
             "noun": "graphic design application",
-            "cta": "learn more"
+            "cta": "get it now"
         },
         {
             "classification": "stack",
@@ -424,10 +424,10 @@ const cv = {
             "title": "excalidraw",
             "subtitle": "i use excalidraw for all of flowcharts and organization ideas. it's like a whiteboard to organize your thoughts and ideas into a coherent plan.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "excalidraw-badge",
+            "link": "https://excalidraw.com/",
             "noun": "collaborative diagraming tool",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -436,10 +436,10 @@ const cv = {
             "title": "notion",
             "subtitle": "i use notion for all of my notes and organization. if my life was a product, then notion would be where i manage the product roadmap. it's an excellent tool for organizing your life, your work, and your thoughts.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "notion-badge",
+            "link": "https://www.notion.so/product?fredir=1",
             "noun": "workspace and note-taking application",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -448,10 +448,10 @@ const cv = {
             "title": "arc",
             "subtitle": "i use arc as one of my primary browsers. it's clean and designed to help you focus on your work by hiding all of the tabs. it has an excellent workspace management system for your tabs.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "arc-badge",
+            "link": "https://arc.net/",
             "noun": "internet browser application",
-            "cta": "learn more"
+            "cta": "try it now"
         },
         {
             "classification": "stack",
@@ -460,10 +460,10 @@ const cv = {
             "title": "14” macbook pro, m1 pro, 32gb ram (2021)",
             "subtitle": "the computational power of a desktop in a laptop. i'm still not sure how they did it. highly recommend.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "apple-badge",
+            "link": "https://www.apple.com/shop/buy-mac/macbook-pro/14-inch",
             "noun": "apple laptop computer",
-            "cta": "learn more"
+            "cta": "get a macbook pro"
         },
         {
             "classification": "stack",
@@ -472,10 +472,10 @@ const cv = {
             "title": "custom pc desktop, nvidia geforce rtx 2070 super, intel i7-9700k, 32gb ram",
             "subtitle": "i originally built this for rtx minecraft. but it's also great for everything else in gaming and coding.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "nvidia-badge",
+            "link": "https://pcpartpicker.com/",
             "noun": "pc desktop computer",
-            "cta": "learn more"
+            "cta": "build your own"
         },
         {
             "classification": "stack",
@@ -484,10 +484,10 @@ const cv = {
             "title": "lg ultragear qhd 34-inch curved gaming monitor, 160hz",
             "subtitle": "the extra real estate on this one is great for getting lost in the code. goes great with the m1 pro.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "lg-ultragear-badge",
+            "link": "https://www.amazon.com/LG-UltraGear-34GP63A-B-Compatibility-FreeSync/dp/B0B928B6BC",
             "noun": "curved computer monitor",
-            "cta": "learn more"
+            "cta": "get your own"
         },
         {
             "classification": "stack",
@@ -496,10 +496,10 @@ const cv = {
             "title": "razer huntsman v2 optical gaming keyboard, linear optical switches",
             "subtitle": "once you go optical, you never go back. i love the sound and feel of the keys. the lighting is also great for coding in the dark.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "razer-badge",
+            "link": "https://www.amazon.com/Razer-Huntsman-Optical-Gaming-Keyboard/dp/B09C12L49Z",
             "noun": "mechanical computer keyboard",
-            "cta": "learn more"
+            "cta": "get your own"
         },
         {
             "classification": "stack",
@@ -508,10 +508,10 @@ const cv = {
             "title": "realspace magellan pneumatic height-adjustable standing desk, 60” width, cherry",
             "subtitle": "if you're always sitting, not eating, and not drinking water, then you'll be sad. this desk is great for standing and sitting. it's not a good source of food or water though.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
+            "image": "desk-badge",
+            "link": "https://www.amazon.com/Realspace-Magellan-Pneumatic-Sit-Stand-Height-Adjustable/dp/B078J9856H",
             "noun": "standing desk",
-            "cta": "learn more"
+            "cta": "get your own"
         },
         {
             "classification": "stack",
@@ -520,9 +520,9 @@ const cv = {
             "title": "natural language processing",
             "subtitle": "i use nlp to learn more about the languages we use, in particular how we acquire them. i aim to study the relationship between contextual information and cognitive states that give rise to an understanding that may empower those with language learning challenges.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "nlp-badge",
+            "link": "https://en.wikipedia.org/wiki/Natural_language_processing",
+            "noun": "field of study",
             "cta": "learn more"
         },
         {
@@ -532,9 +532,9 @@ const cv = {
             "title": "machine learning",
             "subtitle": "i've been fascinated with machine learning ever since i was 9 years old and learned it was used to modify sound signals to focus on a speaker.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "ml-badge",
+            "link": "https://en.wikipedia.org/wiki/Machine_learning",
+            "noun": "field of study",
             "cta": "learn more"
         },
         {
@@ -544,9 +544,9 @@ const cv = {
             "title": "applied statistics and modeling",
             "subtitle": "not sexy, but an integral part of analytics that drive most decisions in the world.",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "data-modeling-badge",
+            "link": "https://en.wikipedia.org/wiki/Statistical_model",
+            "noun": "field of study",
             "cta": "learn more"
         },
         {
@@ -556,9 +556,9 @@ const cv = {
             "title": "data analysis and management",
             "subtitle": "data wrangling will get your heart rate up before you do a statistical workout ;)",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "data-analysis-badge",
+            "link": "https://en.wikipedia.org/wiki/Data_analysis",
+            "noun": "professional domain",
             "cta": "learn more"
         },
         {
@@ -568,10 +568,10 @@ const cv = {
             "title": "python",
             "subtitle": "langchain, nltk, spacy, openai, ollama, anthropic, cohere, sentencetransformers, rake, yake, numpy, pandas, scikit-learn, tensorflow, pytorch, seaborn, beautifulsoup, pydantic, fastapi, modal, discord.py, jupyter",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
-            "cta": "learn more"
+            "image": "python-badge",
+            "link": "https://www.python.org/",
+            "noun": "programming language",
+            "cta": "get started now"
         },
         {
             "classification": "stack",
@@ -580,10 +580,10 @@ const cv = {
             "title": "r",
             "subtitle": "ggplot2, dplyr, caret, tidyverse, purrr, shiny, plotly, rstudio",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
-            "cta": "learn more"
+            "image": "r-badge",
+            "link": "https://www.r-project.org/",
+            "noun": "programming language",
+            "cta": "don't get r"
         },
         {
             "classification": "stack",
@@ -592,9 +592,9 @@ const cv = {
             "title": "web development",
             "subtitle": "jekyll, quarto, next.js, docusaurus, react, modal, mongodb, github pages, docker, javascript, typescript, html, css",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "webdev-badge",
+            "link": "https://en.wikipedia.org/wiki/Web_development",
+            "noun": "professional domain",
             "cta": "learn more"
         },
         {
@@ -604,9 +604,9 @@ const cv = {
             "title": "other programming",
             "subtitle": "c/c++, java, sql, supercollider, sas, google sheets",
             "time": {"start": null, "end": null},
-            "image": "",
-            "link": "",
-            "noun": "",
+            "image": "terminal-badge",
+            "link": "https://en.wikipedia.org/wiki/Computer_programming",
+            "noun": "programming languages/tools",
             "cta": "learn more"
         },
 
