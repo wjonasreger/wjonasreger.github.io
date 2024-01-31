@@ -1,4 +1,8 @@
 export function formatDate(dateString) {
+  if (dateString === null) {
+    return null; // Return null for null values
+  }
+  
     const fullDate = new Date(`${dateString.split('/').join('-')}T00:00:00Z`).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'long',
@@ -14,6 +18,10 @@ export function formatDate(dateString) {
   }
   
   export function formatMonthYear(dateString) {
+    if (dateString === null) {
+      return null; // Return null for null values
+    }
+    
     const dt = new Date(`${dateString.split('/').join('-')}T00:00:00Z`);
     var month = dt.toLocaleString('default', { month: 'long' });
     var year = dt.toLocaleString('default', { year: 'numeric' });
