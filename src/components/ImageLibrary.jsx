@@ -41,6 +41,10 @@ import dataModelingBadge from '../images/badges/data-modeling.png'
 import dataAnalysisBadge from '../images/badges/data-analysis.png'
 import deskBadge from '../images/badges/desk.png'
 
+// article thumbnails
+import stemCells from '../images/photos/article-images/reprogramming-malignant-melanoma.jpg'
+
+
 export const Images = {
     // default
     "default": DefaultImage,
@@ -83,5 +87,8 @@ export const Images = {
     "ml-badge": mlBadge,
     "data-modeling-badge": dataModelingBadge,
     "data-analysis-badge": dataAnalysisBadge,
-    "desk-badge": deskBadge
+    "desk-badge": deskBadge,
+
+    // article images,
+    "stem-cells": stemCells
 }

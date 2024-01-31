@@ -28,7 +28,6 @@ export async function getAllArticles() {
   // Sort the remaining articles
   articles.sort((a, z) => new Date(z.date) - new Date(a.date));
 
-  console.log(articles)
   return articles;
 }
 

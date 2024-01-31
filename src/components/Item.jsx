@@ -120,7 +120,7 @@ export function Article({ article, children }) {
                     {article.noun}
                 </Card.Description>
                 <Card.Description>
-                    {article.date}
+                    {formatDate(article.date)}
                 </Card.Description>
                 <Card.Cta>
                     read article
@@ -132,15 +132,26 @@ export function Article({ article, children }) {
 }
 
 export const RenderArticlesSection = ({ articles }) => {
-    // console.log('Received articles:', articles);
-  
+  // Filter out articles with show = false
+  const visibleArticles = articles.filter(item => item.show !== false);
+
+  // Extract unique years from visible articles
+  const years = [...new Set(visibleArticles.map(article => article.date.split("-")[0]))];
+
     return (
-      <ItemsSection title="articles">
-        {articles.map(item => (
-          <Article key={item.slug} article={item}>
-            {item.subtitle}
-          </Article>
+      <>
+        {years.map(year => (
+          <ItemsSection key={year} title={`${year}`}>
+            {articles
+              .filter(item => item.date.split("-")[0] === year)
+              .map(item => (
+                <Article key={item.slug} article={item}>
+                  {item.subtitle}
+                </Article>
+              ))}
+          </ItemsSection>
         ))}
-      </ItemsSection>
+      </>
     );
   };
+  

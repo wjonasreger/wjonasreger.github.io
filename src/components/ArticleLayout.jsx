@@ -71,7 +71,7 @@ export function ArticleLayout({
                   <i>{meta.noun}</i>
                 </h2>
                 <h2 className="mt-0 text-xl tracking-tight text-zinc-800 dark:text-zinc-500 sm:text-2xl">
-                  <i>{meta.noun}</i>
+                  <i>{meta.group}</i>
                 </h2>
                 <time
                   dateTime={meta.date}
