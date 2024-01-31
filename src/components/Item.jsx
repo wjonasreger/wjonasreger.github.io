@@ -1,6 +1,7 @@
 import { Card } from '../components/Card'
 import { Section } from '../components/Section'
 import { Images } from '../components/ImageLibrary'
+import { formatDate } from '../lib/formatDate'
 
 export function ItemsSection({ children, ...props }) {
     return (
@@ -14,8 +15,8 @@ export function ItemsSection({ children, ...props }) {
   
 // Function to calculate the number of months difference between two dates
 function calculateTimeDifference(startDate, endDate) {
-    const [startMonth, startYear] = startDate.split('/');
-    const [endMonth, endYear] = endDate.split('/');
+    const [startYear, startMonth, startDay] = startDate.split('/');
+    const [endYear, endMonth, endDay] = endDate.split('/');
 
     const yearDifference = endYear - startYear;
     const monthDifference = endMonth - startMonth;
@@ -31,41 +32,41 @@ function calculateTimeDifference(startDate, endDate) {
     return result || '0 months';
 }
 
-export function Item({ image, group, title, href, noun, time, cta, show,children }) {
+export function Item({ item, children }) {
     // Check if the provided image path is valid or use the default image
-    const selectedImage = Images.hasOwnProperty(image) ? Images[image] : Images.default;
+    const selectedImage = Images.hasOwnProperty(item.image) ? Images[item.image] : Images.default;
 
     // Accessible text
-    const altText = `${group} - ${title} - ${noun}`;
+    const altText = `${item.group} - ${item.title} - ${item.noun}`;
 
     // Calculate the number of months difference
-    const numMonths = time.start !== null ? calculateTimeDifference(time.start, time.end) : null;
+    const numMonths = item.time.start !== null ? calculateTimeDifference(item.time.start, item.time.end) : null;
 
 
     return (
-        show ? (
+        item.show ? (
         <Card as="li">
             <div className="w-1/4 pr-6">
                 <Card.Image src={selectedImage} alt={altText} />
             </div>
             <div className="w-3/4 flex flex-col">
-                <Card.Title as="h3" href={href}>
-                    {title}
+                <Card.Title as="h3" href={item.link}>
+                    {item.title}
                 </Card.Title>
                 <Card.Description>
-                    {noun}
+                    {item.noun}
                 </Card.Description>
                 <Card.Description>
-                    {time.start !== null ? `${time.start}—` : ''}
-                    {time.end}
+                    {item.time.start !== null ? `${formatDate(item.time.start)} — ` : ''}
+                    {formatDate(item.time.end)}
                     {numMonths !== null ? ` • ${numMonths}` : ''}
                 </Card.Description>
                 <Card.Description>
                 <div dangerouslySetInnerHTML={{ __html: children }} />
                 </Card.Description>
-                {href && href !== "" && (
+                {item.link && item.link !== "" && (
                     <Card.Cta>
-                        {cta}
+                        {item.cta}
                     </Card.Cta>
                 )}
             </div>
@@ -84,14 +85,7 @@ export const RenderItemsSection = ({ items }) => (
         {groupItems.map((item, itemIndex) => (
             <Item
             key={itemIndex}
-            image={item.image}
-            group={item.group}
-            title={item.title}
-            href={item.link}
-            noun={item.noun}
-            time={item.time}
-            cta={item.cta}
-            show={item.show}
+            item={item}
             >
             {item.subtitle}
             </Item>
@@ -100,3 +94,53 @@ export const RenderItemsSection = ({ items }) => (
     ))}
     </>
 );
+
+
+export function Article({ article, children }) {
+    // Check if the provided image path is valid or use the default image
+    const selectedImage = Images.hasOwnProperty(article.image) ? Images[article.image] : Images.default;
+
+    // Accessible text
+    const altText = `${article.group} - ${article.title} - ${article.noun}`;
+
+    return (
+        article.show ? (
+        <Card as="li">
+            <div className="w-1/4 pr-6">
+                <Card.Image src={selectedImage} alt={altText} />
+            </div>
+            <div className="w-3/4 flex flex-col">
+                <Card.Title as="h3" href={`/articles/${article.slug}`}>
+                    {article.title}
+                </Card.Title>
+                <Card.Description>
+                <div dangerouslySetInnerHTML={{ __html: children }} />
+                </Card.Description>
+                <Card.Description>
+                    {article.noun}
+                </Card.Description>
+                <Card.Description>
+                    {article.date}
+                </Card.Description>
+                <Card.Cta>
+                    read article
+                </Card.Cta>
+            </div>
+        </Card>
+        ) : null
+    );
+}
+
+export const RenderArticlesSection = ({ articles }) => {
+    // console.log('Received articles:', articles);
+  
+    return (
+      <ItemsSection title="articles">
+        {articles.map(item => (
+          <Article key={item.slug} article={item}>
+            {item.subtitle}
+          </Article>
+        ))}
+      </ItemsSection>
+    );
+  };
