@@ -55,19 +55,19 @@ export default function Stack() {
       <NextSeo
         title = {`${pageName} — ${SiteConfigs.title}`}
         description = {SiteConfigs.description}
-        canonical = {`${SiteConfigs.siteUrl}/${pageName}`}
+        canonical = {`${SiteConfigs.url}/${pageName}`}
         openGraph = {{
-          url: `${SiteConfigs.siteUrl}/${pageName}`,
+          url: `${SiteConfigs.url}/${pageName}`,
           images: [
             {
-              url: `../images/jonas.jpeg`,
+              url: `jonas.jpeg`,
               width: 600,
               height: 600,
               alt: 'Og Image Alt',
               type: 'image/jpeg',
             }
           ],
-          siteName: SiteConfigs.siteName,
+          siteName: SiteConfigs.name,
         }}
       />
       <SimpleLayout title = {heading} intro = {subheading}>

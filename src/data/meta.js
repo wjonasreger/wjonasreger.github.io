@@ -9,7 +9,7 @@ const SiteConfigs = {
         github: "https://github.com/wjonasreger",
         linkedin: "https://linkedin.com/in/wjonasreger",
     },
-    url: "https://wjonasreger.github.io/",
+    url: "https://wjonasreger.github.io",
     name: "wjonasreger.github.io",
 }
 
@@ -19,7 +19,7 @@ const OpenGraphConfigs = {
     openGraph: {
       type: 'website',
       locale: 'en_IE',
-      url: 'https://wjonasreger.github.io/next',
+      url: 'https://wjonasreger.github.io',
       siteName: 'w. jonas reger',
     },
   };

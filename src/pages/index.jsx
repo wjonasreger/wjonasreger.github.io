@@ -149,33 +149,6 @@ function Resume() {
       <div className = "mt-12">
         <RenderSmallItemsSection items={workItemsByGroup}/>
       </div>
-      
-
-
-
-      {/* <ol className="mt-6 space-y-6">
-        {Object.entries(workItemsByGroup).map(([groupName, roles], groupIndex) => (
-          <li key={groupIndex} className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="relative h-10 w-10 flex-none">
-                // <Image src={roles[0].image} alt="" className="h-full w-full object-cover rounded-full" unoptimized /> 
-                <Image src={image1} alt="" className="h-full w-full object-cover rounded-full" unoptimized />
-              </div>
-              <span className="text-lg font-semibold">{groupName}</span>
-            </div>
-            <ul className="space-y-4 ml-6">
-              {roles.map((role, roleIndex) => (
-                <li key={roleIndex} className="flex flex-col">
-                  <span className="text-sm font-medium">{role.title} - {formatDate(role.time.end)}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ol> */}
-
-
-
       <Button href = "https://linkedin.com/in/wjonasreger" variant = "secondary" className = "group mt-6 w-full">
                more on linkedin 
         <ArrowDownIcon className = "h-4 w-4 stroke-zinc-400 transition group-active:stroke-zinc-600 dark:group-hover:stroke-zinc-50 dark:group-active:stroke-zinc-50" />
@@ -187,24 +160,24 @@ function Resume() {
 export default function Home({ articles }) {
   return (
     <>
-    <NextSeo
-      title = {SiteConfigs.title}
-      description = {SiteConfigs.description}
-      canonical = {SiteConfigs.siteUrl}
-      openGraph = {{
-        url: SiteConfigs.siteUrl,
-        images: [
-          {
-            url: `../images/jonas.jpeg`,
-            width: 600,
-            height: 600,
-            alt: 'Og Image Alt',
-            type: 'image/jpeg',
-          }
-        ],
-        siteName: SiteConfigs.siteName,
-      }}
-    />
+      <NextSeo
+        title = {`${SiteConfigs.title}`}
+        description = {SiteConfigs.description}
+        canonical = {`${SiteConfigs.url}`}
+        openGraph = {{
+          url: `${SiteConfigs.url}`,
+          images: [
+            {
+              url: `./public/jonas.jpeg`,
+              width: 600,
+              height: 600,
+              alt: 'Og Image Alt',
+              type: 'image/jpeg',
+            }
+          ],
+          siteName: SiteConfigs.name,
+        }}
+      />
       <Container className = "mt-9">
         <div className = "max-w-2xl text-lg">
           <h1 className = "text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">

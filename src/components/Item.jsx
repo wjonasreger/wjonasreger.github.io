@@ -191,7 +191,7 @@ export function Article({ article, children }) {
                     {article.noun}
                 </Card.Description>
                 <Card.Description>
-                    {formatDate(article.date)}
+                    {formatDate(article.date, "dmy")}
                 </Card.Description>
                 <Card.Cta>
                     read article

@@ -78,7 +78,7 @@ export function ArticleLayout({
                   className="order-first flex items-center text-base text-zinc-500 dark:text-zinc-200"
                 >
                   <span className="h-4 w-0.5 rounded-full bg-zinc-500 dark:bg-zinc-200" />
-                  <span className="ml-3">{formatDate(meta.date)}</span>
+                  <span className="ml-3">{formatDate(meta.date, "mdy")}</span>
                 </time>
               </header>
               <Prose className="mt-8">{children}</Prose>
