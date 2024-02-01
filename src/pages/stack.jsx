@@ -5,12 +5,6 @@ import { RenderItemsSection } from "../components/Item"
 
 import cv from '../data/cv'
 
-// Helper function to parse date into milliseconds
-const parseDate = (dateString) => {
-  const [month, year] = dateString.split('/');
-  return parseInt(year) * 12 + parseInt(month) - 1;
-};
-
 // Create a function to group items by their group name
 const groupItemsByClassification = (classification) => {
   const customOrder = ['quantitative skills', 'technical skills', 'developer tools', 'ai tools', 'design tools', 'productivity tools', 'workstation'];

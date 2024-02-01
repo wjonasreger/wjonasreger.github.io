@@ -1,5 +1,5 @@
 import { Card } from '../components/Card'
-import { Section } from '../components/Section'
+import { Section, BasicSection } from '../components/Section'
 import { Images } from '../components/ImageLibrary'
 import { formatDate } from '../lib/formatDate'
 
@@ -12,6 +12,16 @@ export function ItemsSection({ children, ...props }) {
       </Section>
     )
   }
+
+export function SmallItemsSection({ children, ...props }) {
+return (
+    <BasicSection {...props}>
+    <ul role = "list" className = "space-y-6">
+        {children}
+    </ul>
+    </BasicSection>
+)
+}
   
 // Function to calculate the number of months difference between two dates
 function calculateTimeDifference(startDate, endDate) {
@@ -75,6 +85,48 @@ export function Item({ item, children }) {
     );
 }
 
+
+
+export function SmallItem({ item, children }) {
+    // Check if the provided image path is valid or use the default image
+    const selectedImage = Images.hasOwnProperty(item.image) ? Images[item.image] : Images.default;
+
+    // Accessible text
+    const altText = `${item.group} - ${item.title} - ${item.noun}`;
+
+    // Calculate the number of months difference
+    const numMonths = item.time.start !== null ? calculateTimeDifference(item.time.start, item.time.end) : null;
+
+
+    return (
+        item.show ? (
+        <Card as="li">
+            <div className="w-1/4 md:w-2/5 pr-6">
+                <Card.Image src={selectedImage} alt={altText} />
+            </div>
+            <div className="w-3/4 md:w-3/5 flex flex-col">
+                <Card.Title as="h3" href={item.link}>
+                    {item.title}
+                </Card.Title>
+                <Card.Description>
+                    {item.noun}
+                </Card.Description>
+                <Card.Description>
+                    {item.time.start !== null ? `${formatDate(item.time.start)} — ` : ''}
+                    {formatDate(item.time.end)}
+                    {numMonths !== null ? ` • ${numMonths}` : ''}
+                </Card.Description>
+                {item.link && item.link !== "" && (
+                    <Card.Cta>
+                        {item.cta}
+                    </Card.Cta>
+                )}
+            </div>
+        </Card>
+        ) : null
+    );
+}
+
   
 
 // Reusable component for rendering items section
@@ -91,6 +143,25 @@ export const RenderItemsSection = ({ items }) => (
             </Item>
         ))}
         </ItemsSection>
+    ))}
+    </>
+);
+
+
+// Reusable component for rendering items section
+export const RenderSmallItemsSection = ({ items }) => (
+    <>
+    {Object.entries(items).map(([groupName, groupItems], groupIndex) => (
+        <SmallItemsSection title={groupName} key={groupIndex}>
+        {groupItems.map((item, itemIndex) => (
+            <SmallItem
+            key={itemIndex}
+            item={item}
+            >
+            {item.subtitle}
+            </SmallItem>
+        ))}
+        </SmallItemsSection>
     ))}
     </>
 );
@@ -154,4 +225,3 @@ export const RenderArticlesSection = ({ articles }) => {
       </>
     );
   };
-  

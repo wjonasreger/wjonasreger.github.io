@@ -44,6 +44,7 @@ import deskBadge from '../images/badges/desk.png'
 // article thumbnails
 import stemCells from '../images/photos/article-images/reprogramming-malignant-melanoma.jpg'
 import tfDistnCLT from '../images/photos/article-images/tf-distn-clt.png'
+import spanishCoffee from '../images/photos/article-images/spanish-and-coffee.jpg'
 
 
 export const Images = {
@@ -92,5 +93,6 @@ export const Images = {
 
     // article images,
     "stem-cells": stemCells,
-    "binomial-clt": tfDistnCLT
+    "binomial-clt": tfDistnCLT,
+    "spanish-coffee": spanishCoffee
 }

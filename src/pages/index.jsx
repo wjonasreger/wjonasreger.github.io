@@ -5,7 +5,12 @@ import clsx from 'clsx'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Container } from '../components/Container'
+import { Article, RenderSmallItemsSection } from "../components/Item"
+import { getAllArticles } from '../lib/getAllArticles'
 import { GitHubIcon, LinkedInIcon, InstagramIcon } from '../components/SocialIcons'
+import cv from '../data/cv'
+import { formatDate, parseDate } from '@/lib/formatDate'
+import { RenderItemsSection } from "../components/Item"
 
 
 import SiteConfigs from '../data/meta'
@@ -107,8 +112,33 @@ function Photos() {
   );
 }
 
+// Create a function to group items by their group name
+const groupItemsByClassification = (classification) =>
+cv.items
+    .filter(item => item.classification === classification)
+    .sort((a, b) => {
+        // Parse the end dates in mm/yyyy format and compare them
+        const dateA = parseDate(a.time.start);
+        const dateB = parseDate(b.time.start);
+        return dateB - dateA;
+    })
+    .sort((a, b) => {
+        // Parse the end dates in mm/yyyy format and compare them
+        const dateA = parseDate(a.time.end);
+        const dateB = parseDate(b.time.end);
+        return dateB - dateA;
+    })
+    .reduce((acc, item) => {
+    if (!acc[item.group]) {
+        acc[item.group] = [];
+    }
+    acc[item.group].push(item);
+    return acc;
+    }, {});
+
 
 function Resume() {
+  const workItemsByGroup = groupItemsByClassification('work');
 
   return (
     <div className = "rounded-2xl border border-zinc-100 p-6 dark:border-zinc-700/40">
@@ -116,40 +146,36 @@ function Resume() {
         <BriefcaseIcon className = "h-6 w-6 flex-none" />
         <span className = "ml-3">work</span>
       </h2>
-      <ol className = "mt-6 space-y-4">
-        {/* {resume.map((role, roleIndex)  => (
-          <li key = {roleIndex} className = "flex gap-4">
-            <div className = "relative mt-1 flex h-10 w-10 flex-none items-center justify-center rounded-full shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
-              <Image src = {role.logo} alt = "" className = "h-7 w-7" unoptimized />
+      <div className = "mt-12">
+        <RenderSmallItemsSection items={workItemsByGroup}/>
+      </div>
+      
+
+
+
+      {/* <ol className="mt-6 space-y-6">
+        {Object.entries(workItemsByGroup).map(([groupName, roles], groupIndex) => (
+          <li key={groupIndex} className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="relative h-10 w-10 flex-none">
+                // <Image src={roles[0].image} alt="" className="h-full w-full object-cover rounded-full" unoptimized /> 
+                <Image src={image1} alt="" className="h-full w-full object-cover rounded-full" unoptimized />
+              </div>
+              <span className="text-lg font-semibold">{groupName}</span>
             </div>
-            <dl className = "flex flex-auto flex-wrap gap-x-2">
-              <dt className = "sr-only">company</dt>
-              <dd className = "w-full flex-none text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                {role.company}
-              </dd>
-              <dt className = "sr-only">role</dt>
-              <dd className = "text-xs text-zinc-500 dark:text-zinc-400">
-                {role.title}
-              </dd>
-              <dt className = "sr-only">date</dt>
-              <dd
-                className = "ml-auto text-xs text-zinc-500 dark:text-zinc-500"
-                aria-label = {`${role.start.label ?? role.start} until ${
-                  role.end.label ?? role.end
-                }`}
-              >
-                <time dateTime = {role.start.dateTime ?? role.start}>
-                  {role.start.label ?? role.start}
-                </time>{' '}
-                <span aria-hidden = "true">—</span>{' '}
-                <time dateTime = {role.end.dateTime ?? role.end}>
-                  {role.end.label ?? role.end}
-                </time>
-              </dd>
-            </dl>
+            <ul className="space-y-4 ml-6">
+              {roles.map((role, roleIndex) => (
+                <li key={roleIndex} className="flex flex-col">
+                  <span className="text-sm font-medium">{role.title} - {formatDate(role.time.end)}</span>
+                </li>
+              ))}
+            </ul>
           </li>
-        ))} */}
-      </ol>
+        ))}
+      </ol> */}
+
+
+
       <Button href = "https://linkedin.com/in/wjonasreger" variant = "secondary" className = "group mt-6 w-full">
                more on linkedin 
         <ArrowDownIcon className = "h-4 w-4 stroke-zinc-400 transition group-active:stroke-zinc-600 dark:group-hover:stroke-zinc-50 dark:group-active:stroke-zinc-50" />
@@ -188,7 +214,7 @@ export default function Home({ articles }) {
           🚧 <b><i style={{color: '#facc15'}}>this website is currently under construction. new updates coming soon.</i></b> 🚧
           </p>
           <p className = "mt-6 prose dark:prose-invert">
-          <i style={{color: '#facc15'}}>last updated on: sat jan 27 2024</i>
+          <i style={{color: '#facc15'}}>last updated on: wed jan 31 2024</i>
           </p>
           <p className = "mt-6 prose dark:prose-invert">
             👋 hello, i&apos;m jonas! i&apos;m a recent alum of uiuc statistics, specializing in data science. i&apos;m passionate about natural language processing (nlp), machine learning (ml), teaching others about data science, and making a positive and constructive impact on others. my primary research interest is using nlp towards language acquistion.
@@ -232,9 +258,9 @@ export default function Home({ articles }) {
         <div className = "mx-auto grid max-w-xl grid-cols-1 gap-y-20 lg:max-w-none lg:grid-cols-2">
           <div>
             <div className = "flex flex-col gap-16">
-              {/* {articles.map((article)  => (
+               {articles.map((article)  => (
                 <Article key = {article.slug} article = {article} />
-              ))} */}
+              ))}
             </div>
             <div className = "mt-8">
               <Button href = {`/articles/`} variant = "secondary" className = "group mt-6 w-full">
@@ -251,4 +277,24 @@ export default function Home({ articles }) {
 
     </>
   )
+}
+
+export async function getStaticProps() {
+  // if (process.env.NODE_ENV === 'production') {
+  //   await generateRssFeed()
+  // }
+
+  const allArticles = await getAllArticles();
+  let sliceEnd = Math.floor(allArticles.length * 0.75);
+
+  // Ensure the minimum value for sliceEnd is 4
+  sliceEnd = Math.min(sliceEnd, 4);
+
+  return {
+    props: {
+      articles: allArticles
+      .slice(0, sliceEnd)
+      .map(({ component, ...meta }) => meta),
+    },
+  }
 }
