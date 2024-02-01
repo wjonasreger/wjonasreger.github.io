@@ -168,7 +168,7 @@ export default function Home({ articles }) {
           url: `${SiteConfigs.url}`,
           images: [
             {
-              url: `./public/jonas.jpeg`,
+              url: `${SiteConfigs.url}/jonas.jpeg`,
               width: 600,
               height: 600,
               alt: 'Og Image Alt',
@@ -181,7 +181,7 @@ export default function Home({ articles }) {
       <Container className = "mt-9">
         <div className = "max-w-2xl text-lg">
           <h1 className = "text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
-            data science educator, language enthusiast, <br></br>context puzzler.
+            data science educator,<br></br>language enthusiast,<br></br>context puzzler.
           </h1>
           <p className = "mt-6 prose dark:prose-invert">
           🚧 <b><i style={{color: '#facc15'}}>this website is currently under construction. new updates coming soon.</i></b> 🚧

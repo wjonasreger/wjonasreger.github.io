@@ -60,7 +60,7 @@ export default function Stack() {
           url: `${SiteConfigs.url}/${pageName}`,
           images: [
             {
-              url: `jonas.jpeg`,
+              url: `${SiteConfigs.url}/jonas.jpeg`,
               width: 600,
               height: 600,
               alt: 'Og Image Alt',

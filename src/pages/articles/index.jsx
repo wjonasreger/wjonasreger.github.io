@@ -21,7 +21,7 @@ export default function Stack({ articles }) {
           url: `${SiteConfigs.siteUrl}/${pageName}`,
           images: [
             {
-              url: `../images/jonas.jpeg`,
+              url: `${SiteConfigs.url}/jonas.jpeg`,
               width: 600,
               height: 600,
               alt: 'Og Image Alt',
