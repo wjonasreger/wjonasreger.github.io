@@ -98,7 +98,7 @@ const cv = {
             "time": {"start": "2020/06/01", "end": "2020/08/01"},
             "image": "",
             "link": "https://stat.illinois.edu/alumni/david-blackwell/blackwell-summer-scholars-program",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "learn more"
         },
         {
@@ -110,7 +110,7 @@ const cv = {
             "time": {"start": "2020/08/01", "end": "2020/12/01"},
             "image": "",
             "link": "https://fall-2020.stat432.org/",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
         {
@@ -122,7 +122,7 @@ const cv = {
             "time": {"start": "2019/06/01", "end": "2019/12/01"},
             "image": "",
             "link": "https://stat.illinois.edu/academics/course-catalog",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course catalog"
         },
         {
@@ -134,7 +134,7 @@ const cv = {
             "time": {"start": "2020/01/01", "end": "2020/05/01"},
             "image": "",
             "link": "https://stat.illinois.edu/academics/course-catalog",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course catalog"
         },
         {
@@ -146,7 +146,7 @@ const cv = {
             "time": {"start": "2019/01/01", "end": "2020/05/01"},
             "image": "",
             "link": "https://stat.illinois.edu/academics/course-catalog",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course catalog"
         },
         {
@@ -158,7 +158,7 @@ const cv = {
             "time": {"start": "2019/01/01", "end": "2021/12/01"},
             "image": "",
             "link": "https://stat100website.web.illinois.edu/",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
         {
@@ -170,7 +170,7 @@ const cv = {
             "time": {"start": "2023/01/01", "end": "2023/05/01"},
             "image": "",
             "link": "https://stat.illinois.edu/academics/course-catalog",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course catalog"
         },
         {
@@ -182,7 +182,7 @@ const cv = {
             "time": {"start": "2022/08/01", "end": "2022/12/01"},
             "image": "",
             "link": "https://stat385.org/",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
         {
@@ -194,7 +194,7 @@ const cv = {
             "time": {"start": "2021/08/01", "end": "2021/12/01"},
             "image": "",
             "link": "https://discovery.cs.illinois.edu/stat107-fa21/",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
         {
@@ -218,7 +218,7 @@ const cv = {
             "time": {"start": "2022/01/01", "end": "2022/05/01"},
             "image": "",
             "link": "https://stat100website.web.illinois.edu/archive/S22/pages/staff.html",
-            "noun": "department of statistics, university of illinois urbana-champaign",
+            "noun": "statistics, university of illinois urbana-champaign",
             "cta": "view course website"
         },
         
