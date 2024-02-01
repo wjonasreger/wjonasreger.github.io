@@ -2,14 +2,8 @@ import { NextSeo } from 'next-seo';
 import SiteConfigs from '../data/meta'
 import { SimpleLayout } from '../components/SimpleLayout'
 import { RenderItemsSection } from "../components/Item"
-
+import { parseDate } from '@/lib/formatDate'
 import cv from '../data/cv'
-
-// Helper function to parse date into milliseconds
-const parseDate = (dateString) => {
-    const [month, year] = dateString.split('/');
-    return parseInt(year) * 12 + parseInt(month) - 1;
-  };
 
 // Create a function to group items by their group name
 const groupItemsByClassification = (classification) =>

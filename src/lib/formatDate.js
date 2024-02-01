@@ -30,3 +30,7 @@ export function formatDate(dateString) {
   
   }
   
+export function parseDate(dateString) {
+  const [year, month, day] = dateString.split('/');
+  return parseInt(year) * 12 + parseInt(month) - 1;
+};
