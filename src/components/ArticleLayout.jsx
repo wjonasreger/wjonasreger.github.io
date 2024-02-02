@@ -27,7 +27,7 @@ export function ArticleLayout({
 }) {
   let router = useRouter()
 
-  const selectedImage = Images.hasOwnProperty(item.image) ? Images[item.image] : Images.default;
+  // const selectedImage = Images.hasOwnProperty(item.image) ? Images[item.image] : Images.default;
 
   if (isRssFeed) {
     return children
