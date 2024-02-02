@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { Container } from '../components/Container'
 import { formatDate } from '../lib/formatDate'
 import { Prose } from '../components/Prose'
-import { Images } from './ImageLibrary'
+// import { Images } from './ImageLibrary'
 
 function ArrowLeftIcon(props) {
   return (
@@ -43,7 +43,7 @@ export function ArticleLayout({
         images: [
           {
             url: `${SiteConfigs.url}/jonas.jpeg`,
-            width: 1200,
+            width: 600,
             height: 600,
             alt: 'Og Image Alt',
             type: 'image/jpeg',
