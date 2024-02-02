@@ -4,7 +4,6 @@ import { useRouter } from 'next/router'
 import { Container } from '../components/Container'
 import { formatDate } from '../lib/formatDate'
 import { Prose } from '../components/Prose'
-// import { Images } from './ImageLibrary'
 
 function ArrowLeftIcon(props) {
   return (
@@ -27,8 +26,6 @@ export function ArticleLayout({
 }) {
   let router = useRouter()
 
-  // const selectedImage = Images.hasOwnProperty(item.image) ? Images[item.image] : Images.default;
-
   if (isRssFeed) {
     return children
   }
@@ -42,8 +39,8 @@ export function ArticleLayout({
         url: `https://wjonasreger.github.io${router.pathname}`,
         images: [
           {
-            url: `${SiteConfigs.url}/jonas.jpeg`,
-            width: 600,
+            url: `https://og.wjonasreger.github.io/api/og?title=${meta.title}&desc=${meta.subtitle}`,
+            width: 1200,
             height: 600,
             alt: 'Og Image Alt',
             type: 'image/jpeg',
