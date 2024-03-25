@@ -187,7 +187,7 @@ export default function Home({ articles }) {
           🚧 <b><i style={{color: '#facc15'}}>this website is currently under construction. new updates coming soon.</i></b> 🚧
           </p>
           <p className = "mt-6 prose dark:prose-invert">
-          <i style={{color: '#facc15'}}>last updated on: wed jan 31 2024</i>
+          <i style={{color: '#facc15'}}>last updated on: mon mar 25 2024</i>
           </p>
           <p className = "mt-6 prose dark:prose-invert">
             👋 hello, i&apos;m jonas! i&apos;m a recent alum of uiuc statistics, specializing in data science. i&apos;m passionate about natural language processing (nlp), machine learning (ml), teaching others about data science, and making a positive and constructive impact on others. my primary research interest is using nlp towards language acquistion.

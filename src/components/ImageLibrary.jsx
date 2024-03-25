@@ -15,6 +15,7 @@ import networkBluePurple from '../images/photos/project-images/network-blue-purp
 import sentimentWordCloud from '../images/photos/project-images/sentiment-word-cloud.jpg'
 import spanishBoard from '../images/photos/project-images/spanish-board.jpg'
 import redHerringFaceless from '../images/photos/project-images/red-herring-faceless.png'
+import koreanNeon from '../images/photos/project-images/korean-neon.jpg'
 
 // badges
 import pythonBadge from '../images/badges/python.png'
@@ -66,6 +67,7 @@ export const Images = {
     "sentiment-word-cloud": sentimentWordCloud,
     "spanish-board": spanishBoard,
     "red-herring-faceless": redHerringFaceless,
+    "korean-neon": koreanNeon,
 
     // badges
     "python-badge": pythonBadge,
